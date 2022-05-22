@@ -5,6 +5,7 @@ from small_block_contact_env import SmallBlockContactBulletEnv
 from stoch_traj_opt import StochTrajOptimizer
 import numpy as np
 import random
+from argparse import ArgumentParser
 
 if __name__ == '__main__':
     # init ctrl all 0
@@ -19,7 +20,11 @@ if __name__ == '__main__':
     #                           TimeSteps=30, seed=123572, render=False, Iterations=200,
     #                           Num_processes=12)
 
-    uopt = np.load('u_opt_0-10_tp4.npy')
+    parser = ArgumentParser()
+    parser.add_argument("--exp_name", type=str, default="u_opt_0-10_tp4")
+    args = parser.parse_args()
+
+    uopt = np.load(f"data/traj/{args.exp_name}.npy")
 
     steps = uopt.shape[0]
 
@@ -42,9 +47,8 @@ if __name__ == '__main__':
             # else:
             #     state, c, done, _ = world.step(uopt[j, :], None)
             state, c, done, pose = world.step(uopt[j, :], None, train=False)
-            finger_poses.append(pose["finger_pos"])
+            finger_poses += pose["finger_pos"]
             object_poses += pose["object_pose"]
-            print(len(pose["object_pose"]))
             c = -c
             J += c
         np.save("tip_poses.npy", finger_poses)

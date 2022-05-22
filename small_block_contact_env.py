@@ -14,6 +14,7 @@
 
 from pybullet_utils import bullet_client
 import pybullet
+import render as r
 import time
 import gym, gym.utils.seeding, gym.spaces
 import numpy as np
@@ -102,7 +103,8 @@ class SmallBlockContactBulletEnv(gym.Env):
         self.n_steps = 5            # TODO: hardcoded
 
         if self.render:
-            self._p = bullet_client.BulletClient(connection_mode=pybullet.GUI)
+            self._p = bullet_client.BulletClient(connection_mode=pybullet.DIRECT)
+            self.renderer = r.PyBulletRenderer()
         else:
             self._p = bullet_client.BulletClient()
 
@@ -562,7 +564,6 @@ class SmallBlockContactBulletEnv(gym.Env):
         # print("stepping")
 
         # TODO: during step, small block might slide away
-        self.tip_poses = []
         def get_small_block_location_local(this_face: int, this_pos_local: List[float]) -> List[float]:
             # size = [0.02, 0.02, 0.01] if i == 0 else [0.01, 0.01, 0.01]       # thumb larger
             this_pos_local = np.array(this_pos_local)
@@ -741,9 +742,6 @@ class SmallBlockContactBulletEnv(gym.Env):
             r = - np.linalg.norm(vel_1) * 20 - len(cps_1) * 250 \
                 - 300 * np.linalg.norm([pos_1[0], pos_1[1], pos_1[2] - 0.3]) # target reaching cost
             r += 150 * rot_metric
-
-            # if self.render:
-            #     self.draw_cps_ground(cps_1)     # for debugging
             return r
 
         def pre_simulate(current_fins: List[Tuple[List[float], bool]]):
@@ -751,13 +749,11 @@ class SmallBlockContactBulletEnv(gym.Env):
             for cid in self.tip_cids:
                 self._p.removeConstraint(cid)
             self.tip_cids = []
-            self.tip_poses = []
             for idx in range(self.num_fingertips):
+                # Transform the finger tip toward the world frame, here current_fin is expressed in local frame?
                 f_pos_g, _ = self._p.multiplyTransforms(pos, quat, current_fins[idx][0], [0, 0, 0, 1])
                 if f_pos_g[2] < CLEARANCE_H:
                     f_pos_g = [100.0, 100.0, 100.0]
-                if train==False:
-                    self.tip_poses.append(list(f_pos_g))
                 self._p.setCollisionFilterPair(self.tip_ids[idx], self.o_id, -1, -1, 0)
                 self._p.resetBasePositionAndOrientation(self.tip_ids[idx],
                                                         f_pos_g,
@@ -775,6 +771,7 @@ class SmallBlockContactBulletEnv(gym.Env):
                 # can turn on all collisions since disabled fingers moved to far away already
                 self._p.setCollisionFilterPair(self.tip_ids[idx], self.o_id, -1, -1, 1)
 
+        # Starting pose of the object
         pos, quat = rb.get_link_com_xyz_orn(self._p, self.o_id, -1)
 
         a = np.tanh(a)      # [-1, 1]
@@ -789,19 +786,9 @@ class SmallBlockContactBulletEnv(gym.Env):
         ave_r = 0.0
         wr_pos, fin_poss, cost_remaining = self.get_hand_pose(self.cur_fins, self.last_fins)
 
-        # all_hand_poss_1 = None
-        # all_hand_poss = None
-        # if self.render:
-        #     tar_fins, init_wrist = self.get_tar_fin_poss(self.last_fins, self.cur_fins)
-        #     all_hand_poss = self.get_hand_pose_full(tar_fins, init_wrist)
-        #
-        #     if a_next is not None:
-        #         a_next = np.tanh(a_next)
-        #         next_fins, _ = transform_a_no_opt_time(a_next, self.cur_fins)
-        #         tar_fins_1, init_wrist_1 = self.get_tar_fin_poss(self.cur_fins, next_fins)
-        #         all_hand_poss_1 = self.get_hand_pose_full(tar_fins_1, init_wrist_1)
         if not train:
             object_poses = []
+            tip_poses = []
         for t in range(self.control_skip):
             # apply vel target.....
 
@@ -809,7 +796,12 @@ class SmallBlockContactBulletEnv(gym.Env):
             #     self._p.removeAllUserDebugItems()
 
             pos, quat = rb.get_link_com_xyz_orn(self._p, self.o_id, -1)
+            
             if not train:
+                tip_pose = []
+                for idx in range(self.num_fingertips):
+                    tip_pose.append(list(self._p.multiplyTransforms(pos, quat, self.cur_fins[idx][0], [0, 0, 0, 1])[0]))
+                tip_poses.append(tip_pose) # position only
                 object_poses.append(pos+quat) # 7
             vel = rb.get_link_com_linear_velocity(self._p, self.o_id, -1)
 
@@ -866,6 +858,7 @@ class SmallBlockContactBulletEnv(gym.Env):
                                                                self.all_hand_poss[next_key_frame],
                                                                percent)
                     self.draw_hand(all_hand_poss_draw)
+                self.renderer.render()
             self.timer += 1
 
         self.c_step_timer += 1
@@ -882,6 +875,7 @@ class SmallBlockContactBulletEnv(gym.Env):
 
                 if self.render:
                     time.sleep(self._ts * 4.0)
+                    self.renderer.render()
 
         obs = self.get_extended_observation()
 
@@ -904,7 +898,7 @@ class SmallBlockContactBulletEnv(gym.Env):
         self.last_fins = self.cur_fins.copy()
         
         if train==False:
-            return obs, ave_r, False, {"finger_pos":self.tip_poses,"object_pose":object_poses}
+            return obs, ave_r, False, {"finger_pos":tip_poses,"object_pose":object_poses}
         else:
             return obs, ave_r, False, {}
 

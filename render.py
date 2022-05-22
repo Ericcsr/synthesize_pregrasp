@@ -1,0 +1,78 @@
+import pybullet as p
+import time
+import pkgutil
+egl = pkgutil.get_loader('eglRenderer')
+import pybullet_data
+import cv2 as cv
+import numpy as np
+
+class PyBulletRenderer:
+    def __init__(self, width=640, height=440):
+        self.windowName = "image"
+        self.width = width
+        self.height = height
+        null_image = np.zeros((self.width, self.height))
+        cv.imshow(self.windowName, null_image)
+        self.yaw = 0
+        self.pitch = 45
+        self.distance = 2
+        self.upAxisIndex=2
+        self.projection_matrix = [
+            1.0825318098068237, 0.0, 0.0, 0.0, 0.0, 1.732050895690918, 0.0, 0.0, 0.0, 0.0,
+            -1.0002000331878662, -1.0, 0.0, 0.0, -0.020002000033855438, 0.0]
+        cv.createTrackbar("yaw", self.windowName, 0, 360, self.changeYaw)
+        cv.createTrackbar("pitch", self.windowName, 0, 90, self.changePitch)
+        cv.createTrackbar("Distance", self.windowName, 1, 100, self.changeDistance)
+        # Initialize others
+        self.plugin = p.loadPlugin(egl.get_filename(), "_eglRendererPlugin")
+        p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
+        p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
+
+
+    def changeYaw(self, value):
+        self.yaw = value
+    
+    def changePitch(self, value):
+        self.pitch = value
+
+    def changeDistance(self, value):
+        self.distance = value
+
+    def render(self, blocking=False):
+        while True:
+            view_matrix = p.computeViewMatrixFromYawPitchRoll([0,0,0], self.distance*0.1, self.yaw, self.pitch-45, 0, self.upAxisIndex)
+            image = p.getCameraImage(self.width, 
+                                    self.height, 
+                                    view_matrix, 
+                                    projectionMatrix=self.projection_matrix,
+                                    shadow=1, 
+                                    lightDirection=[1,1,1])
+            cv.imshow(self.windowName, image[2])
+            key = cv.waitKey(1)
+            if not blocking or key == ord('q'):
+                break
+
+    def stop(self):
+        p.unloadPlugin(self.plugin)
+if __name__ == "__main__":
+    
+    p.connect(p.DIRECT)
+    renderer = PyBulletRenderer()
+    p.setAdditionalSearchPath(pybullet_data.getDataPath())
+    p.setGravity(0, 0, -10)
+    p.loadURDF("plane.urdf", [0, 0, -1])
+    p.loadURDF("/home/sirius/sirui/contact_planning_dexterous_hand/model/resources/allegro_hand_description/urdf/allegro_hand_description_right.urdf", useFixedBase=1)
+
+    
+    while (p.isConnected()):
+        for y in range(0, 360, 10):
+            start = time.time()
+            p.stepSimulation()
+            stop = time.time()
+            print("stepSimulation %f" % (stop - start))
+            start = time.time()
+            renderer.render()
+            stop = time.time()
+            print("renderImage %f" % (stop - start))
+            cv.waitKey(1)
+    renderer.stop()

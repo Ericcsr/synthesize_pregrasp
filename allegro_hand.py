@@ -2,15 +2,19 @@ import torch
 import numpy as np
 import open3d as o3d
 import rigidBodySento as rb
+from multiprocessing import Pool
 import pytorch_kinematics as pk
 import pybullet as p
 from model.rigid_body_model import AllegroHandPlantDrake
-from model.param import POINT_NUM, SCALE, AllAllegroHandFingers, AllegroHandFinger, NameToFingerIndex
+from model.param import POINT_NUM, SCALE, AllAllegroHandFingers, AllegroHandFinger, NameToFingerIndex, NameToArmFingerIndex
 import model.param as model_param
+import copy
 from pydrake.math import RigidTransform
 from pydrake.common import eigen_geometry
 from pydrake.solvers.snopt import SnoptSolver
+from pydrake.solvers.osqp import OsqpSolver
 from pydrake.multibody.tree import FrameIndex
+
 PI = np.pi
 EULER_UPPER_BOUND = torch.tensor([2*PI, 2*PI, 2*PI])
 EULER_LOWER_BOUND = torch.tensor([-2*PI, -2*PI, -2*PI])
@@ -108,26 +112,60 @@ class AllegroHand:
 
 # Using Albert's code with same API
 class AllegroHandDrake:
-    def __init__(self, object_collidable=True):
+    def __init__(self, 
+                 object_collidable=True, 
+                 useFixedBase=False, 
+                 robot_path = model_param.allegro_hand_urdf_path,
+                 baseOffset = model_param.allegro_hand_offset,
+                 all_fingers = model_param.AllAllegroHandFingers,
+                 sequenceSolve=False):
+        # Parameter for Drake plant
         self.object_collidable = object_collidable
+        self.useFixedBase = useFixedBase
+        self.robot_path = robot_path
+        self.all_fingers = all_fingers
+        self.baseOffset = baseOffset
+
         self.obj_geo = {"x":0.2*SCALE,
                         "y":0.2*SCALE,
                         "z":0.05*SCALE}
         self.setObjectPose(np.array([0,0,0.05 * SCALE]), np.array([0,0,0,1]))
         self.ik_attempts = 5
         self.solver = SnoptSolver()
+        self.sequenceSolve = sequenceSolve
+        self.q_init = np.random.random(21)-0.5
+        #self.q_init[0] = 1
 
     def setObjectPose(self, pos, orn):
         self.obj_pose = pos
         self.obj_orn = np.array([orn[3], orn[0], orn[1], orn[2]])#np.asarray(orn) 
         drake_orn = np.array([orn[3], orn[0], orn[1], orn[2]]) # Convert to drake
-        obj_world_pose = RigidTransform(quaternion=eigen_geometry.Quaternion(drake_orn), 
+        self.object_world_pose = RigidTransform(quaternion=eigen_geometry.Quaternion(drake_orn), 
                                         p=self.obj_pose)
-        self.hand_plant = AllegroHandPlantDrake(object_world_pose=obj_world_pose, 
-                                                meshcat_open_brower=True, 
-                                                num_viz_spheres=4,
-                                                object_collidable=self.object_collidable)
+        self.hand_plant = AllegroHandPlantDrake(object_world_pose=self.object_world_pose, 
+                                                meshcat_open_brower=False, 
+                                                num_finger_tips=4,
+                                                object_collidable=self.object_collidable,
+                                                robot_path=self.robot_path,
+                                                useFixedBase=self.useFixedBase,
+                                                baseOffset=self.baseOffset,
+                                                all_fingers=self.all_fingers)
         self.all_normals = self.createPointCloudNormals()
+
+    def get_new_plant_with_obj_pose(self, pos, orn):
+        drake_orn = np.array([orn[3], orn[0], orn[1], orn[2]]) # Convert to drake
+        obj_pose =  RigidTransform(quaternion=eigen_geometry.Quaternion(drake_orn), 
+                                        p=pos)
+        new_plant = AllegroHandPlantDrake(object_world_pose=self.object_world_pose, 
+                                                meshcat_open_brower=False, 
+                                                num_finger_tips=4,
+                                                object_collidable=self.object_collidable,
+                                                robot_path=self.robot_path,
+                                                useFixedBase=self.useFixedBase,
+                                                baseOffset=self.baseOffset,
+                                                all_fingers=self.all_fingers)
+        _, new_plant_context = new_plant.create_context()
+        return new_plant.plant, new_plant_context
 
     def getBulletJointState(self,q,unused_finger={}):
         return self.hand_plant.get_bullet_hand_config_from_drake_q(q,unused_finger)[2]
@@ -198,8 +236,9 @@ class AllegroHandDrake:
         # Based on geometry of the compute the norm at contact point
         contact_points = {}
         finger_tip_target = self.augment_finger(finger_tip_target, weights)
+        name_to_idx = NameToArmFingerIndex if self.all_fingers == model_param.AllAllegroArmFingers else NameToFingerIndex
         for key in finger_tip_target.keys():
-            contact_points[NameToFingerIndex[key]] = finger_tip_target[key]
+            contact_points[name_to_idx[key]] = finger_tip_target[key]
         #print(contact_points)
         # Number of tip target maybe less than 4
         collision_distance = 1e-4 #1e-3
@@ -210,18 +249,21 @@ class AllegroHandDrake:
             collision_distance= collision_distance, # 1e-3
             allowed_deviation=np.ones(3) * 0.00001,
             has_normals=has_normal)
-        self.desired_positions = desired_positions
-        q_init = np.random.random(len(ik.q())) - 0.5
+        # self.desired_positions = desired_positions
+        if self.sequenceSolve:
+            q_init = self.q_init
+        else:
+            q_init = np.random.random(len(ik.q())) - 0.5
         match_finger_tips = False
         no_collision = False
         for _ in range(self.ik_attempts):
             result = self.solver.Solve(ik.prog(), q_init)
-            q_sol = result.GetSolution(ik.q())
+            q_sol = result.GetSolution()
             no_collision = True if collision_distance==None else collision_constr.evaluator().CheckSatisfied(q_sol, tol=3e-2)
             match_finger_tips = True
             for finger in finger_tip_target.keys(): # TODO: Only on active finger
                 #print(constrains_on_finger[NameToFingerIndex[finger]][0].evaluator().Eval(q_sol))
-                if not constrains_on_finger[NameToFingerIndex[finger]][0].evaluator().CheckSatisfied(q_sol,tol=1e-4):
+                if not constrains_on_finger[name_to_idx[finger]][0].evaluator().CheckSatisfied(q_sol,tol=1e-4):
                     match_finger_tips = False
                     break
             if no_collision and match_finger_tips:
@@ -232,12 +274,240 @@ class AllegroHandDrake:
                 q_init = q_sol + (np.random.random(q_sol.shape)-0.5)/0.5*0.2
         
         # return q_sol, no_collision , match_finger_tips
-        unused_fingers = set(AllAllegroHandFingers)
+        unused_fingers = set(self.all_fingers)
         for finger in contact_points.keys():
             unused_fingers.remove(finger)
+        if match_finger_tips and no_collision and self.sequenceSolve:
+            self.q_init = q_sol
         joint_state = self.getBulletJointState(q_sol, unused_fingers)
         base_state = self.getBulletBaseState(q_sol)
-        return joint_state, base_state, match_finger_tips and no_collision
+        return joint_state, base_state, desired_positions ,match_finger_tips and no_collision
+
+    # Each worker can search a subspace of solution space not only one solution
+    def regressFingerTipPosWithRandomSearch(self, finger_tip_target, weights, has_normal=True, n_process=40):
+        # Based on geometry of the compute the norm at contact point
+        contact_points = {}
+        finger_tip_target = self.augment_finger(finger_tip_target, weights)
+        name_to_idx = NameToArmFingerIndex if self.all_fingers == model_param.AllAllegroArmFingers else NameToFingerIndex
+        for key in finger_tip_target.keys():
+            contact_points[name_to_idx[key]] = finger_tip_target[key]
+        #print(contact_points)
+        # Number of tip target maybe less than 4
+        collision_distance = 1e-4 #1e-3
+        
+        # self.desired_positions = desired_positions
+        if self.sequenceSolve:
+            q_init = self.q_init
+        else:
+            q_init = np.random.random(len(self.q_init)) - 0.5
+            print("Warning not using Sequence Solve")
+
+        args_list = []
+        for i in range(n_process):
+            _q_init = q_init + (np.random.random(q_init.shape)-0.5)/0.5*0.2
+            _robot_path = self.robot_path
+            _object_world_pose = self.object_world_pose
+            _baseOffset = self.baseOffset
+            _all_fingers = self.all_fingers
+            _collision_distance = collision_distance
+            _finger_tip_target = finger_tip_target
+            _ik_attempts = self.ik_attempts
+            _contact_points = contact_points
+            _has_normals = has_normal
+            args_list.append((_q_init, _robot_path, _object_world_pose, _baseOffset,_all_fingers,
+                              _collision_distance, _finger_tip_target,_ik_attempts, _contact_points, _has_normals))
+
+        with Pool(n_process) as p:
+            results = p.starmap(_parallel_solve, args_list)
+        
+        best_q = None
+        best_norm = 1000000
+        for result in results:
+            if not (result[1] and result[2]):
+                continue
+            elif np.linalg.norm(result[0]-q_init) < best_norm:
+                best_q = result[0]
+                best_norm = np.linalg.norm(result[0]-q_init)
+        
+        desired_positions = results[0][3]
+        if not isinstance(best_q, np.ndarray):
+            q_sol = result[0]
+            flag = False
+        else:
+            q_sol = best_q
+            flag = True
+        # return q_sol, no_collision , match_finger_tips
+        unused_fingers = set(self.all_fingers)
+        for finger in contact_points.keys():
+            unused_fingers.remove(finger)
+        if self.sequenceSolve:
+            self.q_init = q_sol
+        joint_state = self.getBulletJointState(q_sol, unused_fingers)
+        base_state = self.getBulletBaseState(q_sol)
+        return joint_state, base_state, desired_positions, flag
+
+    # N is number of interpolant
+    def solveInterp(self, 
+                    finger_tip_target, 
+                    weights,
+                    start_q,
+                    end_q,
+                    obj_poses,
+                    has_normal=False, 
+                    N=5):
+        # Get finger_tip_target based on object poses
+        finger_tip_target = self.augment_finger(finger_tip_target, weights)
+        assert(len(obj_poses)%N==0)
+        obj_pose_keyframe = obj_poses[::len(obj_poses)//N]
+        contact_points = {}
+        name_to_idx = NameToArmFingerIndex if self.all_fingers == model_param.AllAllegroArmFingers else NameToFingerIndex
+        for finger in finger_tip_target.keys():
+            contact_points[name_to_idx[finger]] = [finger_tip_target[finger]]
+            for i in range(N-1):
+                contact_points[name_to_idx[finger]].append(
+                    self.map_to_new_object_frame(obj_pose_keyframe[0], obj_pose_keyframe[i+1], finger_tip_target[finger]))
+        
+        # get the problem instance
+        prog, constraints_on_finger, collision_constr = self.hand_plant.construct_interp_with_contact_normal(
+            self.hand_plant.create_context()[1],
+            contact_points,
+            start_q,
+            end_q,
+            collision_distance=1e-4,
+            has_normals=has_normal,
+            allowed_deviation = np.ones(3) * 0.00001,
+            N = N)
+
+        # Initialize initial guess with naive interpolation
+        naive_interp = np.linspace(start_q,end_q,num=len(obj_poses))
+        q_init = naive_interp[::len(obj_poses)//N]
+        dq_init = q_init[1:] - q_init[:-1]
+        init_guess = np.hstack([q_init.flatten(), dq_init.flatten()])
+
+        no_collision = True
+        match_finger_tips = True
+        for i in range(self.ik_attempts):
+            # Solve the program
+            solver = SnoptSolver()
+            result = solver.Solve(prog, init_guess)
+            solution = result.GetSolution()
+            sol = solution.reshape(2*N-1,-1)
+            q_sol = sol[:N]
+            dq_sol = sol[N:]
+
+            # Verify the result
+            for i in range(N):
+                if not collision_constr.CheckSatisfied(q_sol[i]):
+                    no_collision = False
+                    break
+            
+            for finger in contact_points.keys():
+                for i in range(N):
+                    if not constraints_on_finger[finger][i].CheckSatisfied(q_sol[i]):
+                        match_finger_tips = False
+                        break
+            if no_collision and match_finger_tips:
+                break
+            else:
+                init_guess = solution + np.random.random(solution.shape) * 0.2
+        # interp
+        q_full = np.zeros((len(obj_poses), q_sol.shape[1]))
+        seg_len = len(obj_poses)//N
+        for i in range(N-1):
+            q_full[seg_len * i:seg_len*(i+1)] = np.linspace(q_sol[i],q_sol[i+1],seg_len)
+        return q_sol, q_full, no_collision and match_finger_tips
+
+    def solveInterpTest(self,
+                        finger_tip_target, 
+                        weights,
+                        start_q,
+                        end_q,
+                        obj_poses,
+                        has_normal=False, 
+                        N=3):
+        # Get finger_tip_target based on object poses
+        finger_tip_target = self.augment_finger(finger_tip_target, weights)
+        assert(len(obj_poses)%N==0)
+        obj_pose_keyframe = np.vstack([obj_poses[::len(obj_poses)//N],obj_poses[-1]])
+        contact_points = {}
+        name_to_idx = NameToArmFingerIndex if self.all_fingers == model_param.AllAllegroArmFingers else NameToFingerIndex
+        for finger in finger_tip_target.keys():
+            contact_points[name_to_idx[finger]] = [finger_tip_target[finger]]
+            for i in range(N):
+                contact_points[name_to_idx[finger]].append(
+                    self.map_to_new_object_frame(obj_pose_keyframe[0], obj_pose_keyframe[i+1], finger_tip_target[finger]))
+        
+        plants = []
+        contexts = []
+        for i in range(len(obj_pose_keyframe)):
+            plant, context = self.get_new_plant_with_obj_pose(obj_pose_keyframe[i,:3], obj_pose_keyframe[i,3:])
+            plants.append(plant)
+            contexts.append(context)
+        
+        # get the problem instance
+        prog, constraints_on_finger, collision_constr = self.hand_plant.construct_interp_with_contact_normal_test(
+            plants,
+            contexts,
+            contact_points,
+            start_q,
+            end_q,
+            collision_distance=1e-4,
+            has_normals=has_normal,
+            allowed_deviation = np.ones(3) * 0.001,
+            N = N)
+
+        # Initialize initial guess with naive interpolation
+        naive_interp = np.linspace(start_q,end_q,num=len(obj_poses))
+        q_init = np.vstack([naive_interp[::len(obj_poses)//N], naive_interp[-1]])
+        dq_init = q_init[1:] - q_init[:-1]
+        init_guess = np.hstack([copy.deepcopy(q_init.flatten()), copy.deepcopy(dq_init.flatten())])
+
+        no_collision = True
+        match_finger_tips = True
+        for i in range(self.ik_attempts+10):
+            # Solve the program
+            solver = SnoptSolver()
+            result = solver.Solve(prog, init_guess)
+            solution = result.GetSolution()
+            sol = solution.reshape(2*N+1,-1)
+            q_sol = sol[:N+1]
+            dq_sol = sol[N+1:]
+
+            # Verify the result
+            for i in range(N+1):
+                if not collision_constr[i].CheckSatisfied(q_sol[i]):
+                    no_collision = False
+                    break
+            
+            for finger in contact_points.keys():
+                for i in range(N+1):
+                    if not constraints_on_finger[finger][i].CheckSatisfied(q_sol[i]):
+                        match_finger_tips = False
+                        break
+            if no_collision and match_finger_tips:
+                break
+            else:
+                init_guess = solution + np.random.random(solution.shape) * 0.1
+        # interp
+        q_full = np.zeros((len(obj_poses), q_sol.shape[1]))
+        seg_len = len(obj_poses)//N
+        for i in range(N):
+            q_full[seg_len * i:seg_len*(i+1)] = np.linspace(q_sol[i],q_sol[i+1],seg_len)
+        # if not (no_collision and match_finger_tips):
+        #     q_sol = q_init
+        #     q_full = np.vstack([naive_interp,naive_interp[-1]])
+        #     print("Reach here")
+        return q_sol, q_full[:-1], no_collision, match_finger_tips
+
+    # Assume object pose in pybullet format
+    def map_to_new_object_frame(self,current_obj_pose, next_obj_pose, finger_tip_target):
+        r = getRelativePose(finger_tip_target[:3],current_obj_pose[:3],current_obj_pose[3:])
+        new_pos = getWorldPose(r, next_obj_pose[:3], next_obj_pose[3:])
+        rel_normal = getRelativeNormal(finger_tip_target[3:], current_obj_pose[3:])
+        new_normal = getWorldNormal(rel_normal, next_obj_pose[3:])
+        print(new_pos)
+        return np.hstack([new_pos, new_normal])
+        
 
     def createTipsVisual(self,radius=[0.04, 0.02, 0.02, 0.02]):
         """
@@ -257,26 +527,110 @@ class AllegroHandDrake:
                                            init_xyz = (100,100,100))
             self.tip_id.append(id)
 
-    def draw_desired_positions(self, weights):
+    def draw_desired_positions(self, desired_positions ,weights):
         """
         Should be called after creation of visual tips as well as solve ik
         """
-        order = [AllegroHandFinger.THUMB,
-                 AllegroHandFinger.INDEX, 
-                 AllegroHandFinger.MIDDLE, 
-                 AllegroHandFinger.RING]
-        for key in weights.keys():
+        default_orn = [0,0,0,1]
+        obsolete_pos = [100,100,100]
+        order = copy.deepcopy(self.all_fingers)
+        name_to_idx = NameToArmFingerIndex if self.all_fingers == model_param.AllAllegroArmFingers else NameToFingerIndex
+        avaliable_tip_index = [0,1,2,3]
+        unavaliable_tip_index = []
+        unused_order = []
+        for i,key in enumerate(weights.keys()):
             if weights[key]==0:
-                order.remove(NameToFingerIndex[key])
-        orn = [0,0,0,1]
-        print(self.desired_positions)
-        for i in range(len(order)):
-            p.resetBasePositionAndOrientation(self.tip_id[i], self.desired_positions[order[i]], orn)
+                order.remove(name_to_idx[key])
+                unused_order.append(name_to_idx[key])
+                avaliable_tip_index.remove(i)
+                unavaliable_tip_index.append(i)
+        
+        for i, ord in zip(avaliable_tip_index, order):
+            p.resetBasePositionAndOrientation(self.tip_id[i], desired_positions[ord], default_orn)
+        
+        for i in unavaliable_tip_index:
+            p.resetBasePositionAndOrientation(self.tip_id[i], obsolete_pos, default_orn)
+
+    def reset_finger_tips(self):
+        obsolete_pos = [100,100,100]
+        default_orn = [0,0,0,1]
+        for i in self.tip_id:
+            p.resetBasePositionAndOrientation(i, obsolete_pos, default_orn)
 
     def draw_point_cloud(self):
         p.addUserDebugPoints(self.all_normals[:,:3], np.ones((len(self.all_normals), 3)))
 
+def _parallel_solve(q_init, 
+                    robot_path, 
+                    obj_world_pose, 
+                    baseOffset, 
+                    all_fingers,
+                    collision_distance, 
+                    finger_tip_target, 
+                    ik_attempts,
+                    contact_points,
+                    has_normal=True,
+                    object_collidable=True,
+                    useFixedBase=True):
+    hand_plant = AllegroHandPlantDrake(object_world_pose=obj_world_pose, 
+                                                meshcat_open_brower=False, 
+                                                num_finger_tips=4,
+                                                object_collidable=object_collidable,
+                                                robot_path=robot_path,
+                                                useFixedBase=useFixedBase,
+                                                baseOffset=baseOffset,
+                                                all_fingers=all_fingers)
+    ik, constrains_on_finger, collision_constr, desired_positions = hand_plant.construct_ik_given_fingertip_normals(
+            hand_plant.create_context()[1],
+            contact_points,
+            padding=model_param.object_padding,
+            collision_distance= collision_distance, # 1e-3
+            allowed_deviation=np.ones(3) * 0.00001,
+            has_normals=has_normal)
+    name_to_idx = NameToArmFingerIndex if all_fingers == model_param.AllAllegroArmFingers else NameToFingerIndex
+    solver = SnoptSolver()
+    no_collision = True
+    match_finger_tips = True
+    q_sol = None
+    for _ in range(ik_attempts):
+        result = solver.Solve(ik.prog(), q_init)
+        q_sol = result.GetSolution()
+        no_collision = True if collision_distance==None else collision_constr.evaluator().CheckSatisfied(q_sol, tol=3e-2)
+        for finger in finger_tip_target.keys(): # TODO: Only on active finger
+            #print(constrains_on_finger[NameToFingerIndex[finger]][0].evaluator().Eval(q_sol))
+            if not constrains_on_finger[name_to_idx[finger]][0].evaluator().CheckSatisfied(q_sol,tol=1e-4):
+                match_finger_tips = False
+                break
+        if no_collision and match_finger_tips:
+            break
+        elif no_collision and not match_finger_tips:
+            q_init = q_sol + (np.random.random(q_sol.shape)-0.5)/0.5*0.03
+        else:
+            q_init = q_sol + (np.random.random(q_sol.shape)-0.5)/0.5*0.2
+    return q_sol, no_collision, match_finger_tips, desired_positions
 
+def getRelativePose(tip_pose, obj_pose, obj_orn):
+    r = tip_pose - obj_pose
+    orn = torch.tensor([obj_orn[3], obj_orn[0], obj_orn[1], obj_orn[2]])
+    orn_inv = pk.quaternion_invert(orn)
+    r = pk.quaternion_apply(orn_inv, torch.from_numpy(r)).numpy()
+    return r
+
+def getWorldPose(rel_pos, obj_pose, obj_orn):
+    orn = torch.tensor([obj_orn[3], obj_orn[0], obj_orn[1], obj_orn[2]])
+    r = pk.quaternion_apply(orn, torch.from_numpy(rel_pos)).numpy()
+    return r + obj_pose
+
+def getRelativeNormal(normal, obj_orn):
+    orn = torch.tensor([obj_orn[3], obj_orn[0], obj_orn[1], obj_orn[2]])
+    orn_inv = pk.quaternion_invert(orn)
+    rel_normal = pk.quaternion_apply(orn_inv, torch.from_numpy(normal)).numpy()
+    return rel_normal
+
+def getWorldNormal(normal, obj_orn):
+    orn = torch.tensor([obj_orn[3], obj_orn[0], obj_orn[1], obj_orn[2]])
+    abs_normal = pk.quaternion_apply(orn, torch.from_numpy(normal)).numpy()
+    return abs_normal
 
 if __name__ == "__main__":
     def setStates(r_id, states):
@@ -300,10 +654,17 @@ if __name__ == "__main__":
                "thumb":1.0}   # Good Using projection
     object_pos_pybullet = np.array([-0.00834451, -0.08897273,  0.19901382]) * SCALE
     object_orn_pybullet = [-0.30716777, -0.64500374, -0.30996876,  0.62732567]
-    drake_hand = AllegroHandDrake(object_collidable=True)
+    drake_hand = AllegroHandDrake(useFixedBase=True,
+                                  robot_path=model_param.allegro_arm_urdf_path,
+                                  baseOffset=model_param.allegro_arm_offset,
+                                  all_fingers = model_param.AllAllegroArmFingers,
+                                  object_collidable=True)
     drake_hand.setObjectPose(object_pos_pybullet, object_orn_pybullet)
+    #drake_hand.frames_printer()
+    #input()
     #print("hand_created")
-    joint_state, base_state,success = drake_hand.regressFingerTipPos(target_finger_tip, weights, has_normal=True)
+    #joint_state, base_state,targets,success = drake_hand.regressFingerTipPos(target_finger_tip, weights, has_normal=True)
+    joint_state, base_state, targets,success =  drake_hand.regressFingerTipPosWithRandomSearch(target_finger_tip, weights, has_normal=True, n_process=4)
     print("solution obtained:",success) # Solutions are in the format of numpy array
     #print(joint_state)
     #drake_hand.root_printer()
@@ -325,7 +686,7 @@ if __name__ == "__main__":
     # pjoints_states = AllegroHand.getBulletJointState(result)
     # base_pos, base_orn = AllegroHand.getBulletBaseState(base_state)
     p.connect(p.GUI)
-    hand_id = p.loadURDF("model/resources/allegro_hand_description/urdf/allegro_hand_description_right.urdf",useFixedBase=1)
+    hand_id = p.loadURDF("model/resources/allegro_hand_description/urdf/allegro_arm.urdf",useFixedBase=1)
     base_pos, base_orn = base_state
     setStates(hand_id, joint_state)
     p.resetBasePositionAndOrientation(hand_id, base_pos, base_orn)
@@ -352,7 +713,7 @@ if __name__ == "__main__":
                                        init_xyz=object_pos_pybullet,
                                        init_quat=object_orn_pybullet)
     drake_hand.createTipsVisual()
-    drake_hand.draw_desired_positions(weights)
+    drake_hand.draw_desired_positions(targets,weights)
     drake_hand.draw_point_cloud()
     input()
 

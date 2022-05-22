@@ -3,9 +3,10 @@ import numpy as np
 '''
 Parameters related to the allegro hand
 '''
-allegro_urdf_path = 'resources/allegro_hand_description/allegro_hand_description_right.urdf'  # noqa
-drake_allegro_path = "drake/manipulation/models/"\
-        "allegro_hand_description/sdf/allegro_hand_description_right.sdf"
+allegro_hand_urdf_path     = 'model/resources/allegro_hand_description/urdf/allegro_hand_description_right.urdf'
+allegro_arm_urdf_path = 'model/resources/allegro_hand_description/urdf/allegro_arm.urdf'
+allegro_hand_offset = [0, 0, 0, 0]
+allegro_arm_offset  = [0, 0, 0, 4]
 # allegro_base_inertia_offset = -0.0475
 # allegro_base_collision_offset = 0.0475
 gravity_vector = [0., 0., -9.8]
@@ -14,7 +15,7 @@ object_padding = 0.01  # Radius of the finger
 force_closure_regularization_weight = 0.05
 min_finger_normal = 0.1
 
-SCALE = 0.5
+SCALE = 0.3
 POINT_NUM=20000
 
 # For checking collisions
@@ -80,6 +81,12 @@ class AllegroHandFinger(enum.Enum):
     MIDDLE = 7
     RING = 11
 
+class AllegroArmFinger(enum.Enum):
+    THUMB = 20
+    INDEX = 8
+    MIDDLE = 12
+    RING = 16
+
 NameToFingerIndex = {
     "thumb":AllegroHandFinger.THUMB,
     "ifinger":AllegroHandFinger.INDEX,
@@ -92,6 +99,12 @@ IndexToFingerName = {
     AllegroHandFinger.MIDDLE:"mfinger",
     AllegroHandFinger.RING:"rfinger"}
 
+NameToArmFingerIndex = {
+    "thumb":AllegroArmFinger.THUMB,
+    "ifinger":AllegroArmFinger.INDEX,
+    "rfinger":AllegroArmFinger.RING,
+    "mfinger":AllegroArmFinger.MIDDLE}
+
 
 ActiveAllegroHandFingers =[AllegroHandFinger.THUMB,
                            AllegroHandFinger.INDEX,
@@ -102,6 +115,11 @@ AllAllegroHandFingers =[AllegroHandFinger.THUMB,
                         AllegroHandFinger.MIDDLE,
                         AllegroHandFinger.RING]
 
+AllAllegroArmFingers = [AllegroArmFinger.THUMB,
+                        AllegroArmFinger.INDEX,
+                        AllegroArmFinger.MIDDLE,
+                        AllegroArmFinger.RING]
+
 AllegroHandFingertipDrakeLink={
     AllegroHandFinger.THUMB: 15,
     AllegroHandFinger.INDEX: 3,
@@ -109,11 +127,25 @@ AllegroHandFingertipDrakeLink={
     AllegroHandFinger.RING: 11
 }
 
+AllegroArmFingertipDrakeLink={
+    AllegroArmFinger.THUMB:15,
+    AllegroArmFinger.INDEX:3,
+    AllegroArmFinger.MIDDLE:7,
+    AllegroArmFinger.RING:11 
+}
+
 AllegroHandFingertipDrakeLinkOffset={
     AllegroHandFinger.THUMB: np.array([0.,0.,0.0423]),
     AllegroHandFinger.INDEX: np.array([0.,0.,0.0267]),
     AllegroHandFinger.MIDDLE: np.array([0.,0.,0.0267]),
     AllegroHandFinger.RING: np.array([0.,0.,0.0267])
+}
+
+AllegroArmFingertipDrakeLinkOffset={
+    AllegroArmFinger.THUMB: np.array([0.,0.,0.0423]),
+    AllegroArmFinger.INDEX: np.array([0.,0.,0.0267]),
+    AllegroArmFinger.MIDDLE: np.array([0.,0.,0.0267]),
+    AllegroArmFinger.RING: np.array([0.,0.,0.0267])
 }
 
 # AllegroHandFingertipDrakeLinkOffset={
