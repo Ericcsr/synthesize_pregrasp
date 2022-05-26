@@ -15,7 +15,7 @@ object_padding = 0.01  # Radius of the finger
 force_closure_regularization_weight = 0.05
 min_finger_normal = 0.1
 
-SCALE = 0.3
+SCALE = 0.6
 POINT_NUM=20000
 
 # For checking collisions

@@ -7,18 +7,24 @@ import model.param as model_params
 
 TS=1/250.
 
+finger_idxs = {
+    "ifinger":[5,6,7,8],
+    "mfinger":[10,11,12,13],
+    "rfinger":[15,16,17,18],
+    "thumb":[20,21,22,23]}
+
 def parse_finger_motion_data(data):
     tip_poses = []
     tip_weights = []
     for i in range(data.shape[0]):
         tip_pose = {"thumb":data[i,0] * model_params.SCALE,
-                    "ifinger":data[i,1] * model_params.SCALE,
+                    "ifinger":data[i,3] * model_params.SCALE,
                     "mfinger":data[i,2] * model_params.SCALE,
-                    "rfinger":data[i,3] * model_params.SCALE}
+                    "rfinger":data[i,1] * model_params.SCALE}
         tip_weight = {"thumb":1 if data[i,0].sum() < 100 else 0,
-                      "ifinger":1 if data[i,1].sum() < 100 else 0,
+                      "ifinger":1 if data[i,3].sum() < 100 else 0,
                       "mfinger":1 if data[i,2].sum() < 100 else 0,
-                      "rfinger":1 if data[i,3].sum() < 100 else 0}
+                      "rfinger":1 if data[i,1].sum() < 100 else 0}
         tip_poses.append(tip_pose)
         tip_weights.append(tip_weight)
     return tip_poses, tip_weights
@@ -62,7 +68,8 @@ def animate_keyframe(o_id,
                      hand_drake=None,
                      desired_positions=None,
                      hand_weights=None,
-                     renderer=None):
+                     renderer=None,
+                     point_cloud=None):
     for i in range(len(joint_states)):
         p.resetBasePositionAndOrientation(o_id, 
                                           object_poses_keyframe[i],
@@ -73,6 +80,9 @@ def animate_keyframe(o_id,
                                               base_states[i][0],
                                               base_states[i][1])
         # Create Visual features # need to change this
+        if not (point_cloud is None):
+            print("Reach here")
+            hand_drake.draw_point_cloud(point_cloud[i])
         if not desired_positions == None:
             hand_drake.draw_desired_positions(desired_positions[i],hand_weights[i])
         
@@ -118,7 +128,7 @@ def animate(o_id, hand_id, object_poses, object_orns, joint_states, base_states=
             p.resetBasePositionAndOrientation(hand_id, 
                                               base_states[0][i], 
                                               base_states[1][i])
-        time.sleep(20 * TS)
+        time.sleep(10 * TS)
         if not renderer == None:
             renderer.render()
 
@@ -155,3 +165,11 @@ def convert_joints_for_bullet(joint_states, dofs=21, baseOffset=4):
     for i in range(4):
         bullet_states[1+baseOffset+i*5:5+baseOffset+i*5] = joint_states[1+baseOffset+i*4:1+baseOffset+(i+1)*4]
     return bullet_states
+
+# Only reset part of joint state that related to a finger
+def set_finger_joints(joint_states, finger_name, target_state):
+    j_states = joint_states.copy()
+    idxs = finger_idxs[finger_name]
+    j_states[idxs] = target_state
+    return j_states
+    

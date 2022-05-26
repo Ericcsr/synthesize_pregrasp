@@ -13,7 +13,7 @@ if __name__ == '__main__':
     parser.add_argument("--iters",type=int, default=100)
     args = parser.parse_args()
 
-    max_forces_list = [50] #[10,20,30,40,50,100]
+    max_forces_list = [80] #[10,20,30,40,50,100]
     sigma_list = [0.8] #[0.1, 0.2, 0.4, 0.8]
 
     log_text_list = []
@@ -22,7 +22,7 @@ if __name__ == '__main__':
         for max_forces in max_forces_list:
             for sigma in sigma_list:
                 optimizer = StochTrajOptimizer(env=SmallBlockContactBulletEnv, sigma=sigma, initial_guess=None,
-                                        TimeSteps=5, seed=12367134, render=False, Iterations=args.iters, num_fingertips=4, num_interp_f=7,
+                                        TimeSteps=3, seed=12367134, render=False, Iterations=args.iters, num_fingertips=4, num_interp_f=7,
                                         Num_processes=64, Traj_per_process=10, opt_time=False, max_forces=max_forces, verbose=1)
 
                 uopt = None

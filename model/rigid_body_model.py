@@ -294,12 +294,12 @@ class AllegroHandPlantDrake:
                 desired_position+allowed_deviation
             )]
             # Add angle constraints
-            # if has_normals and False:
-            #     constraints_on_finger[finger].append(ik.AddAngleBetweenVectorsConstraint(self.plant.world_frame(),
-            #                                      contact_normal,
-            #                                      self.fingertip_frames[finger],
-            #                                      np.array([0.,0.,-1.]),
-            #                                      0., np.pi/3.))
+            if has_normals:
+                constraints_on_finger[finger].append(ik.AddAngleBetweenVectorsConstraint(self.plant.world_frame(),
+                                                 contact_normal,
+                                                 self.fingertip_frames[finger],
+                                                 np.array([0.,0.,-1.]),
+                                                 0, np.pi/2.))
             unused_fingers.remove(finger)
 
         prog = ik.get_mutable_prog()
@@ -308,7 +308,7 @@ class AllegroHandPlantDrake:
         for finger in unused_fingers:
             # keep unused fingers straight
             # FIXME(wualbert): why is this never satisfied? (Eric)Thumb never satisfied??
-            if finger != self.finger_map.THUMB:
+            if finger != self.finger_map.THUMB and False:
                 constraints_on_finger[finger] = prog.AddBoundingBoxConstraint(
                     0., 0., q[self.finger_joints_idx[finger]])
         # Collision constraints

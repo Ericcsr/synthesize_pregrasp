@@ -107,7 +107,7 @@ class SmallBlockContactBulletEnv(gym.Env):
 
         if self.render:
             self._p = bullet_client.BulletClient(connection_mode=pybullet.DIRECT)
-            self.renderer = r.PyBulletRenderer(p_agent=self._p)
+            self.renderer = r.PyBulletRenderer()
         else:
             self._p = bullet_client.BulletClient()
 
@@ -168,9 +168,9 @@ class SmallBlockContactBulletEnv(gym.Env):
                                               init_quat=(0, 0, 0, 1))
 
         self._p.changeDynamics(self.floor_id, -1,
-                               lateralFriction=30.0, restitution=0.0)            # TODO
+                               lateralFriction=70.0, restitution=0.0)            # TODO
         self._p.changeDynamics(self.o_id, -1,
-                               lateralFriction=30.0, restitution=0.0)             # TODO
+                               lateralFriction=70.0, restitution=0.0)             # TODO
 
         self.cps_vids = []
         for i in range(10):
@@ -611,7 +611,7 @@ class SmallBlockContactBulletEnv(gym.Env):
                     else: # Different finger have different position mapping, which may be inconsistent between ik
                         if sub_a[-3] < 0: # On the edge
                             loc_x = 0.2
-                            loc_z = -sub_a[-3] / 10.0 - 0.05         # [-1, 0] -> [-0.05, 0.05] # Sensitive!
+                            loc_z = -sub_a[-3] / 15.0 - 0.05         # [-1, 0] -> [-0.05, 0.05] # Sensitive!
                             this_face = 1
                         else:
                             loc_x = (-sub_a[-3] + 1.0) * 0.15 + 0.05       # [0, 1] -> [0.2, 0]
