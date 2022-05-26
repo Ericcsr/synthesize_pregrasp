@@ -32,7 +32,7 @@
     <limit effort="15" lower="-3.1415" upper="3.1415" velocity="7"/>
     <parent link="hand_root"/>
     <child link="aux_upper_arm"/>
-    <origin rpy="0 0 0" xyz="-0.3 0.3 -0.5"/>
+    <origin rpy="0 2 3.1416" xyz="0.5 0.0 0.2"/>
     <dynamics damping="3" friction="0"/>
   </joint>
   <link name="upper_arm">
@@ -568,7 +568,7 @@
   </link>
   <joint name="joint_12" type="revolute">
     <axis xyz="-1 0 0"/>
-    <limit effort="15" lower="0.263" upper="1.396" velocity="7"/>
+    <limit effort="15" lower="-0.11" upper="1.396" velocity="7"/>
     <parent link="palm_link"/>
     <child link="link_12"/>
     <origin rpy="0 -1.65806278845 -1.5707963259" xyz="-0.0182 0.019333 0.054013"/>

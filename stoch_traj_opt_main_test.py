@@ -22,6 +22,7 @@ if __name__ == '__main__':
 
     parser = ArgumentParser()
     parser.add_argument("--exp_name", type=str, default="u_opt_0-10_tp4")
+    parser.add_argument("--playback",action="store_true", default=False)
     args = parser.parse_args()
 
     uopt = np.load(f"data/traj/{args.exp_name}.npy")
@@ -51,5 +52,6 @@ if __name__ == '__main__':
             object_poses += pose["object_pose"]
             c = -c
             J += c
-        np.save("tip_poses.npy", finger_poses)
-        np.save("object_poses.npy", object_poses)
+        if not args.playback:
+            np.save(f"data/tip_data/{args.exp_name}_tip_poses.npy", finger_poses)
+            np.save(f"data/object_poses/{args.exp_name}_object_poses.npy", object_poses)

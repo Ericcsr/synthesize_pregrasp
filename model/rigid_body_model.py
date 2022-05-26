@@ -42,10 +42,9 @@ class AllegroHandPlantDrake:
                  object_world_pose=None, 
                  meshcat_open_brower=True,
                  num_finger_tips=3, 
-                 viz_sphere_colors=None, 
-                 viz_sphere_radius=0.015,
                  object_collidable=True, 
                  useFixedBase=False,
+                 base_pose=None,
                  robot_path=model_param.allegro_hand_urdf_path,
                  baseName="hand_root",
                  baseOffset=model_param.allegro_hand_offset,
@@ -100,7 +99,7 @@ class AllegroHandPlantDrake:
             self.plant.WeldFrames(
                 self.plant.world_frame(),
                 self.hand_body_drake_frame, # Will the name change after using the arm?
-                RigidTransform(p=np.zeros(3)))
+                RigidTransform(p=np.zeros(3)) if base_pose==None else base_pose)
         
         self.hand_base_bullet_frame = pydrake.multibody.tree.FixedOffsetFrame_[float](
                 name=f"pybullet_base",
@@ -110,7 +109,7 @@ class AllegroHandPlantDrake:
         self.fingertip_frames = {}
         self.fingertip_bodies = {}
         self.fingertip_sphere_collision = {}
-        for i, finger in enumerate(all_fingers):
+        for _, finger in enumerate(all_fingers):
             X_FT = pydrake.math.RigidTransform(p=self.tip_offset_map[finger])
             self.fingertip_bodies[finger] = self.plant.GetBodyByName(f"link_{self.tip_drake_link_map[finger]}")
             self.fingertip_frames[finger] = pydrake.multibody.tree.FixedOffsetFrame_[float](
@@ -118,9 +117,8 @@ class AllegroHandPlantDrake:
                 P=self.fingertip_bodies[finger].body_frame(),
                 X_PF=X_FT)
             self.plant.AddFrame(self.fingertip_frames[finger])
-        for i in range(num_finger_tips):
-            # self.viz_spheres_frames[finger] = self.plant.GetBodyByName(viz_name, sphere).body_frame()
-            # # Make the fingertips non-colllidable
+        for _ in range(num_finger_tips):
+            # Make the fingertips non-colllidable
             fingertip_collsions = self.plant.GetCollisionGeometriesForBody(self.fingertip_bodies[finger])
             # Extract the collsions
             for fc in fingertip_collsions:
@@ -138,12 +136,8 @@ class AllegroHandPlantDrake:
         hand_nontip_collision_candidates = non_object_collision_candidates.difference(
             self.fingertip_sphere_collision.values())
         all_geometry_set = GeometrySet(self.scene_graph.model_inspector().GetAllGeometryIds())
-        # other_geometry_set = GeometrySet(list(non_object_collision_candidates))
         hand_nontip_geometry_set = GeometrySet(list(hand_nontip_collision_candidates))
         object_geometry_set = GeometrySet(list(object_collision_candidates))
-        # print(self.plant.GetCollisionGeometriesForBody(self.object_body))
-        # print('col', list(self.fingertip_spheres.values()))
-        # self.scene_graph.collision_filter_manager().Apply(CollisionFilterDeclaration().ExcludeWithin(all_geometry_set).AllowBetween(hand_nontip_geometry_set,object_geometry_set))
         self.scene_graph.collision_filter_manager().Apply(CollisionFilterDeclaration().ExcludeWithin(all_geometry_set).
                                                           AllowBetween(hand_nontip_geometry_set,object_geometry_set).
                                                           AllowWithin(hand_nontip_geometry_set))
@@ -191,7 +185,7 @@ class AllegroHandPlantDrake:
             self.finger_joints_idx[finger] = np.array(self.finger_joints_idx[finger], dtype=int)
         self.finger_joint_idx_start = self.plant.GetJointByName('joint_0').position_start()
 
-    def get_bullet_hand_config_from_drake_q(self, q,unused_fingers={}):
+    def get_bullet_hand_config_from_drake_q(self, q,unused_fingers={}, rest_angles={}):
         """
         Note that Drake quaternions are [w, x, y, z], while Pybullet
         quaternions are [x, y, z, w]
@@ -211,7 +205,10 @@ class AllegroHandPlantDrake:
         finger_angles = {}
         for finger in self.finger_map:
             if finger in unused_fingers:
-                finger_angles[finger] = np.zeros_like(q[self.finger_joints_idx[finger]])
+                if rest_angles=={}:
+                    finger_angles[finger] = np.zeros_like(q[self.finger_joints_idx[finger]])
+                else:
+                    finger_angles[finger] = rest_angles[finger] # rest angle for finger not in contact
             else:
                 finger_angles[finger] = q[self.finger_joints_idx[finger]]
         
@@ -558,3 +555,11 @@ class AllegroHandPlantDrake:
             self._p.addUserDebugLine(point - delta,
                                      point + delta,
                                      lineColorRGB=color, lineWidth=1., **kwargs)
+
+    def get_joint_limits(self):
+        joint_lower_limits = self.plant.GetPositionLowerLimits()
+        joint_upper_limits = self.plant.GetPositionUpperLimits()
+        return joint_lower_limits, joint_upper_limits
+
+    def getNumDofs(self):
+        return len(self.plant.GetPositionLowerLimits())

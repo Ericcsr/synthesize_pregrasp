@@ -12,13 +12,13 @@ def parse_finger_motion_data(data):
     tip_weights = []
     for i in range(data.shape[0]):
         tip_pose = {"thumb":data[i,0] * model_params.SCALE,
-                    "ifinger":data[i,3] * model_params.SCALE,
+                    "ifinger":data[i,1] * model_params.SCALE,
                     "mfinger":data[i,2] * model_params.SCALE,
-                    "rfinger":data[i,1] * model_params.SCALE}
+                    "rfinger":data[i,3] * model_params.SCALE}
         tip_weight = {"thumb":1 if data[i,0].sum() < 100 else 0,
-                      "ifinger":1 if data[i,3].sum() < 100 else 0,
+                      "ifinger":1 if data[i,1].sum() < 100 else 0,
                       "mfinger":1 if data[i,2].sum() < 100 else 0,
-                      "rfinger":1 if data[i,1].sum() < 100 else 0}
+                      "rfinger":1 if data[i,3].sum() < 100 else 0}
         tip_poses.append(tip_pose)
         tip_weights.append(tip_weight)
     return tip_poses, tip_weights

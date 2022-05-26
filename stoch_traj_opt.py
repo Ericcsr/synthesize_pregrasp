@@ -17,15 +17,17 @@ class StochTrajOptimizer:
     def __init__(self,
                  env,
                  sigma=0.2,
-                 kappa=1,
+                 kappa=5,
                  alpha=1,
-                 Num_processes=12,
-                 Traj_per_process=30,
+                 Num_processes=64,
+                 Traj_per_process=15,
                  TimeSteps=200,
                  Iterations=20,
                  seed=None,
                  render=True,
                  initial_guess=None,
+                 verbose=0,
+                 patience=10,
                  **kwargs):
 
         self.sigma = sigma  # noise intensity
@@ -40,16 +42,21 @@ class StochTrajOptimizer:
         self.render = render  # whether or not to render the execution of each iteration output
         self.initial_guess = initial_guess  # location of .npy file containing initial control sequence guess (can be a sequence obtained by previous run of algorithm)
         self.env = env  # environment
+        self.verbose = verbose
+        self.patience = patience
+        self.current_patience = patience
         self.kwargs = kwargs  # environment arguments
+        if self.verbose==2:
+            print('main program process id:', os.getpid())
 
-        print('main program process id:', os.getpid())
-        # Setup and store all processes
+    def reset(self):
+        self.current_patience = self.patience
         self.processes = []
         for i in range(self.num_process):
             # Create a pair of pipes that can communicate with each other through .send() and .recv()
             parent_conn, child_conn = Pipe()
             # Create the sub-process and assign the pipe to it
-            p = Process(target=StochTrajOptimizer.child_process, args=(child_conn,))
+            p = Process(target=StochTrajOptimizer.child_process, args=(child_conn,self.verbose))
             self.processes.append([p, parent_conn])
             # Start the process
             p.start()
@@ -70,14 +77,17 @@ class StochTrajOptimizer:
     ###############################
     ####### Child process  ########
     ###############################
-    def child_process(conn):
-        print('simulation process id:', os.getpid())
+    @staticmethod
+    def child_process(conn, verbose):
+        if verbose==2:
+            print('simulation process id:', os.getpid())
 
         timer = 0
 
         # Receive the initialization data
         initialization_data = conn.recv()
-        print('Initialization data: ', initialization_data)
+        if verbose==2:
+            print('Initialization data: ', initialization_data)
         N, sigma, n_traj, seed, env_fn, kwargs = initialization_data  # number of trajectories simulated by each process
         sim = env_fn(render=False, **kwargs)  # it is assumed that rendering is controlled by "render" argument
         if seed is not None:
@@ -122,21 +132,26 @@ class StochTrajOptimizer:
     ######## Main process  ########
     ###############################
     def optimize(self):
-
+        self.reset()
         if self.initial_guess is not None:
             u = np.load(self.initial_guess)
-            print('Initialized control with existing control sequence')
+            if self.verbose==2:
+                print('Initialized control with existing control sequence')
         else:
             u = np.zeros((self.N, self.ctrl_dim))  # initialize control sequence with zeros
             # u = np.random.uniform(-0.5, 0.5, (self.N, self.ctrl_dim))  # initialize control sequence with zeros
             # print('Initialized control with random control uniform in -1, 1')
-            print('Initialized control with zero')
+            if self.verbose==2:
+                print('Initialized control with zero')
 
         # Optimization loop
         self.uopt = u.copy()  # uopt keeps track of the optimal control sequence
         self.Jopt = np.inf  # initialization of optimal cost
-        print('Starting optimization...')
+        if self.verbose==2:
+            print('Starting optimization...')
         start_time = time.time()
+        Jopt_log = []
+        r_log = []
         for iter_id in range(self.ITER):
             J = []
             E = []
@@ -154,6 +169,7 @@ class StochTrajOptimizer:
 
             J = np.concatenate(J)
             E = np.concatenate(E, axis=2)
+            #print(E.shape)
             Jmean = np.mean(J)  # This is the mean of the rewards from the sampled trajectories
             J = J - min(J)
             S = np.exp(-self.kappa * J)
@@ -173,18 +189,21 @@ class StochTrajOptimizer:
                 self.uopt = u.copy()
                 # Xopt[:,:] = Xnew[:,:]
                 self.Jopt = Jcur
-            print(
-                "Iteration %.0f took %.2f seconds (mean sampled reward: %.2f). Current reward after update: %.2f, Optimal reward %.2f" % (
-                iter_id + 1, (end_time - start_time), -Jmean, -Jcur, -self.Jopt))
+            if self.verbose == 1:
+                print(
+                    "Iteration %.0f took %.2f seconds (mean sampled reward: %.2f). Current reward after update: %.2f, Optimal reward %.2f" % (
+                    iter_id + 1, (end_time - start_time), -Jmean, -Jcur, -self.Jopt))
+            Jopt_log.append(-self.Jopt)
+            r_log.append(-Jcur)
             start_time = time.time()
 
         # Wrap up
         for i in range(self.num_process):
             Js_i = self.processes[i][1].send(["stop"])
             self.processes[i][0].join()
-
-        print('Optimization completed.')
-        return self.uopt, -self.Jopt
+        if self.verbose==2:
+            print('Optimization completed.')
+        return self.uopt, -self.Jopt, Jopt_log, r_log
 
     def replay_traj(self, u):
         if self.seed is not None:
@@ -209,27 +228,3 @@ class StochTrajOptimizer:
         for j in range(replay_times):
             self.replay_traj(u)
 
-    # TODO: move these two to main
-    # def replay_traj_my(self, u):
-    #     hand_key_frames = []
-    #     self.world.reset()
-    #     for j in range(self.N):
-    #         _, _, _, info = self.world.step(u[j, :])
-    #
-    #         from copy import deepcopy
-    #         # TODO: deepcopy??
-    #         hand_key_frames.append((info["wr_pos"], deepcopy(info["fin_poss"])))      # TODO: flag specific
-    #
-    #         # print(hand_key_frames)
-    #
-    #     return hand_key_frames
-    #
-    # def render_traj_my(self, u, replay_times=10):
-    #     # create a new GUI window for testing traj
-    #     self.world = self.env(render=True,
-    #                           **self.kwargs)  # it is assumed that rendering is controlled by "render" argument
-    #     assert isinstance(replay_times, int) and replay_times >= 1
-    #     for j in range(replay_times):
-    #         hand_key_frames = self.replay_traj_my(u)
-    #
-    #         self.world.re_render(u, hand_key_frames)       # TODO: env specific

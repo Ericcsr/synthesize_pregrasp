@@ -53,10 +53,17 @@ def fit_interp_ik(targets,
     desired_positions = []
     for i in range(len(targets)):
         arm_drake.setObjectPose(object_poses_keyframe[i], object_orns_keyframe[i])
-        joint_state, _, desired_position, success = arm_drake.regressFingerTipPosWithRandomSearch(
-            targets[i],
-            weights[i],
-            has_normal=True)
+        if i==0:
+            q_sol, joint_state, _, desired_position, success = arm_drake.regressFingerTipPosWithRandomSearch(
+                targets[i],
+                weights[i],
+                has_normal=True)
+        else:
+            q_sol, joint_state, _, desired_position, success = arm_drake.regressFingerTipPosWithRandomSearch(
+                targets[i],
+                weights[i],
+                has_normal=True,
+                prev_q = q_sol)
         joint_states.append(joint_state)
         success_flags.append(success)
         desired_positions.append(desired_position)
@@ -65,39 +72,39 @@ def fit_interp_ik(targets,
 
 if __name__ == "__main__":
     # np.random.seed(3)
-    finger_tip_data = np.load("data/tip_data/tip_poses.npy")
-    object_data = np.load("data/object_poses/object_poses.npy")
+    parser = ArgumentParser()
+    parser.add_argument("--exp_name", type=str, default="default")
+    args = parser.parse_args()
+    finger_tip_data = np.load(f"data/tip_data/{args.exp_name}_tip_poses.npy")
+    object_data = np.load(f"data/object_poses/{args.exp_name}_object_poses.npy")
     #key_joint_states = np.load("data/key_joint_states_default.npy")
 
     tip_poses, tip_weights = helper.parse_finger_motion_data(finger_tip_data)
     obj_poses, obj_orns = helper.parse_object_motion_data(object_data)
     
+    p_client = p.connect(p.DIRECT)
+    renderer = render.PyBulletRenderer()
+
     arm_drake = AllegroHandDrake(useFixedBase=True,
                                  robot_path=model_params.allegro_arm_urdf_path,
                                  baseOffset=model_params.allegro_arm_offset,
                                  all_fingers=model_params.AllAllegroArmFingers,
-                                 object_collidable=True)
+                                 object_collidable=True,
+                                 sequenceSolve=True)
     
-    keyframe_obj_poses = obj_poses[::15]
-    keyframe_obj_orns = obj_orns[::15]
-    tip_poses_keyframe = tip_poses[::15]
-    tip_weights_keyframe = tip_weights[::15]
+    keyframe_obj_poses = obj_poses[::10]
+    keyframe_obj_orns = obj_orns[::10]
+    tip_poses_keyframe = tip_poses[::10]
+    tip_weights_keyframe = tip_weights[::10]
     joint_states, desired_positions, success_flags = fit_interp_ik(tip_poses_keyframe, 
                                                                    tip_weights_keyframe,
                                                                    keyframe_obj_poses, 
                                                                    keyframe_obj_orns, 
                                                                    arm_drake)
-
-    p.connect(p.DIRECT)
-    renderer = render.PyBulletRenderer()
-    obj_id = rb.create_primitive_shape(p, 1.0, p.GEOM_BOX, 
-                                      (0.2 * model_params.SCALE,0.2 * model_params.SCALE, 0.05 * model_params.SCALE),
-                                      color = (0.6, 0, 0, 0.8), collidable=True)
     arm_drake.createTipsVisual()
-    hand_id = p.loadURDF("model/resources/allegro_hand_description/urdf/allegro_arm.urdf", useFixedBase=1)
 
-    helper.animate_keyframe(obj_id,
-                            hand_id,
+    helper.animate_keyframe(arm_drake.obj_id,
+                            arm_drake.hand_id,
                             keyframe_obj_poses, 
                             keyframe_obj_orns, 
                             joint_states,

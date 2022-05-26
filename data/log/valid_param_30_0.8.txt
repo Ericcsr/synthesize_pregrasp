@@ -1,0 +1,1 @@
+Max force: 50 Sigma: 0.8 mean rewards: -264.45421597851185, best rewards:-793.3626479355356

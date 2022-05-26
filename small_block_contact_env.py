@@ -80,14 +80,17 @@ class SmallBlockContactBulletEnv(gym.Env):
     def __init__(self,
                  render=True,
                  init_noise=True,
-                 control_skip=75,
+                 control_skip=50,
                  num_fingertips=4,
                  num_interp_f=5,
                  use_split_region=True,      # TODO: implement false
                  opt_time=False,
-                 task=np.array([0, 0, 1])
-                 ):
+                 task=np.array([0, 0, 1]),
+                 solve_hand=False,
+                 max_forces=50):
 
+        self.solve_hand = solve_hand
+        self.max_forces = max_forces
         self.render = render
         self.init_noise = init_noise
         self.control_skip = int(control_skip)
@@ -100,11 +103,11 @@ class SmallBlockContactBulletEnv(gym.Env):
         self.opt_time = opt_time
         self.task = task
 
-        self.n_steps = 5            # TODO: hardcoded
+        self.n_steps = 3            # TODO: hardcoded
 
         if self.render:
             self._p = bullet_client.BulletClient(connection_mode=pybullet.DIRECT)
-            self.renderer = r.PyBulletRenderer()
+            self.renderer = r.PyBulletRenderer(p_agent=self._p)
         else:
             self._p = bullet_client.BulletClient()
 
@@ -151,6 +154,8 @@ class SmallBlockContactBulletEnv(gym.Env):
 
         # full reload
         self._p.resetSimulation()
+        if self.render:
+            self.renderer.reset()
 
         self._p.setTimeStep(self._ts)
         self._p.setGravity(0, 0, -10)
@@ -200,8 +205,9 @@ class SmallBlockContactBulletEnv(gym.Env):
             # self._p.setCollisionFilterGroupMask(bid, -1, 0, 0)
 
         self.tip_ids = []
+        colors = [[1.0, 1.0, 1.0, 1.0],[0.0, 0.0, 1.0, 1.0],[0.0, 1.0, 0.0, 1.0],[1.0, 0.0, 0.0, 1.0]]
         for i in range(self.num_fingertips):
-            color = [0.0, 1.0, 0.0, 1.0]
+            color = colors[i]
 
             size = [0.02, 0.02, 0.01] if i == 0 else [0.01, 0.01, 0.01]       # thumb larger
 
@@ -260,8 +266,6 @@ class SmallBlockContactBulletEnv(gym.Env):
                                                         b_quat)
                 bone_idx += 1
                 sp = ep
-        # print(np.array(lens))
-        # print(np.abs(np.array(lens) - NOMINAL_LENS) < 0.003)
 
     def draw_cps_ground(self, cps):
         for j, cp in enumerate(cps):
@@ -513,8 +517,6 @@ class SmallBlockContactBulletEnv(gym.Env):
                     lam = NOMINAL_LENS[fin_ind * 4 + j] / np.linalg.norm(diff)
 
                     res = list(np.array(all_poss[chain[j+1]]) - lam * diff)
-                    # res = self.push_outside_box(res)
-
                     if j != 0:
                         all_poss[chain[j]] = res
                     else:
@@ -533,8 +535,6 @@ class SmallBlockContactBulletEnv(gym.Env):
                     lam = NOMINAL_LENS[fin_ind * 4 + j] / np.linalg.norm(diff)
 
                     res = list(np.array(all_poss[chain[j]]) + lam * diff)
-                    # res = self.push_outside_box(res)
-
                     all_poss[chain[j+1]] = res
 
         return all_poss
@@ -564,6 +564,7 @@ class SmallBlockContactBulletEnv(gym.Env):
         # print("stepping")
 
         # TODO: during step, small block might slide away
+        # Compansate for thickness of the object
         def get_small_block_location_local(this_face: int, this_pos_local: List[float]) -> List[float]:
             # size = [0.02, 0.02, 0.01] if i == 0 else [0.01, 0.01, 0.01]       # thumb larger
             this_pos_local = np.array(this_pos_local)
@@ -575,16 +576,15 @@ class SmallBlockContactBulletEnv(gym.Env):
                 assert this_face == 2
                 return list(this_pos_local + np.array([0., 0., -0.01]))
 
+        # How action are map to change the physical world. Very important
         def transform_a_to_action_single_pc(sub_a: List[float],
                                             fin_ind: int,
                                             previous_fins: List[Tuple[List[float], bool]]) -> List[float]:
-            # sub_a length 5, [-1,1]
-
             # face = None         # 0 top, 1 side, 2 bottom face
             assert len(sub_a) == self.single_action_dim
-            assert np.all(np.array(sub_a) <= 1.0)         # TODO.. why explode tanh..
-            assert np.all(np.array(sub_a) >= -1.0)
 
+            # ======= Notice Finger tip pose at this stage is represented as local coordinate =======
+            # If a finger tip is in contact in previous step, it does not allow to change relative position
             if previous_fins[fin_ind][1]: # Contact Flag (pos, contact_flag)
                 # last contact is on, not allowed to change
                 # Directly use previous position.
@@ -599,29 +599,30 @@ class SmallBlockContactBulletEnv(gym.Env):
                 else: # On the bottom
                     assert np.isclose(pos_vec[2], -0.06, 1e-6)
                     this_face = 2
-            else:
+            else: # Currently we always use split region
                 if self.use_split_region:
                     # 4 fingers assumed
                     if fin_ind == 0:
-                        # thumb
-                        loc_x = (sub_a[-3] + 0.9) / 10  # [-1, 1] -> [0, 0.2]        # TODO
+                        # thumb, which have diffrent action mapping
+                        loc_x = (sub_a[-3] + 1) * 0.5 * 0.15 + 0.05  # [-1, 1] ->[0, 2]-> [0, 0.15]
                         loc_z = 0.05        # always on top hard coded assumption
-                        loc_y = sub_a[-2] / 10.0  # [-1, 1] -> [-0.1, 0.1]
+                        loc_y = sub_a[-2] * 0.2  # [-1, 1] -> [-0.1, 0.1]
                         this_face = 0
-                    else: # Different finger have different position mapping
-                        if sub_a[-3] < 0:
+                    else: # Different finger have different position mapping, which may be inconsistent between ik
+                        if sub_a[-3] < 0: # On the edge
                             loc_x = 0.2
-                            loc_z = -sub_a[-3] / 10.0 - 0.05      # [-1, 0] -> [0.05, -0.05]
+                            loc_z = -sub_a[-3] / 10.0 - 0.05         # [-1, 0] -> [-0.05, 0.05] # Sensitive!
                             this_face = 1
                         else:
-                            loc_x = (-sub_a[-3] + 1.0) / 5.0         # [0, 1] -> [0.2, 0]
-                            loc_z = -0.05
+                            loc_x = (-sub_a[-3] + 1.0) * 0.15 + 0.05       # [0, 1] -> [0.2, 0]
+                            loc_z = -0.05                            # On the other side of the object compared with thumb
                             this_face = 2
 
+                        # Different finger have different y location mapping
                         if fin_ind == 1:
-                            loc_y = sub_a[-2] / 30.0 - 2.0 / 30.0
+                            loc_y = sub_a[-2] / 30.0 - 2.0 / 30.0 # TODO: Why 30.0 since there are 3 fingers
                         elif fin_ind == 2:
-                            loc_y = sub_a[-2] / 30.0
+                            loc_y = sub_a[-2] / 30.0 # TODO: Why 30.0 since there are 3 fingers
                         else:
                             assert fin_ind == 3
                             loc_y = sub_a[-2] / 30.0 + 2.0 / 30.0
@@ -648,12 +649,13 @@ class SmallBlockContactBulletEnv(gym.Env):
                 idx_start = num_interp * 3
                 
                 # Applied to all interp, no matter it will be used for force or position
+                # If the "force" is pointing into the object, then force is allowed to apply otherwise no
                 if sub_a[idx_start] > 0:
-                    v_normal = sub_a[idx_start] * 5.0 * self._ts    # [0, 1] -> [5, 1/250]  (max 5m/s target velocity)
+                    v_normal = sub_a[idx_start] * 5.0 * self._ts    # [0, 1] -> [0, 5/250]  (max 5m/s target velocity)
                     v_t1 = sub_a[idx_start + 1] * 1.0 * v_normal        # TODO: make sense??
-                    v_t2 = sub_a[idx_start + 2] * 1.0 * v_normal        # Does this simulating friction force?
+                    v_t2 = sub_a[idx_start + 2] * 1.0 * v_normal        # The larger the normal  inward force the larger friction will be allowed
                 else:
-                    v_normal = v_t1 = v_t2 = 0.0 # Eric: What does it means by setting v to zero? As long as normal direction's interp is zero all are zero?
+                    v_normal = v_t1 = v_t2 = 0.0 # Eric: What does it means by setting v to zero? Will remain on previous location
 
                 # With respect to local coordinate frame
                 if this_face == 0:
@@ -668,10 +670,11 @@ class SmallBlockContactBulletEnv(gym.Env):
 
             pos_force_vec += pos_vec
             pos_force_vec += [1.0] if sub_a[-1] > 0 else [0.0]      # last bit on / off (non-colliding finger)
-
+            # Current decision will be effective next time.
             assert len(pos_force_vec) == self.single_action_dim + 1
             return pos_force_vec
 
+        # Linear interpolate "force" or virtual velocity between the interpolant
         def calc_force_interp_from_fvec(vec: List[float]) -> np.ndarray:
             # for a single contact point
             # f_vec is 3*num_interp_f length 1d
@@ -705,21 +708,11 @@ class SmallBlockContactBulletEnv(gym.Env):
                                                             (idx + 1) * self.single_action_dim],
                                                         idx,
                                                         previous_fins)
-                # # turn off tip if no clearance
-                # f_pos_g, _ = self._p.multiplyTransforms(pre_pos, pre_quat, f_vec[-4:-1], [0, 0, 0, 1])
-                # if f_pos_g[2] < 0.05:
-                #     f_vec[-1] = 0.0
-                # TODO: hoping that it will "learn" to turn such case off since no help & add to pose cost
-
-                if not f_vec[-1]: 
-                    # This contact point has been switched off
-                    # Finger is assumed to be attached 
+                if f_vec[-1]==0:
                     f_vec[:-4] = [0.0] * len(f_vec[:-4]) 
                     f_vec[-4:-1] = [100.0, 100.0, 100.0]
 
-                if not f_vec[0]:
-                    # turn off whole segment if first segment set to 0
-                    # Finger is assume to be attached to the object, cannot move.
+                if f_vec[0]==0:
                     f_vec[:-4] = [0.0] * len(f_vec[:-4])
 
                 f_interp = calc_force_interp_from_fvec(f_vec[:-4]) # Force information comes from [:-4]
@@ -730,18 +723,18 @@ class SmallBlockContactBulletEnv(gym.Env):
 
         def calc_reward_value():
             # post obj config
-            cps_1 = self._p.getContactPoints(self.o_id, self.floor_id, -1, -1)
-            pos_1, quat_1 = rb.get_link_com_xyz_orn(self._p, self.o_id, -1)
-            vel_1 = rb.get_link_com_linear_velocity(self._p, self.o_id, -1)
+            cps_1 = self._p.getContactPoints(self.o_id, self.floor_id, -1, -1) # contact points between floor and object
+            pos_1, quat_1 = rb.get_link_com_xyz_orn(self._p, self.o_id, -1) # Object pose and orn
+            vel_1 = rb.get_link_com_linear_velocity(self._p, self.o_id, -1) # object's linear velocity vec 3
 
             z_axis, _ = self._p.multiplyTransforms(
                 [0, 0, 0], quat_1, [0, 0, 1], [0, 0, 0, 1]
-            )
-            rot_metric = np.array(z_axis).dot(self.task)        # in [-1,1]
+            ) # Compute the object's z-axis vector in world frame
+            rot_metric = np.array(z_axis).dot(self.task)        # in [-1,1] # z-axis need to tilted to a given angle cosine similarity should be raise up seems to be
 
-            r = - np.linalg.norm(vel_1) * 20 - len(cps_1) * 250 \
-                - 300 * np.linalg.norm([pos_1[0], pos_1[1], pos_1[2] - 0.3]) # target reaching cost
-            r += 150 * rot_metric
+            r = - np.linalg.norm(vel_1) * 20 - len(cps_1) * 250 # As slow as possible, as less contact point as possible.
+            r += - 300 * np.linalg.norm([pos_1[0], pos_1[1], pos_1[2] - 0.3]) # COM should be 0.3 meter off the ground. While x and y coordinate remain the same.
+            r += 150 * rot_metric # hope the object can be rotate to a given z orientation
             return r
 
         def pre_simulate(current_fins: List[Tuple[List[float], bool]]):
@@ -806,26 +799,15 @@ class SmallBlockContactBulletEnv(gym.Env):
             vel = rb.get_link_com_linear_velocity(self._p, self.o_id, -1)
 
             for i, f_tuple in enumerate(self.interped_fs):
-                # i is indexing finger
-                # add vel target in world frame...
-
-                # if i == 0:
-                #     print(pos_f_tuple[1][:, t])
-                
-                # Seems to be force in global frame
+                # "Force" in global frame
                 v_g_s, _ = self._p.multiplyTransforms([0., 0., 0.], quat, f_tuple[:, t], [0, 0, 0, 1])
-                v_g = np.array(v_g_s) + np.array(vel) * self._ts
+                v_g = np.array(v_g_s) + np.array(vel) * self._ts # Follow the rigid body movement
                 tar_pos_g, _ = self._p.multiplyTransforms(pos, quat, self.cur_fins[i][0], [0, 0, 0, 1])
-                if tar_pos_g[2] < CLEARANCE_H:
-                    tar_pos_g = [100.0, 100.0, 100.0]
+                # if tar_pos_g[2] < CLEARANCE_H: # Not allow the finger tip to penetrate the ground, this means that the break of the finger tip may happen in the middle
+                #    tar_pos_g = [100.0, 100.0, 100.0]    # WARN: This may be problematic
                 tar_pos_g = np.array(tar_pos_g)
                 tar_pos_g = list(tar_pos_g + v_g)
-                # print(tar_pos_g)
-                self._p.changeConstraint(self.tip_cids[i], tar_pos_g, quat, maxForce=20.0, erp=0.9)
-
-                # if self.render:
-                #     end = np.array(tar_pos_g) - np.array(v_g_s) * 50.0
-                #     self._p.addUserDebugLine(tar_pos_g, end, [1.0, 0.0, 0.0], 5)
+                self._p.changeConstraint(self.tip_cids[i], tar_pos_g, quat, maxForce=self.max_forces, erp=0.9)
 
             self._p.stepSimulation()
 
@@ -833,23 +815,9 @@ class SmallBlockContactBulletEnv(gym.Env):
 
             if self.render:
                 time.sleep(self._ts * 20.0)
-                # if self.timer % 4 == 0:
-                # w_local_pos = [+0.25, 0.0, +0.03]
-                # hand_local_poss = (np.array(NOMINAL_POSE) + np.array(w_local_pos)).tolist()
-                # hand_local_poss_all = [w_local_pos] + hand_local_poss.copy()
-
-                # if a_next is not None:
-                #     percent = t * 1.0 / self.control_skip
-                #     all_hand_poss_draw = self.interp_hand_poss(all_hand_poss, all_hand_poss_1, percent)
-                # else:
-                #     all_hand_poss_draw = all_hand_poss
-
-                # if have all_hand_poss from last run
                 if self.all_hand_poss is not None:
                     prev_key_frame = self.timer // 25
                     percent = (self.timer % 25) / 25
-                    # percent = 0.0
-
                     next_key_frame = prev_key_frame + 1
                     if next_key_frame == 3 * self.n_steps:
                         next_key_frame = 3 * self.n_step - 1
@@ -864,12 +832,10 @@ class SmallBlockContactBulletEnv(gym.Env):
         self.c_step_timer += 1
 
         final_r = 0
-        # test period around 1sec
-        # What is the purpose of this?
-        # Let the system evolve naturally?
+        # Let the system evolve naturally Then stabilize the system for final eval
+        # Only avaiable in final epoch
         if self.c_step_timer == self.n_steps:
             for _ in range(300):
-                # print("LAST!!")
                 self._p.stepSimulation()
                 final_r += calc_reward_value()
 
@@ -892,7 +858,7 @@ class SmallBlockContactBulletEnv(gym.Env):
         self.all_active_fins.append(fin_pos)
 
         # only run once, used for later runs
-        if self.render and self.all_hand_poss is None and self.c_step_timer == self.n_steps:
+        if self.render and self.all_hand_poss is None and self.c_step_timer == self.n_steps and self.solve_hand:
             _, self.all_hand_poss = self.get_hand_pose_full_with_optimization()
 
         self.last_fins = self.cur_fins.copy()
@@ -903,7 +869,9 @@ class SmallBlockContactBulletEnv(gym.Env):
             return obs, ave_r, False, {}
 
     def get_extended_observation(self) -> List[float]:
-
+        # It is essentially position of all corners of the object
+        # It can be replaced by point cloud for more general object
+        # It contains pose for only one step
         dim = [0.4, 0.4, 0.1]
         local_corners = [[dim[0] / 2, dim[1] / 2, dim[2] / 2] for _ in range(8)]
         local_corners[1] = [-dim[0] / 2, dim[1] / 2, dim[2] / 2]
