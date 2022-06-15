@@ -1,0 +1,1 @@
+Sigma: 0.8 mean rewards: 241.54582039689734, best rewards:292.47405255479526

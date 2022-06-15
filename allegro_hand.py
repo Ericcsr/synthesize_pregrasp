@@ -1,4 +1,5 @@
 import torch
+import functools
 import numpy as np
 import open3d as o3d
 import rigidBodySento as rb
@@ -228,7 +229,7 @@ class AllegroHandDrake:
         return augment_target
 
     # Each worker can search a subspace of solution space not only one solution
-    def regressFingerTipPosWithRandomSearch(self, finger_tip_target, weights, has_normal=True, n_process=40, prev_q=None):
+    def regressFingerTipPosWithRandomSearch(self, finger_tip_target, weights, has_normal=True, n_process=40, prev_q=None, interp_mode=False):
         # Based on geometry of the compute the norm at contact point
         contact_points = {}
         finger_tip_target = self.augment_finger(finger_tip_target, weights)
@@ -262,8 +263,9 @@ class AllegroHandDrake:
             # Regularize the solution
             if isinstance(prev_q, np.ndarray) and self.regularize:
                 _prev_q = prev_q.copy()
+                _interp_mode = interp_mode
                 args_list.append((_q_init, _robot_path, _object_world_pose, _baseOffset,_all_fingers,
-                              _collision_distance, _finger_tip_target,_ik_attempts, _contact_points, _has_normals, _prev_q))
+                              _collision_distance, _finger_tip_target,_ik_attempts, _contact_points, _has_normals, _prev_q, _interp_mode))
             # Not regularize solution
             else:
                 args_list.append((_q_init, _robot_path, _object_world_pose, _baseOffset,_all_fingers,
@@ -292,71 +294,6 @@ class AllegroHandDrake:
         unused_fingers = set(self.all_fingers)
         for finger in contact_points.keys():
             unused_fingers.remove(finger)
-        # Handle the delta angle of unused fingers
-        # for finger in unused_fingers:
-
-        # May be even no need to specity unused fingers
-        joint_state = self.getBulletJointState(q_sol)
-        base_state = self.getBulletBaseState(q_sol)
-        self.first_solve = False
-        return q_sol, joint_state, base_state, desired_positions, flag
-
-    def interpFingerTipPoseWithRandomSearch(self,finger_tip_target, weights, prev_q, next_q, has_normal=True, n_process=40):
-        # Based on geometry of the compute the norm at contact point
-        contact_points = {}
-        finger_tip_target = self.augment_finger(finger_tip_target, weights)
-        name_to_idx = NameToArmFingerIndex if self.all_fingers == model_param.AllAllegroArmFingers else NameToFingerIndex
-        for key in finger_tip_target.keys():
-            contact_points[name_to_idx[key]] = finger_tip_target[key]
-        #print(contact_points)
-        # Number of tip target maybe less than 4
-        collision_distance = 1e-4 #1e-3
-
-        # Get unused fingers:
-        unused_fingers = set(self.all_fingers)
-        for finger in contact_points.keys():
-            unused_fingers.remove(finger)
-
-        # Load parameters for different sub processes
-        args_list = []
-        for i in range(n_process):
-            _q_prev = prev_q + (np.random.random(prev_q.shape)-0.5)/0.5*0.2
-            _robot_path = self.robot_path
-            _object_world_pose = self.object_world_pose
-            _baseOffset = self.baseOffset
-            _all_fingers = self.all_fingers
-            _collision_distance = collision_distance
-            _finger_tip_target = finger_tip_target
-            _ik_attempts = self.ik_attempts
-            _contact_points = contact_points
-            _has_normals = has_normal
-            # Regularize the solution
-            _next_q = next_q
-            _unused_fingers = unused_fingers
-            args_list.append((_q_prev, _next_q, _robot_path, _object_world_pose, _baseOffset,_all_fingers,
-                            _collision_distance, _finger_tip_target,_ik_attempts, _contact_points, _has_normals, _unused_fingers))
-        with Pool(n_process) as proc:
-            results = proc.starmap(_parallel_interp, args_list)
-        
-        # Select best solution
-        best_q = None
-        best_norm = 1000000
-        for result in results:
-            if not (result[1] and result[2]):
-                continue
-            elif np.linalg.norm(result[0]-q_init) < best_norm:
-                best_q = result[0]
-                best_norm = np.linalg.norm(result[0]-q_init)
-        
-        desired_positions = results[0][3]
-        if not isinstance(best_q, np.ndarray):
-            q_sol = result[0]
-            flag = False
-        else:
-            q_sol = best_q
-            flag = True
-        # return q_sol, no_collision , match_finger_tips
-        
         # Handle the delta angle of unused fingers
         # for finger in unused_fingers:
 
@@ -426,6 +363,9 @@ class AllegroHandDrake:
     def draw_point_cloud(self, pc):
         p.addUserDebugPoints(np.random.random(size=pc.shape), np.ones((len(pc), 3)))
 
+def target_norm_cost(q,q_target):
+    return 10 * (q-q_target).dot(q-q_target)
+
 def _parallel_solve(q_init, 
                     robot_path, 
                     obj_world_pose, 
@@ -437,6 +377,7 @@ def _parallel_solve(q_init,
                     contact_points,
                     has_normal=True,
                     prev_q=None,
+                    interp_mode=False,
                     object_collidable=True,
                     useFixedBase=True):
     hand_plant = AllegroHandPlantDrake(object_world_pose=obj_world_pose, 
@@ -446,7 +387,8 @@ def _parallel_solve(q_init,
                                                 robot_path=robot_path,
                                                 useFixedBase=useFixedBase,
                                                 baseOffset=baseOffset,
-                                                all_fingers=all_fingers)
+                                                all_fingers=all_fingers,
+                                                interp_mode=interp_mode)
     ik, constrains_on_finger, collision_constr, desired_positions = hand_plant.construct_ik_given_fingertip_normals(
             hand_plant.create_context()[1],
             contact_points,
@@ -463,8 +405,14 @@ def _parallel_solve(q_init,
     if isinstance(prev_q, np.ndarray): # This constraint have problem but why?? Initialization
         prog = ik.get_mutable_prog()
         lb, ub = hand_plant.get_joint_limits()
-        r = (ub - lb) * 0.05
-        prog.AddBoundingBoxConstraint(prev_q-r, prev_q+r, ik.q())
+        r = (ub - lb) * model_param.ALLOWANCE
+        # Using box constraint
+        if model_param.USE_SOFT_BOUNDING:
+            cost_fn = functools.partial(target_norm_cost, q_target=prev_q)
+            prog.AddCost(cost_fn, ik.q())
+        else:
+            prog.AddBoundingBoxConstraint(prev_q-r, prev_q+r, ik.q())
+            
     # Over
     for _ in range(ik_attempts):
         result = solver.Solve(ik.prog(), q_init)
@@ -482,69 +430,6 @@ def _parallel_solve(q_init,
         else:
             q_init = q_sol + (np.random.random(q_sol.shape)-0.5)/0.5*0.2
     return q_sol, no_collision, match_finger_tips, desired_positions
-
-# TODO: incomplete
-def _parallel_interp(prev_q,
-                     next_q,
-                     robot_path, 
-                     obj_world_pose, 
-                     baseOffset, 
-                     all_fingers,
-                     collision_distance, 
-                     finger_tip_target, 
-                     ik_attempts,
-                     contact_points,
-                     has_normal=True,
-                     object_collidable=True,
-                     useFixedBase=True,
-                     unused_fingers={}):
-    hand_plant = AllegroHandPlantDrake(object_world_pose=obj_world_pose, 
-                                                meshcat_open_brower=False, 
-                                                num_finger_tips=4,
-                                                object_collidable=object_collidable,
-                                                robot_path=robot_path,
-                                                useFixedBase=useFixedBase,
-                                                baseOffset=baseOffset,
-                                                all_fingers=all_fingers)
-    ik, constrains_on_finger, collision_constr, desired_positions = hand_plant.construct_ik_given_fingertip_normals(
-            hand_plant.create_context()[1],
-            contact_points,
-            padding=model_param.object_padding,
-            collision_distance= collision_distance, # 1e-3
-            allowed_deviation=np.ones(3) * 0.00001,
-            has_normals=has_normal)
-    name_to_idx = NameToArmFingerIndex if all_fingers == model_param.AllAllegroArmFingers else NameToFingerIndex
-    solver = SnoptSolver()
-    no_collision = True
-    match_finger_tips = True
-    q_sol = None
-    # Add new constraint here, need to make sure all lb are negative and ub are positive, thumb is problematic
-    prog = ik.get_mutable_prog()
-    q=ik.q()
-    lb, ub = hand_plant.get_joint_limits()
-    r = (ub - lb) * 0.1
-    prog.AddBoundingBoxConstraint(prev_q-r, prev_q+r, q)
-    # Add Cost here, need unused finger to each for target
-    for finger in unused_fingers:
-        prog.AddCost()
-    # Over
-    for _ in range(ik_attempts):
-        result = solver.Solve(ik.prog(), q_init)
-        q_sol = result.GetSolution()
-        no_collision = True if collision_distance==None else collision_constr.evaluator().CheckSatisfied(q_sol, tol=3e-2)
-        for finger in finger_tip_target.keys(): # TODO: Only on active finger
-            #print(constrains_on_finger[NameToFingerIndex[finger]][0].evaluator().Eval(q_sol))
-            if not constrains_on_finger[name_to_idx[finger]][0].evaluator().CheckSatisfied(q_sol,tol=1e-4):
-                match_finger_tips = False
-                break
-        if no_collision and match_finger_tips:
-            break
-        elif no_collision and not match_finger_tips:
-            q_init = q_sol + (np.random.random(q_sol.shape)-0.5)/0.5*0.03
-        else:
-            q_init = q_sol + (np.random.random(q_sol.shape)-0.5)/0.5*0.2
-    return q_sol, no_collision, match_finger_tips, desired_positions
-
 
 def getRelativePose(tip_pose, obj_pose, obj_orn):
     r = tip_pose - obj_pose

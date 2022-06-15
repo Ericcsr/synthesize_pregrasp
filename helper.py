@@ -4,6 +4,7 @@ import torch
 import pytorch_kinematics as pk
 import time
 import model.param as model_params
+import imageio
 
 TS=1/250.
 
@@ -119,18 +120,20 @@ def animate_keyframe_states(o_id,
             input("Press Enter to continue")
             
 
-def animate(o_id, hand_id, object_poses, object_orns, joint_states, base_states=None, renderer=None):
+def animate(o_id, hand_id, object_poses, object_orns, joint_states, base_states=None, renderer=None, gif_name="default"):
     # Should be full joint states
-    for i in range(len(joint_states)):
-        p.resetBasePositionAndOrientation(o_id, object_poses[i], object_orns[i])
-        setStates(hand_id, joint_states[i])
-        if not base_states==None:
-            p.resetBasePositionAndOrientation(hand_id, 
-                                              base_states[0][i], 
-                                              base_states[1][i])
-        time.sleep(10 * TS)
-        if not renderer == None:
-            renderer.render()
+    with imageio.get_writer(f"data/video/{gif_name}.gif", mode="I") as writer:
+        for i in range(len(joint_states)):
+            p.resetBasePositionAndOrientation(o_id, object_poses[i], object_orns[i])
+            setStates(hand_id, joint_states[i])
+            if not base_states==None:
+                p.resetBasePositionAndOrientation(hand_id, 
+                                                base_states[0][i], 
+                                                base_states[1][i])
+            time.sleep(10 * TS)
+            if not renderer == None:
+                image = renderer.render()
+                writer.append_data(image)
 
 def animate_states(o_id,hand_id, object_states, joint_states, base_states=None, renderer=None):
     for i in range(len(joint_states)):

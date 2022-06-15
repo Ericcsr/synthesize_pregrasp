@@ -5,32 +5,47 @@ from small_block_contact_env import SmallBlockContactBulletEnv
 from stoch_traj_opt import StochTrajOptimizer
 import numpy as np
 import random
+import imageio
 from argparse import ArgumentParser
 
+def parse_fin_data(fin_data):
+    post_data = np.zeros((len(fin_data), 4, 4))
+    for i in range(len(fin_data)):
+        for j in range(4):
+            post_data[i,j,:3] = fin_data[i][j][0]
+            post_data[i,j,3] = fin_data[i][j][1]
+    return post_data
+
+
 if __name__ == '__main__':
-    # init ctrl all 0
-    # sess = StochTrajOptimizer(env=PointContactBulletEnv, sigma=0.5, initial_guess=None,
-    #                           TimeSteps=4, seed=12353, render=False, Iterations=100, num_fingertips=4, num_interp_f=7)
-
-    # sess = StochTrajOptimizer(env=SmallBlockContactBulletEnv, sigma=0.4, initial_guess=None,
-    #                           TimeSteps=5, seed=12357, render=False, Iterations=200, num_fingertips=4, num_interp_f=7,
-    #                           Num_processes=1)
-
-    # sess = StochTrajOptimizer(env=ShadowHandGraspEnv, sigma=0.6, initial_guess=None,
-    #                           TimeSteps=30, seed=123572, render=False, Iterations=200,
-    #                           Num_processes=12)
-
     parser = ArgumentParser()
     parser.add_argument("--exp_name", type=str, default="u_opt_0-10_tp4")
+    parser.add_argument("--init_data", type=str, default="")
+    parser.add_argument("--disable_region", action="store_false", default=True)
     parser.add_argument("--playback",action="store_true", default=False)
+    parser.add_argument("--spherical",action="store_true", default=False)
     args = parser.parse_args()
 
     uopt = np.load(f"data/traj/{args.exp_name}.npy")
 
     steps = uopt.shape[0]
 
+    if args.init_data != "":
+        last_fin = np.load(f"data/fin_data/{args.init_data}_fin_data.npy")[-1]
+        init_obj_pose = np.load(f"data/object_poses/{args.init_data}_object_poses.npy")[-1]
+    else:
+        last_fin = None
+        init_obj_pose = None
+
     env = SmallBlockContactBulletEnv
-    world = env(render=True, num_fingertips=4, num_interp_f=7)
+    world = env(render=True, 
+                num_fingertips=4, 
+                num_interp_f=7, 
+                last_fins=last_fin,
+                init_obj_pose=init_obj_pose,
+                train=False,
+                use_split_region=args.disable_region,
+                use_spherical_coord=args.spherical)
 
     seed = 0
     np.random.seed(seed)
@@ -42,16 +57,23 @@ if __name__ == '__main__':
         J = 0
         finger_poses = []
         object_poses = []
+        last_fins = []
+        images = []
         for j in range(steps):
-            # if j < steps - 1:
-            #     state, c, done, _ = world.step(uopt[j, :], uopt[j + 1, :])      # interpolate temporal hand pose
-            # else:
-            #     state, c, done, _ = world.step(uopt[j, :], None)
-            state, c, done, pose = world.step(uopt[j, :], None, train=False)
-            finger_poses += pose["finger_pos"]
-            object_poses += pose["object_pose"]
+            state, c, done, info = world.step(uopt[j, :])
+            finger_poses += info["finger_pos"]
+            object_poses += info["object_pose"]
+            images += info['images']
+            last_fins.append(info["last_fins"])
             c = -c
             J += c
         if not args.playback:
             np.save(f"data/tip_data/{args.exp_name}_tip_poses.npy", finger_poses)
             np.save(f"data/object_poses/{args.exp_name}_object_poses.npy", object_poses)
+            fin_data = parse_fin_data(last_fins)
+            np.save(f"data/fin_data/{args.exp_name}_fin_data.npy", fin_data)
+            print(len(images))
+            print(images[-1])
+            with imageio.get_writer(f"data/video/{args.exp_name}_test.gif",mode="I") as writer:
+                for i in range(len(images)):
+                    writer.append_data(images[i])

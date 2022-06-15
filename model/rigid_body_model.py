@@ -48,7 +48,9 @@ class AllegroHandPlantDrake:
                  robot_path=model_param.allegro_hand_urdf_path,
                  baseName="hand_root",
                  baseOffset=model_param.allegro_hand_offset,
-                 all_fingers = AllAllegroHandFingers):
+                 all_fingers = AllAllegroHandFingers,
+                 interp_mode = False):
+        self.interp_mode = interp_mode
         self.baseOffset = baseOffset
         self.all_fingers = all_fingers
         self.useFixedBase = useFixedBase
@@ -304,11 +306,12 @@ class AllegroHandPlantDrake:
 
         prog = ik.get_mutable_prog()
         q = ik.q()
-        prog.AddCost(norm_cost, vars = q) # plant_context is q
+        if not model_param.USE_SOFT_BOUNDING:
+            prog.AddCost(norm_cost, vars = q) # plant_context is q
         for finger in unused_fingers:
             # keep unused fingers straight
             # FIXME(wualbert): why is this never satisfied? (Eric)Thumb never satisfied??
-            if finger != self.finger_map.THUMB and False:
+            if finger != self.finger_map.THUMB and not self.interp_mode:
                 constraints_on_finger[finger] = prog.AddBoundingBoxConstraint(
                     0., 0., q[self.finger_joints_idx[finger]])
         # Collision constraints
@@ -317,150 +320,6 @@ class AllegroHandPlantDrake:
         else:
             collision_constr = ik.AddMinimumDistanceConstraint(collision_distance, 1.)
         return ik, constraints_on_finger, collision_constr, desired_positions
-
-    def construct_interp_with_contact_normal(self, 
-                                             plant_context,
-                                             finger_normal_maps, # This should be a dictionary of list of 5
-                                             start_q,
-                                             end_q,
-                                             padding = model_param.object_padding,
-                                             collision_distance=0.,
-                                             has_normals=True,
-                                             allowed_deviation=np.ones(3)* 0.01,
-                                             N=5):
-        # preprocess data
-        unused_fingers = set(self.finger_map)
-        desired_positions = {}
-        for finger in finger_normal_maps.keys():
-            desired_positions[finger] = []
-            unused_fingers.remove(finger)
-            for i in range(N):
-                contact_position = np.squeeze(finger_normal_maps[finger][i][:3])
-                if has_normals:
-                    contact_normal = finger_normal_maps[finger][i][3:]
-                    contact_normal /= np.linalg.norm(contact_normal)
-                    desired_position = contact_position + contact_normal * padding
-                else:
-                    desired_position = contact_position
-                desired_positions[finger].append(desired_position)
-        joint_lower_limits = self.plant.GetPositionLowerLimits()
-        joint_upper_limits = self.plant.GetPositionUpperLimits()
-        # Create program and variables
-        prog = mp.MathematicalProgram()
-        q  = np.empty((N, self.plant.num_positions()), dtype=Variable)
-        dq = np.empty((N-1, self.plant.num_positions()), dtype=Variable)
-        dofs = self.plant.num_positions()
-        for i in range(N):
-            q[i] = prog.NewContinuousVariables(dofs, f"q{i}")
-
-        for i in range(N-1):
-            dq[i] = prog.NewContinuousVariables(dofs, f"dq{i}")
-
-        # Add Constraints
-        prog.AddConstraint(eq(q[0], start_q))
-        prog.AddConstraint(eq(q[N-1],end_q))
-
-        for i in range(N-1):
-            prog.AddConstraint(eq(q[i+1], q[i]+dq[i]))
-            prog.AddBoundingBoxConstraint(joint_lower_limits * 0.1, joint_upper_limits * 0.1, dq[i])
-
-        collision_constraint = MinimumDistanceConstraint(self.plant, 1e-4, plant_context)
-        for i in range(N):
-            prog.AddBoundingBoxConstraint(joint_lower_limits, joint_upper_limits, q[i])
-            prog.AddConstraint(collision_constraint, q[i])
-        
-        # Add finger tip position constraint from contact map
-        constraints_on_finger = {}
-        for finger in finger_normal_maps.keys():
-            constraints_on_finger[finger] = []
-            for i in range(N):
-                pos_constr = PositionConstraint(
-                    self.plant,
-                    self.plant.world_frame(),
-                    desired_positions[finger][i]-allowed_deviation,
-                    desired_positions[finger][i]+allowed_deviation,
-                    self.fingertip_frames[finger],
-                    np.zeros(3),
-                    plant_context)
-                prog.AddConstraint(pos_constr, q[i])
-                constraints_on_finger[finger].append(pos_constr)
-        return prog, constraints_on_finger, collision_constraint
-
-    def construct_interp_with_contact_normal_test(self,
-                                                  plants, 
-                                                  plant_contexts,
-                                                  finger_normal_maps, # This should be a dictionary of list of 5
-                                                  start_q,
-                                                  end_q,
-                                                  padding = model_param.object_padding,
-                                                  collision_distance=0.,
-                                                  has_normals=True,
-                                                  allowed_deviation=np.ones(3)* 0.01,
-                                                  N=3):
-        # preprocess data
-        unused_fingers = set(self.finger_map)
-        desired_positions = {}
-        for finger in finger_normal_maps.keys():
-            desired_positions[finger] = []
-            unused_fingers.remove(finger)
-            for i in range(N+1):
-                contact_position = np.squeeze(finger_normal_maps[finger][i][:3])
-                if has_normals:
-                    contact_normal = finger_normal_maps[finger][i][3:]
-                    contact_normal /= np.linalg.norm(contact_normal)
-                    desired_position = contact_position + contact_normal * padding
-                else:
-                    desired_position = contact_position
-                desired_positions[finger].append(desired_position)
-        
-        # Shared by multiple plants
-        joint_lower_limits = self.plant.GetPositionLowerLimits()
-        joint_upper_limits = self.plant.GetPositionUpperLimits()
-        # Create program and variables
-        prog = mp.MathematicalProgram()
-        q  = np.empty((N+1, self.plant.num_positions()), dtype=Variable)
-        dq = np.empty((N, self.plant.num_positions()), dtype=Variable)
-        dofs = self.plant.num_positions()
-        for i in range(N+1):
-            q[i] = prog.NewContinuousVariables(dofs, f"q{i}")
-
-        for i in range(N):
-            dq[i] = prog.NewContinuousVariables(dofs, f"dq{i}")
-
-        # Add Constraints
-        prog.AddConstraint(eq(q[0], start_q)) # Verified
-        prog.AddConstraint(eq(q[-1],end_q)) # Verified
-
-        for i in range(N):
-            prog.AddConstraint(eq(q[i+1], q[i]+dq[i]))
-            prog.AddBoundingBoxConstraint(joint_lower_limits * 0.02, joint_upper_limits * 0.02, dq[i])
-            #prog.AddCost(norm_cost, dq[i])
-
-        collision_constraints = []
-        for i in range(N+1):
-            collision_constraint = MinimumDistanceConstraint(plants[i], 1e-4, plant_contexts[i])
-            collision_constraints.append(collision_constraint)
-            prog.AddBoundingBoxConstraint(joint_lower_limits, joint_upper_limits, q[i])
-            prog.AddConstraint(collision_constraint, q[i])
-            
-        
-        # Add finger tip position constraint from contact map
-        constraints_on_finger = {}
-        for finger in finger_normal_maps.keys():
-            constraints_on_finger[finger] = []
-            for i in range(N+1):
-                pos_constr = PositionConstraint(
-                    self.plant,
-                    self.plant.world_frame(),
-                    desired_positions[finger][i]-allowed_deviation,
-                    desired_positions[finger][i]+allowed_deviation,
-                    self.fingertip_frames[finger],
-                    np.zeros(3),
-                    self.create_context()[1])
-                print("Desired:",desired_positions[finger][i])
-                #prog.AddConstraint(pos_constr, q[i])
-                constraints_on_finger[finger].append(pos_constr)
-        return prog, constraints_on_finger, collision_constraints
 
     def get_collision_points_world_positions(self, joint_angles, base_position,
                                              base_rotation_matrix):

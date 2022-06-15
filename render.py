@@ -16,17 +16,20 @@ class PyBulletRenderer:
         cv.imshow(self.windowName, null_image)
         self.yaw = 0
         self.pitch = 45
-        self.distance = 2
+        self.distance = 6
+        self.view_height = 0
         self.upAxisIndex=2
         self.projection_matrix = [
             1.0825318098068237, 0.0, 0.0, 0.0, 0.0, 1.732050895690918, 0.0, 0.0, 0.0, 0.0,
             -1.0002000331878662, -1.0, 0.0, 0.0, -0.020002000033855438, 0.0]
         cv.createTrackbar("yaw", self.windowName, 0, 360, self.changeYaw)
         cv.createTrackbar("pitch", self.windowName, 0, 90, self.changePitch)
-        cv.createTrackbar("Distance", self.windowName, 1, 100, self.changeDistance)
+        cv.createTrackbar("Distance", self.windowName, 1, 20, self.changeDistance)
+        cv.createTrackbar("Height", self.windowName,0, 10, self.changeHeight)
         cv.setTrackbarPos("yaw",self.windowName, 20)
         cv.setTrackbarPos("pitch",self.windowName, 10)
-        cv.setTrackbarPos("Distance",self.windowName, 5)
+        cv.setTrackbarPos("Distance",self.windowName, 6)
+        
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
 
         # Initialize others
@@ -50,20 +53,25 @@ class PyBulletRenderer:
     def changeDistance(self, value):
         self.distance = value
 
+    def changeHeight(self, value):
+        self.view_height = value
+
     def render(self, blocking=False):
+        image = np.zeros((self.width, self.height))
         while True:
-            view_matrix = p.computeViewMatrixFromYawPitchRoll([0,0,0], self.distance*0.1, self.yaw, self.pitch-45, 0, self.upAxisIndex)
+            view_matrix = p.computeViewMatrixFromYawPitchRoll([0, 0, 0.1 * self.view_height], self.distance*0.1, self.yaw, self.pitch-45, 0, self.upAxisIndex)
             image = p.getCameraImage(self.width, 
                                     self.height, 
                                     view_matrix, 
                                     projectionMatrix=self.projection_matrix,
                                     shadow=1, 
-                                    lightDirection=[1,1,1])
-            cv.imshow(self.windowName, image[2])
+                                    lightDirection=[1,1,1])[2]
+            cv.imshow(self.windowName, image)
             key = cv.waitKey(1)
             if not blocking or key == ord('q'):
                 break
-
+        return image
+    
     def stop(self):
         p.unloadPlugin(self.plugin)
 

@@ -17,6 +17,11 @@ min_finger_normal = 0.1
 
 SCALE = 0.6
 POINT_NUM=20000
+MAX_FORCE=50
+CONTROL_SKIP=50
+ALLOWANCE=0.05
+
+USE_SOFT_BOUNDING=False
 
 # For checking collisions
 # joint idx: local transform of collision checking point (one per link)
