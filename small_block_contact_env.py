@@ -407,10 +407,9 @@ class SmallBlockContactBulletEnv(gym.Env):
                         surface_norm = np.array([0., 0., -1.])
                     loc_y = sub_a[-2] / 5.0                     # [-1, 1] -> [-0.2, 0.2]
                 else:
-                    x1 = sub_a[3]
-                    theta = np.pi * sub_a[2]
+                    x1 = sub_a[-3]
+                    theta = np.pi * sub_a[-2]
                     point, surface_norm = self.obj_spherical.get_wrapped(theta, x1)
-                    # TODO: Change this face mechanism
                     loc_x, loc_y, loc_z = point
                 pos_vec = [loc_x, loc_y, loc_z]
                 pos_vec = get_small_block_location_local(surface_norm, pos_vec.copy())
