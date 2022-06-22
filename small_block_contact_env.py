@@ -372,7 +372,7 @@ class SmallBlockContactBulletEnv(gym.Env):
                         # thumb, which have diffrent action mapping
                         loc_x = (sub_a[-3] + 1) * 0.5 * 0.15 + 0.05  # [-1, 1] ->[0, 2]-> [0, 0.15]
                         loc_z = 0.05        # always on top hard coded assumption
-                        loc_y = sub_a[-2] * 0.2  # [-1, 1] -> [-0.1, 0.1]
+                        loc_y = sub_a[-2] * 0.1  # [-1, 1] -> [-0.1, 0.1]
                         surface_norm = np.array([0., 0., 1.])
                     else: # Different finger have different position mapping, which may be inconsistent between ik
                         if sub_a[-3] < 0: # On the edge
@@ -407,10 +407,9 @@ class SmallBlockContactBulletEnv(gym.Env):
                         surface_norm = np.array([0., 0., -1.])
                     loc_y = sub_a[-2] / 5.0                     # [-1, 1] -> [-0.2, 0.2]
                 else:
-                    x1 = sub_a[3]
-                    theta = np.pi * sub_a[2]
+                    x1 = sub_a[-3]
+                    theta = np.pi * sub_a[-2]
                     point, surface_norm = self.obj_spherical.get_wrapped(theta, x1)
-                    # TODO: Change this face mechanism
                     loc_x, loc_y, loc_z = point
                 pos_vec = [loc_x, loc_y, loc_z]
                 pos_vec = get_small_block_location_local(surface_norm, pos_vec.copy())
