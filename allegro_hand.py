@@ -2,7 +2,7 @@ import torch
 import functools
 import numpy as np
 import open3d as o3d
-import rigidBodySento as rb
+import utils.rigidBodySento as rb
 from multiprocessing import Pool
 import pytorch_kinematics as pk
 import pybullet as p

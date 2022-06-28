@@ -15,7 +15,7 @@
 from pybullet_utils import bullet_client
 import open3d as o3d
 import pybullet
-import render as r
+import utils.render as r
 import time
 import gym, gym.utils.seeding, gym.spaces
 import numpy as np
@@ -25,72 +25,19 @@ import inspect
 
 from typing import List, Tuple
 
-import rigidBodySento as rb
+import utils.rigidBodySento as rb
 
 from scipy.optimize import minimize
 import  model.param as model_param 
 
+from utils.math_utils import rotation_matrix_from_vectors, minimumDist2dBox
+
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 CLEARANCE_H = 0.05
-
-class SphericalCoordinate:
-    def __init__(self, mesh, origin=None):
-        self.mesh = mesh
-        self.mesh.compute_triangle_normals()
-        self.mesh.compute_vertex_normals()
-        self.pointcloud = self.mesh.sample_points_uniformly(number_of_points=20000)
-        if origin is None:
-            self.origin = self.pointcloud.get_center()
-        else:
-            self.origin = origin
-        self.pointcloud.translate(-self.origin)
-        self.points = np.asarray(self.pointcloud.points)
-        self.normals = np.asarray(self.pointcloud.normals)
-        self.kd_tree = o3d.geometry.KDTreeFlann(self.pointcloud)
-        
-    def compute_batch_cos_similarity(self,vec):
-        points = self.points.copy()
-        points[:,0] *= vec[0]
-        points[:,1] *= vec[1]
-        points[:,2] *= vec[2]
-        dot_points = points.sum(axis=1)
-        points_norm = np.linalg.norm(vec) * np.linalg.norm(self.points, axis=1)
-        return dot_points/points_norm
-
-    def get(self, theta, phi):
-        # Need to get the closest point from center to the shell.
-        dir_vec = np.array([np.sin(phi)*np.cos(theta), np.sin(phi) * np.sin(theta), np.cos(phi)])
-        cos_sim = self.compute_batch_cos_similarity(dir_vec)
-        index = cos_sim.argmax()
-        return self.points[index], self.normals[index]
-
-    def get_wrapped(self, theta, x1):
-        phi = np.arccos(x1)
-        return self.get(theta, phi)
-
-    def cartesian2spherical(self, points):
-        sp_coord = np.zeros((len(points), 2))
-        sp_coord[:,0] = np.arctan2(points[1], points[0]) # theta
-        sp_coord[:,1] = np.arccos(points[2]/np.linalg.norm(points,axis=1)) # psi
-        return sp_coord
+USE_RENDERER = False
 
 
-# Return the rotation matrix R that enable Rvec1 = vec2
-def rotation_matrix_from_vectors(vec1, vec2):
-    a, b = (vec1 / np.linalg.norm(vec1)).reshape(3), (vec2 / np.linalg.norm(vec2)).reshape(3)
-    v = np.cross(a, b)
-    c = np.dot(a, b)
-    s = np.linalg.norm(v)
-    if s==0:
-        if c > 0:
-            return np.eye(3)
-        else:
-            return np.array([[-1,0,0],[0,1,0],[0,0,-1]])
-    kmat = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
-    rotation_matrix = np.eye(3) + kmat + kmat.dot(kmat) * ((1 - c) / (s ** 2))
-    return rotation_matrix
-
-class SmallBlockContactBulletEnv(gym.Env):
+class BookShelfBulletEnv(gym.Env):
     metadata = {'render.modes': ['human', 'rgb_array'], 'video.frames_per_second': 50}
 
     def __init__(self,
@@ -103,11 +50,11 @@ class SmallBlockContactBulletEnv(gym.Env):
                  opt_time=False,
                  last_fins=None,
                  init_obj_pose=None,
-                 task=np.array([0, 0, 1]),
+                 task=[np.array([0, 1, 0]),np.array([0.5, 0., 0.2])],
                  train=True,
                  steps=3,
                  observe_last_action=False,
-                 use_spherical_coord=False):
+                 use_spherical_coord=False): # TODO: remove spherical coordinate if proved to be none feasible.
         self.train = train
         self.observe_last_action=observe_last_action
         self.max_forces = model_param.MAX_FORCE
@@ -119,11 +66,11 @@ class SmallBlockContactBulletEnv(gym.Env):
         self.num_fingertips = num_fingertips
         self.num_interp_f = num_interp_f
         self.use_split_region = use_split_region
-        self.use_spherical_coord = use_spherical_coord
         if use_split_region:
             assert num_fingertips == 4         # TODO: 3/4/5?
         self.opt_time = opt_time
-        self.task = task
+        self.task = task[0]
+        self.target_pose = task[1]
 
         self.n_steps = steps
         self.last_surface_norm = {
@@ -133,8 +80,9 @@ class SmallBlockContactBulletEnv(gym.Env):
             3:None}
 
         if self.render:
-            self._p = bullet_client.BulletClient(connection_mode=pybullet.DIRECT)
-            self.renderer = r.PyBulletRenderer()
+            self._p = bullet_client.BulletClient(connection_mode=pybullet.GUI if not USE_RENDERER else pybullet.DIRECT) # DIRECT
+            if USE_RENDERER:
+                self.renderer = r.PyBulletRenderer()
         else:
             self._p = bullet_client.BulletClient()
 
@@ -182,7 +130,7 @@ class SmallBlockContactBulletEnv(gym.Env):
 
         # full reload
         self._p.resetSimulation()
-        if self.render:
+        if self.render and USE_RENDERER:
             self.renderer.reset()
 
         self._p.setTimeStep(self._ts)
@@ -194,16 +142,38 @@ class SmallBlockContactBulletEnv(gym.Env):
             init_xyz = self.init_obj_pose[:3]
             init_orn = self.init_obj_pose[3:]
         else:
-            init_xyz = np.array([0, 0, 0.05])
-            init_orn = np.array([0, 0, 0, 1])
+            init_xyz = np.array([0, 0, 0.2])
+            init_orn = np.array([0.7071068, 0, 0, 0.7071068])
         self.o_id = rb.create_primitive_shape(self._p, 1.0, pybullet.GEOM_BOX, (0.2, 0.2, 0.05),         # half-extend
                                               color=(0.6, 0, 0, 0.8), collidable=True,
                                               init_xyz=init_xyz,
                                               init_quat=init_orn)
-        # Need to create corresponding pointcloud
-        self.obj_mesh = o3d.geometry.TriangleMesh.create_box(0.2 * 2, 0.2 * 2, 0.05 * 2)
-        self.obj_mesh.translate(np.array([-0.2, -0.2, -0.05]))
-        self.obj_spherical = SphericalCoordinate(self.obj_mesh)
+        # Create two walls:
+        self.w1_id = rb.create_primitive_shape(self._p, 1.0, pybullet.GEOM_BOX, (0.2, 0.2, 0.05),         # half-extend
+                                              color=(0.0, 0.6, 0, 0.8), collidable=True,
+                                              init_xyz=[0, 0.11, 0.2],
+                                              init_quat=[0.7071068, 0, 0, 0.7071068])
+
+        self.w2_id = rb.create_primitive_shape(self._p, 1.0, pybullet.GEOM_BOX, (0.2, 0.2, 0.05),         # half-extend
+                                              color=(0., 0.6, 0, 0.8), collidable=True,
+                                              init_xyz=[0, -0.11, 0.2],
+                                              init_quat=[0.7071068, 0, 0, 0.7071068])
+        self.wall_size = np.array([0.2, 0.2, 0.05])
+        
+        self._p.changeDynamics(self.w1_id, -1, lateralFriction=0.0)
+        self._p.changeDynamics(self.w2_id, -1, lateralFriction=0.0)
+
+        self._p.createConstraint(self.w1_id,-1, -1, -1, pybullet.JOINT_FIXED,
+                                 [0, 0, 0], [0, 0, 0],
+                                 childFramePosition=[0,  0.11, 0.2],
+                                 childFrameOrientation=[0.7071068, 0, 0, 0.7071068])
+        self._p.createConstraint(self.w2_id,-1, -1, -1, pybullet.JOINT_FIXED,
+                                 [0, 0, 0], [0, 0, 0],
+                                 childFramePosition=[0, -0.11, 0.2],
+                                 childFrameOrientation=[0.7071068, 0, 0, 0.7071068])
+        self._p.changeConstraint(self.w1_id, maxForce=10000)
+        self._p.changeConstraint(self.w2_id, maxForce=10000)
+
 
         self._p.changeDynamics(self.floor_id, -1,
                                lateralFriction=70.0, restitution=0.0)            # TODO
@@ -392,7 +362,7 @@ class SmallBlockContactBulletEnv(gym.Env):
                         else:
                             assert fin_ind == 3
                             loc_y = sub_a[-2] / 30.0 + 2.0 / 30.0
-                elif not self.use_spherical_coord:
+                else:
                     if sub_a[-3] < -0.2: # [-1, -0.2]
                         loc_x = (sub_a[-3] + 1.0) / 2 - 0.2        # [-1, -0.2] -> [-0.2, 0.2]
                         loc_z = 0.05
@@ -406,11 +376,6 @@ class SmallBlockContactBulletEnv(gym.Env):
                         loc_z = -0.05
                         surface_norm = np.array([0., 0., -1.])
                     loc_y = sub_a[-2] / 5.0                     # [-1, 1] -> [-0.2, 0.2]
-                else:
-                    x1 = sub_a[-3]
-                    theta = np.pi * sub_a[-2]
-                    point, surface_norm = self.obj_spherical.get_wrapped(theta, x1)
-                    loc_x, loc_y, loc_z = point
                 pos_vec = [loc_x, loc_y, loc_z]
                 pos_vec = get_small_block_location_local(surface_norm, pos_vec.copy())
                 self.last_surface_norm[fin_ind] = surface_norm
@@ -499,8 +464,8 @@ class SmallBlockContactBulletEnv(gym.Env):
             ) # Compute the object's z-axis vector in world frame
             rot_metric = np.array(z_axis).dot(self.task)        # in [-1,1] # z-axis need to tilted to a given angle cosine similarity should be raise up seems to be
 
-            r  = - np.linalg.norm(vel_1) * 20 - len(cps_1) * 250 # As slow as possible, as less contact point as possible.
-            r += - 300 * np.linalg.norm([pos_1[0], pos_1[1], pos_1[2] - 0.3]) # COM should be 0.3 meter off the ground. While x and y coordinate remain the same.
+            r  = - np.linalg.norm(vel_1) * 20 - len(cps_1) * 10 # As slow as possible, as less contact point as possible. 250
+            r += - 300 * np.linalg.norm([pos_1[:3] - self.target_pose]) # COM should be 0.3 meter off the ground. While x and y coordinate remain the same.
             r += 150 * rot_metric # hope the object can be rotate to a given z orientation
             return r
 
@@ -513,7 +478,7 @@ class SmallBlockContactBulletEnv(gym.Env):
             for idx in range(self.num_fingertips):
                 # Transform the finger tip toward the world frame, here current_fin is expressed in local frame?
                 f_pos_g, _ = self._p.multiplyTransforms(pos, quat, current_fins[idx][0], [0, 0, 0, 1])
-                if f_pos_g[2] < CLEARANCE_H:
+                if self.checkClearance(f_pos_g): # If the clearance is two small before next step of simulation, then the 
                     f_pos_g = [100.0, 100.0, 100.0]
                 self._p.setCollisionFilterPair(self.tip_ids[idx], self.o_id, -1, -1, 0)
                 self._p.resetBasePositionAndOrientation(self.tip_ids[idx],
@@ -651,3 +616,19 @@ class SmallBlockContactBulletEnv(gym.Env):
     def seed(self, seed=None):
         self.np_random, seed = gym.utils.seeding.np_random(seed)
         return [seed]
+
+    def checkClearance(self, point):
+        dist2floor = point[2]
+        if dist2floor < CLEARANCE_H:
+            return False
+        elif minimumDist2dBox(self._p, self.w1_id, self.wall_size, point) < CLEARANCE_H:
+            return False
+        elif minimumDist2dBox(self._p, self.w2_id, self.wall_size, point) < CLEARANCE_H:
+            return False
+
+
+if __name__ == "__main__":
+    env = BookShelfBulletEnv()
+    while True:
+        env._p.stepSimulation()
+        time.sleep(1/240.)

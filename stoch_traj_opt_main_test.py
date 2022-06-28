@@ -1,7 +1,6 @@
-#from my_pybullet_envs.point_contact_env import PointContactBulletEnv
-from small_block_contact_env import SmallBlockContactBulletEnv
-#from my_pybullet_envs.shadow_hand_grasp_env import ShadowHandGraspEnv
-#from a2c_ppo_acktr.algo import StochTrajOptimizer
+from envs.small_block_contact_env import LaptopBulletEnv
+from envs.bookshelf_env import BookShelfBulletEnv
+
 from stoch_traj_opt import StochTrajOptimizer
 import numpy as np
 import random
@@ -16,10 +15,15 @@ def parse_fin_data(fin_data):
             post_data[i,j,3] = fin_data[i][j][1]
     return post_data
 
+envs_dict = {
+    "bookshelf":BookShelfBulletEnv,
+    "laptop":LaptopBulletEnv
+}
 
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("--exp_name", type=str, default="u_opt_0-10_tp4")
+    parser.add_argument("--env", type=str, default="laptop")
     parser.add_argument("--init_data", type=str, default="")
     parser.add_argument("--disable_region", action="store_false", default=True)
     parser.add_argument("--playback",action="store_true", default=False)
@@ -37,7 +41,7 @@ if __name__ == '__main__':
         last_fin = None
         init_obj_pose = None
 
-    env = SmallBlockContactBulletEnv
+    env = envs_dict[args.env]
     world = env(render=True, 
                 num_fingertips=4, 
                 num_interp_f=7, 

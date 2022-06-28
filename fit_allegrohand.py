@@ -4,7 +4,7 @@ import numpy as np
 from model.param import SCALE
 import torch
 import time
-import rigidBodySento as rb
+import utils.rigidBodySento as rb
 
 TS = 1./250
 

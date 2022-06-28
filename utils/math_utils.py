@@ -7,6 +7,7 @@ import pybullet as p
 import scipy.optimize
 from sklearn.decomposition import PCA
 import torch
+import pytorch_kinematics as pk
 
 from scipy.spatial.transform import Rotation as R
 
@@ -436,3 +437,38 @@ def compute_n_W(p_W, R_WS, t_WS, fitted_fn_grad):
     p_S = np.matmul(R_WS.T, p_W.reshape(3,1) - t_WS.reshape(3,1))
     n_S = compute_nF_S(p_S, fitted_fn_grad)
     return R_WS @ n_S
+
+def rotation_matrix_from_vectors(vec1, vec2):
+    """
+    Compute the rotation matrix R that can: Rvec1 = vec2,
+    If flipped 180, bu default rotate along x axis.
+    There may still be some edge cases that can cause problem..
+    """
+    a, b = (vec1 / np.linalg.norm(vec1)).reshape(3), (vec2 / np.linalg.norm(vec2)).reshape(3)
+    v = np.cross(a, b)
+    c = np.dot(a, b)
+    s = np.linalg.norm(v)
+    if s==0:
+        if c > 0:
+            return np.eye(3)
+        else:
+            return np.array([[-1,0,0],[0,1,0],[0,0,-1]])
+    kmat = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
+    rotation_matrix = np.eye(3) + kmat + kmat.dot(kmat) * ((1 - c) / (s ** 2))
+    return rotation_matrix
+
+def minimumDist2dBox(p_client, rigid_box, shape, point):
+    """
+    axes aligned rect is a rectangle numpy array [4,3]
+    if not we need to express the point in rect frame
+    """
+    pos, orn = p_client.getBasePositionAndOrientation(rigid_box)
+    rel_pos = torch.from_numpy(point - np.asarray(pos))
+    orn = torch.tensor([orn[3], orn[0], orn[1], orn[2]])
+    inv_q = pk.quaternion_invert(orn)
+    x,y,z = pk.quaternion_apply(inv_q, rel_pos).tolist()
+    # Calculate minimum distance
+    dx = max(abs(x)-shape[0], 0)
+    dy = max(abs(y)-shape[1], 0)
+    dz = max(abs(z)-shape[2], 0)
+    return np.linalg.norm([dx, dy, dz])

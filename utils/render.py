@@ -5,7 +5,7 @@ egl = pkgutil.get_loader('eglRenderer')
 import pybullet_data
 import cv2 as cv
 import numpy as np
-import rigidBodySento as rb
+import utils.rigidBodySento as rb
 
 class PyBulletRenderer:
     def __init__(self, width=640, height=440):

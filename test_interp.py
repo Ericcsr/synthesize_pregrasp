@@ -3,11 +3,11 @@ from allegro_hand import AllegroHandDrake
 import numpy as np
 import torch
 import time
-import rigidBodySento as rb
+import utils.rigidBodySento as rb
 import  model.param as model_params
 import pytorch_kinematics as pk
 import helper
-import render
+import utils.render as render
 from argparse import ArgumentParser
 
 # Input key frame and key finger tip pose.
