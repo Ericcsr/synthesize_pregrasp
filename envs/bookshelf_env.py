@@ -50,7 +50,7 @@ class BookShelfBulletEnv(gym.Env):
                  opt_time=False,
                  last_fins=None,
                  init_obj_pose=None,
-                 task=[np.array([0, 1, 0]),np.array([0.5, 0., 0.2])],
+                 task=[np.array([0, -1, 0]),np.array([0.5, 0., 0.2])],
                  train=True,
                  steps=3,
                  observe_last_action=False,
@@ -478,7 +478,7 @@ class BookShelfBulletEnv(gym.Env):
             for idx in range(self.num_fingertips):
                 # Transform the finger tip toward the world frame, here current_fin is expressed in local frame?
                 f_pos_g, _ = self._p.multiplyTransforms(pos, quat, current_fins[idx][0], [0, 0, 0, 1])
-                if self.checkClearance(f_pos_g): # If the clearance is two small before next step of simulation, then the 
+                if not self.checkClearance(f_pos_g): # If the clearance is two small before next step of simulation, then the 
                     f_pos_g = [100.0, 100.0, 100.0]
                 self._p.setCollisionFilterPair(self.tip_ids[idx], self.o_id, -1, -1, 0)
                 self._p.resetBasePositionAndOrientation(self.tip_ids[idx],
@@ -549,8 +549,9 @@ class BookShelfBulletEnv(gym.Env):
 
             if self.render:
                 time.sleep(self._ts * 20.0)
-                image = self.renderer.render()
-                images.append(image)
+                if USE_RENDERER:
+                    image = self.renderer.render()
+                    images.append(image)
             self.timer += 1
 
         self.c_step_timer += 1
@@ -563,7 +564,7 @@ class BookShelfBulletEnv(gym.Env):
                 self._p.stepSimulation()
                 final_r += calc_reward_value()
 
-                if self.render:
+                if self.render and USE_RENDERER:
                     time.sleep(self._ts * 4.0)
                     self.renderer.render()
 
@@ -625,6 +626,8 @@ class BookShelfBulletEnv(gym.Env):
             return False
         elif minimumDist2dBox(self._p, self.w2_id, self.wall_size, point) < CLEARANCE_H:
             return False
+        else:
+            return True
 
 
 if __name__ == "__main__":
