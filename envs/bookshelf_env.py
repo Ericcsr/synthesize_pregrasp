@@ -462,6 +462,8 @@ class BookShelfBulletEnv(gym.Env):
         def calc_reward_value():
             # post obj config
             cps_1 = self._p.getContactPoints(self.o_id, self.floor_id, -1, -1) # contact points between floor and object
+            cps_2 = self._p.getContactPoints(self.o_id, self.w1_id, -1, -1)
+            cps_3 = self._p.getContactPoints(self.o_id, self.w2_id, -1, -1)
             pos_1, quat_1 = rb.get_link_com_xyz_orn(self._p, self.o_id, -1) # Object pose and orn
             vel_1 = rb.get_link_com_linear_velocity(self._p, self.o_id, -1) # object's linear velocity vec 3
 
@@ -470,7 +472,11 @@ class BookShelfBulletEnv(gym.Env):
             ) # Compute the object's z-axis vector in world frame
             rot_metric = np.array(z_axis).dot(self.task)        # in [-1,1] # z-axis need to tilted to a given angle cosine similarity should be raise up seems to be
 
-            r  = - np.linalg.norm(vel_1) * 20 - len(cps_1) * 10 # As slow as possible, as less contact point as possible. 250
+            r  = - np.linalg.norm(vel_1) * 20
+            if self.c_step_timer < self.n_steps - 1:
+                r -= (len(cps_1) + len(cps_2) + len(cps_3)) * 10 # As slow as possible, as less contact point as possible. 250
+            else:
+                r -= (len(cps_1) + len(cps_2) + len(cps_3)) * 50
             r += - 300 * np.linalg.norm([pos_1[:3] - self.target_pose]) # COM should be 0.3 meter off the ground. While x and y coordinate remain the same.
             r += 150 * rot_metric # hope the object can be rotate to a given z orientation
             return r
@@ -560,12 +566,12 @@ class BookShelfBulletEnv(gym.Env):
                     images.append(image)
             self.timer += 1
 
-        self.c_step_timer += 1
+        
 
         final_r = 0
         # Let the system evolve naturally Then stabilize the system for final eval
         # Only avaiable in final epoch
-        if self.c_step_timer == self.n_steps:
+        if self.c_step_timer == self.n_steps - 1:
             for _ in range(300):
                 self._p.stepSimulation()
                 final_r += calc_reward_value()
@@ -573,7 +579,7 @@ class BookShelfBulletEnv(gym.Env):
                 if self.render and USE_RENDERER:
                     time.sleep(self._ts * 4.0)
                     self.renderer.render()
-
+        self.c_step_timer += 1
         obs = self.get_extended_observation()
 
         ave_r /= self.control_skip
