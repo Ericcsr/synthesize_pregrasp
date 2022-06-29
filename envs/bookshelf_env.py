@@ -51,7 +51,7 @@ class BookShelfBulletEnv(gym.Env):
                  opt_time=False,
                  last_fins=None,
                  init_obj_pose=None,
-                 task=[np.array([0, -1, 0]),np.array([0.5, 0., 0.2])],
+                 task=[np.array([0, -1, 0]),np.array([0.5, 0., 0.3])],
                  train=True,
                  steps=3,
                  observe_last_action=False,
