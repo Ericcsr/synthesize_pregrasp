@@ -49,7 +49,8 @@ if __name__ == '__main__':
                 init_obj_pose=init_obj_pose,
                 train=False,
                 use_split_region=args.disable_region,
-                use_spherical_coord=args.spherical)
+                use_spherical_coord=args.spherical,
+                steps = steps)
 
     seed = 0
     np.random.seed(seed)
