@@ -40,7 +40,7 @@ if __name__ == '__main__':
     try:
         for sigma in sigma_list:
             optimizer = StochTrajOptimizer(env=envs_dict[args.env], sigma=sigma, initial_guess=None,
-                                    TimeSteps=3, seed=12367134, render=False, Iterations=args.iters, num_fingertips=4, num_interp_f=7,
+                                    TimeSteps=args.steps, seed=12367134, render=False, Iterations=args.iters, num_fingertips=4, num_interp_f=7,
                                     Num_processes=64, Traj_per_process=10, opt_time=False, verbose=1, 
                                     last_fins=fin_data, init_obj_pose=init_obj_pose, steps=args.steps, use_split_region=args.disable_region, use_spherical_coord=args.spherical)
 
