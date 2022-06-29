@@ -143,7 +143,7 @@ class BookShelfBulletEnv(gym.Env):
             init_orn = self.init_obj_pose[3:]
         else:
             init_xyz = np.array([0, 0, 0.2])
-            init_orn = np.array([ 0.5, 0.5, 0.5, 0.5 ])
+            init_orn = np.array([ -0.5, -0.5, 0.5, -0.5 ])
         self.o_id = rb.create_primitive_shape(self._p, 1.0, pybullet.GEOM_BOX, (0.2, 0.2, 0.05),         # half-extend
                                               color=(0.6, 0, 0, 0.8), collidable=True,
                                               init_xyz=init_xyz,
