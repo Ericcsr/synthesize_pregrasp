@@ -19,7 +19,8 @@ import utils.render as r
 import time
 import gym, gym.utils.seeding, gym.spaces
 import numpy as np
-
+import pytorch_kinematics as pk
+import torch
 import os
 import inspect
 
@@ -126,6 +127,9 @@ class BookShelfBulletEnv(gym.Env):
         obs_dummy = np.array([1.12234567] * self.obs_dim)
         self.observation_space = gym.spaces.Box(low=-np.inf * obs_dummy, high=np.inf * obs_dummy)
 
+    def getBulletClient(self):
+        return self._p
+
     def reset(self) -> List[float]:
 
         # full reload
@@ -143,7 +147,9 @@ class BookShelfBulletEnv(gym.Env):
             init_orn = self.init_obj_pose[3:]
         else:
             init_xyz = np.array([0, 0, 0.2])
-            init_orn = np.array([ -0.5, -0.5, 0.5, -0.5 ])
+            init_orn = torch.tensor([np.pi/2,0, np.pi/2])
+            init_orn = pk.matrix_to_quaternion(pk.euler_angles_to_matrix(init_orn, convention="XYZ")).numpy()
+            init_orn = np.array([init_orn[1], init_orn[2], init_orn[3], init_orn[0]])
         self.o_id = rb.create_primitive_shape(self._p, 1.0, pybullet.GEOM_BOX, (0.2, 0.2, 0.05),         # half-extend
                                               color=(0.6, 0, 0, 0.8), collidable=True,
                                               init_xyz=init_xyz,
@@ -340,7 +346,7 @@ class BookShelfBulletEnv(gym.Env):
                     # 4 fingers assumed
                     if fin_ind == 0:
                         # thumb, which have diffrent action mapping
-                        loc_x = (sub_a[-3] + 1) * 0.5 * 0.15 + 0.05  # [-1, 1] ->[0, 2]-> [0, 0.15]
+                        loc_x = (sub_a[-3] + 1) * 0.5 * 0.2  # [-1, 1] ->[0, 2]-> [0.0, 0.2]
                         loc_z = 0.05        # always on top hard coded assumption
                         loc_y = sub_a[-2] * 0.1  # [-1, 1] -> [-0.1, 0.1]
                         surface_norm = np.array([0., 0., 1.])
