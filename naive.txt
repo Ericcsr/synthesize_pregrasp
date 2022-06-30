@@ -1,0 +1,740 @@
+nohup: ignoring input
+pybullet build time: May 20 2022 19:44:17
+Iteration 1 took 4.88 seconds (mean sampled reward: -870.40). Current reward after update: -704.16, Optimal reward -704.16
+Iteration 2 took 4.59 seconds (mean sampled reward: -871.29). Current reward after update: -677.46, Optimal reward -677.46
+Iteration 3 took 4.60 seconds (mean sampled reward: -902.22). Current reward after update: -718.06, Optimal reward -677.46
+Iteration 4 took 4.54 seconds (mean sampled reward: -876.93). Current reward after update: -604.10, Optimal reward -604.10
+Iteration 5 took 4.64 seconds (mean sampled reward: -909.64). Current reward after update: -604.78, Optimal reward -604.10
+Iteration 6 took 4.70 seconds (mean sampled reward: -882.81). Current reward after update: -645.25, Optimal reward -604.10
+Iteration 7 took 4.73 seconds (mean sampled reward: -897.94). Current reward after update: -587.21, Optimal reward -587.21
+Iteration 8 took 4.71 seconds (mean sampled reward: -874.57). Current reward after update: -652.49, Optimal reward -587.21
+Iteration 9 took 4.76 seconds (mean sampled reward: -861.21). Current reward after update: -793.20, Optimal reward -587.21
+Iteration 10 took 4.69 seconds (mean sampled reward: -872.47). Current reward after update: -601.78, Optimal reward -587.21
+Iteration 11 took 4.69 seconds (mean sampled reward: -863.38). Current reward after update: -594.38, Optimal reward -587.21
+Iteration 12 took 4.74 seconds (mean sampled reward: -843.66). Current reward after update: -628.06, Optimal reward -587.21
+Iteration 13 took 4.65 seconds (mean sampled reward: -886.04). Current reward after update: -608.41, Optimal reward -587.21
+Iteration 14 took 4.79 seconds (mean sampled reward: -885.18). Current reward after update: -528.62, Optimal reward -528.62
+Iteration 15 took 4.73 seconds (mean sampled reward: -891.33). Current reward after update: -617.76, Optimal reward -528.62
+Iteration 16 took 4.71 seconds (mean sampled reward: -855.44). Current reward after update: -557.66, Optimal reward -528.62
+Iteration 17 took 4.63 seconds (mean sampled reward: -851.75). Current reward after update: -551.14, Optimal reward -528.62
+Iteration 18 took 4.50 seconds (mean sampled reward: -807.83). Current reward after update: -533.04, Optimal reward -528.62
+Iteration 19 took 4.53 seconds (mean sampled reward: -820.06). Current reward after update: -532.32, Optimal reward -528.62
+Iteration 20 took 4.51 seconds (mean sampled reward: -845.75). Current reward after update: -513.67, Optimal reward -513.67
+Iteration 21 took 4.56 seconds (mean sampled reward: -847.27). Current reward after update: -522.01, Optimal reward -513.67
+Iteration 22 took 4.60 seconds (mean sampled reward: -856.62). Current reward after update: -570.13, Optimal reward -513.67
+Iteration 23 took 4.50 seconds (mean sampled reward: -885.28). Current reward after update: -625.91, Optimal reward -513.67
+Iteration 24 took 4.48 seconds (mean sampled reward: -875.82). Current reward after update: -627.83, Optimal reward -513.67
+Iteration 25 took 4.50 seconds (mean sampled reward: -875.70). Current reward after update: -965.12, Optimal reward -513.67
+Iteration 26 took 4.53 seconds (mean sampled reward: -872.74). Current reward after update: -483.51, Optimal reward -483.51
+Iteration 27 took 4.52 seconds (mean sampled reward: -842.55). Current reward after update: -596.34, Optimal reward -483.51
+Iteration 28 took 4.52 seconds (mean sampled reward: -812.05). Current reward after update: -550.64, Optimal reward -483.51
+Iteration 29 took 4.56 seconds (mean sampled reward: -843.14). Current reward after update: -570.72, Optimal reward -483.51
+Iteration 30 took 4.60 seconds (mean sampled reward: -829.39). Current reward after update: -550.77, Optimal reward -483.51
+Iteration 31 took 4.72 seconds (mean sampled reward: -861.29). Current reward after update: -503.31, Optimal reward -483.51
+Iteration 32 took 4.76 seconds (mean sampled reward: -840.77). Current reward after update: -424.33, Optimal reward -424.33
+Iteration 33 took 4.83 seconds (mean sampled reward: -860.74). Current reward after update: -475.29, Optimal reward -424.33
+Iteration 34 took 4.61 seconds (mean sampled reward: -856.85). Current reward after update: -458.88, Optimal reward -424.33
+Iteration 35 took 4.78 seconds (mean sampled reward: -852.42). Current reward after update: -476.88, Optimal reward -424.33
+Iteration 36 took 4.40 seconds (mean sampled reward: -884.01). Current reward after update: -449.79, Optimal reward -424.33
+Iteration 37 took 4.41 seconds (mean sampled reward: -890.49). Current reward after update: -487.75, Optimal reward -424.33
+Iteration 38 took 4.37 seconds (mean sampled reward: -854.65). Current reward after update: -476.53, Optimal reward -424.33
+Iteration 39 took 4.52 seconds (mean sampled reward: -817.75). Current reward after update: -452.13, Optimal reward -424.33
+Iteration 40 took 4.53 seconds (mean sampled reward: -824.71). Current reward after update: -462.32, Optimal reward -424.33
+Iteration 41 took 4.54 seconds (mean sampled reward: -822.43). Current reward after update: -425.73, Optimal reward -424.33
+Iteration 42 took 4.64 seconds (mean sampled reward: -799.32). Current reward after update: -418.89, Optimal reward -418.89
+Iteration 43 took 4.76 seconds (mean sampled reward: -755.83). Current reward after update: -406.36, Optimal reward -406.36
+Iteration 44 took 4.63 seconds (mean sampled reward: -837.15). Current reward after update: -421.29, Optimal reward -406.36
+Iteration 45 took 4.79 seconds (mean sampled reward: -807.34). Current reward after update: -393.90, Optimal reward -393.90
+Iteration 46 took 4.80 seconds (mean sampled reward: -796.14). Current reward after update: -490.38, Optimal reward -393.90
+Iteration 47 took 4.78 seconds (mean sampled reward: -791.63). Current reward after update: -374.03, Optimal reward -374.03
+Iteration 48 took 4.72 seconds (mean sampled reward: -774.77). Current reward after update: -420.52, Optimal reward -374.03
+Iteration 49 took 4.60 seconds (mean sampled reward: -762.50). Current reward after update: -435.10, Optimal reward -374.03
+Iteration 50 took 4.58 seconds (mean sampled reward: -758.83). Current reward after update: -406.68, Optimal reward -374.03
+Iteration 51 took 4.76 seconds (mean sampled reward: -759.14). Current reward after update: -388.26, Optimal reward -374.03
+Iteration 52 took 4.79 seconds (mean sampled reward: -782.82). Current reward after update: -417.14, Optimal reward -374.03
+Iteration 53 took 4.77 seconds (mean sampled reward: -766.47). Current reward after update: -368.56, Optimal reward -368.56
+Iteration 54 took 4.84 seconds (mean sampled reward: -755.54). Current reward after update: -426.23, Optimal reward -368.56
+Iteration 55 took 4.55 seconds (mean sampled reward: -805.24). Current reward after update: -477.07, Optimal reward -368.56
+Iteration 56 took 4.70 seconds (mean sampled reward: -788.52). Current reward after update: -428.33, Optimal reward -368.56
+Iteration 57 took 4.79 seconds (mean sampled reward: -764.19). Current reward after update: -457.66, Optimal reward -368.56
+Iteration 58 took 4.71 seconds (mean sampled reward: -774.09). Current reward after update: -404.07, Optimal reward -368.56
+Iteration 59 took 4.90 seconds (mean sampled reward: -775.67). Current reward after update: -433.77, Optimal reward -368.56
+Iteration 60 took 4.87 seconds (mean sampled reward: -740.36). Current reward after update: -407.96, Optimal reward -368.56
+Iteration 61 took 4.89 seconds (mean sampled reward: -743.95). Current reward after update: -406.76, Optimal reward -368.56
+Iteration 62 took 4.87 seconds (mean sampled reward: -775.08). Current reward after update: -423.90, Optimal reward -368.56
+Iteration 63 took 4.87 seconds (mean sampled reward: -756.82). Current reward after update: -403.38, Optimal reward -368.56
+Iteration 64 took 4.82 seconds (mean sampled reward: -752.73). Current reward after update: -378.45, Optimal reward -368.56
+Iteration 65 took 4.67 seconds (mean sampled reward: -799.74). Current reward after update: -457.52, Optimal reward -368.56
+Iteration 66 took 4.70 seconds (mean sampled reward: -794.35). Current reward after update: -448.46, Optimal reward -368.56
+Iteration 67 took 4.67 seconds (mean sampled reward: -795.74). Current reward after update: -418.54, Optimal reward -368.56
+Iteration 68 took 4.52 seconds (mean sampled reward: -793.88). Current reward after update: -421.20, Optimal reward -368.56
+Iteration 69 took 4.68 seconds (mean sampled reward: -778.63). Current reward after update: -466.73, Optimal reward -368.56
+Iteration 70 took 4.77 seconds (mean sampled reward: -777.04). Current reward after update: -418.17, Optimal reward -368.56
+Iteration 71 took 4.67 seconds (mean sampled reward: -768.36). Current reward after update: -396.88, Optimal reward -368.56
+Iteration 72 took 4.78 seconds (mean sampled reward: -771.58). Current reward after update: -385.50, Optimal reward -368.56
+Iteration 73 took 4.87 seconds (mean sampled reward: -805.11). Current reward after update: -467.67, Optimal reward -368.56
+Iteration 74 took 4.97 seconds (mean sampled reward: -839.10). Current reward after update: -429.68, Optimal reward -368.56
+Iteration 75 took 4.82 seconds (mean sampled reward: -807.02). Current reward after update: -411.63, Optimal reward -368.56
+Iteration 76 took 4.71 seconds (mean sampled reward: -797.57). Current reward after update: -446.97, Optimal reward -368.56
+Iteration 77 took 4.83 seconds (mean sampled reward: -757.40). Current reward after update: -408.37, Optimal reward -368.56
+Iteration 78 took 4.84 seconds (mean sampled reward: -765.30). Current reward after update: -443.90, Optimal reward -368.56
+Iteration 79 took 4.87 seconds (mean sampled reward: -782.64). Current reward after update: -381.73, Optimal reward -368.56
+Iteration 80 took 4.91 seconds (mean sampled reward: -838.47). Current reward after update: -403.60, Optimal reward -368.56
+Iteration 81 took 4.85 seconds (mean sampled reward: -782.82). Current reward after update: -390.61, Optimal reward -368.56
+Iteration 82 took 4.82 seconds (mean sampled reward: -752.66). Current reward after update: -392.16, Optimal reward -368.56
+Iteration 83 took 4.72 seconds (mean sampled reward: -780.80). Current reward after update: -421.16, Optimal reward -368.56
+Iteration 84 took 4.70 seconds (mean sampled reward: -802.98). Current reward after update: -390.88, Optimal reward -368.56
+Iteration 85 took 4.87 seconds (mean sampled reward: -804.88). Current reward after update: -421.59, Optimal reward -368.56
+Iteration 86 took 4.69 seconds (mean sampled reward: -807.51). Current reward after update: -469.15, Optimal reward -368.56
+Iteration 87 took 4.61 seconds (mean sampled reward: -820.72). Current reward after update: -430.91, Optimal reward -368.56
+Iteration 88 took 4.63 seconds (mean sampled reward: -837.61). Current reward after update: -436.75, Optimal reward -368.56
+Iteration 89 took 4.72 seconds (mean sampled reward: -778.76). Current reward after update: -393.06, Optimal reward -368.56
+Iteration 90 took 4.94 seconds (mean sampled reward: -809.98). Current reward after update: -402.68, Optimal reward -368.56
+Iteration 91 took 4.70 seconds (mean sampled reward: -803.25). Current reward after update: -416.82, Optimal reward -368.56
+Iteration 92 took 4.75 seconds (mean sampled reward: -803.20). Current reward after update: -408.53, Optimal reward -368.56
+Iteration 93 took 4.79 seconds (mean sampled reward: -854.65). Current reward after update: -414.70, Optimal reward -368.56
+Iteration 94 took 4.77 seconds (mean sampled reward: -828.16). Current reward after update: -420.40, Optimal reward -368.56
+Iteration 95 took 4.64 seconds (mean sampled reward: -805.19). Current reward after update: -404.39, Optimal reward -368.56
+Iteration 96 took 4.63 seconds (mean sampled reward: -819.37). Current reward after update: -429.59, Optimal reward -368.56
+Iteration 97 took 4.55 seconds (mean sampled reward: -848.09). Current reward after update: -432.30, Optimal reward -368.56
+Iteration 98 took 4.54 seconds (mean sampled reward: -868.69). Current reward after update: -376.45, Optimal reward -368.56
+Iteration 99 took 4.55 seconds (mean sampled reward: -805.06). Current reward after update: -396.62, Optimal reward -368.56
+Iteration 100 took 4.61 seconds (mean sampled reward: -829.63). Current reward after update: -417.48, Optimal reward -368.56
+Iteration 101 took 4.63 seconds (mean sampled reward: -780.98). Current reward after update: -417.13, Optimal reward -368.56
+Iteration 102 took 4.65 seconds (mean sampled reward: -770.32). Current reward after update: -404.02, Optimal reward -368.56
+Iteration 103 took 4.58 seconds (mean sampled reward: -754.14). Current reward after update: -422.04, Optimal reward -368.56
+Iteration 104 took 4.60 seconds (mean sampled reward: -765.51). Current reward after update: -378.01, Optimal reward -368.56
+Iteration 105 took 4.68 seconds (mean sampled reward: -775.63). Current reward after update: -371.76, Optimal reward -368.56
+Iteration 106 took 4.63 seconds (mean sampled reward: -784.26). Current reward after update: -391.04, Optimal reward -368.56
+Iteration 107 took 4.65 seconds (mean sampled reward: -788.90). Current reward after update: -413.38, Optimal reward -368.56
+Iteration 108 took 4.64 seconds (mean sampled reward: -804.22). Current reward after update: -404.38, Optimal reward -368.56
+Iteration 109 took 4.70 seconds (mean sampled reward: -799.31). Current reward after update: -380.98, Optimal reward -368.56
+Iteration 110 took 4.66 seconds (mean sampled reward: -787.40). Current reward after update: -382.55, Optimal reward -368.56
+Iteration 111 took 4.64 seconds (mean sampled reward: -792.53). Current reward after update: -429.45, Optimal reward -368.56
+Iteration 112 took 4.75 seconds (mean sampled reward: -800.57). Current reward after update: -447.29, Optimal reward -368.56
+Iteration 113 took 4.70 seconds (mean sampled reward: -780.79). Current reward after update: -363.47, Optimal reward -363.47
+Iteration 114 took 4.63 seconds (mean sampled reward: -784.17). Current reward after update: -420.09, Optimal reward -363.47
+Iteration 115 took 4.75 seconds (mean sampled reward: -811.27). Current reward after update: -476.36, Optimal reward -363.47
+Iteration 116 took 4.56 seconds (mean sampled reward: -805.94). Current reward after update: -476.35, Optimal reward -363.47
+Iteration 117 took 4.65 seconds (mean sampled reward: -796.59). Current reward after update: -469.55, Optimal reward -363.47
+Iteration 118 took 4.60 seconds (mean sampled reward: -789.80). Current reward after update: -400.04, Optimal reward -363.47
+Iteration 119 took 4.65 seconds (mean sampled reward: -767.91). Current reward after update: -404.11, Optimal reward -363.47
+Iteration 120 took 4.66 seconds (mean sampled reward: -776.02). Current reward after update: -424.72, Optimal reward -363.47
+Iteration 121 took 4.67 seconds (mean sampled reward: -761.54). Current reward after update: -423.66, Optimal reward -363.47
+Iteration 122 took 4.63 seconds (mean sampled reward: -764.57). Current reward after update: -612.35, Optimal reward -363.47
+Iteration 123 took 4.68 seconds (mean sampled reward: -735.76). Current reward after update: -389.55, Optimal reward -363.47
+Iteration 124 took 4.78 seconds (mean sampled reward: -747.79). Current reward after update: -499.81, Optimal reward -363.47
+Iteration 125 took 4.78 seconds (mean sampled reward: -776.82). Current reward after update: -405.51, Optimal reward -363.47
+Iteration 126 took 4.75 seconds (mean sampled reward: -779.14). Current reward after update: -403.22, Optimal reward -363.47
+Iteration 127 took 4.67 seconds (mean sampled reward: -776.42). Current reward after update: -420.53, Optimal reward -363.47
+Iteration 128 took 4.54 seconds (mean sampled reward: -809.42). Current reward after update: -431.55, Optimal reward -363.47
+Iteration 129 took 4.63 seconds (mean sampled reward: -808.78). Current reward after update: -425.63, Optimal reward -363.47
+Iteration 130 took 4.68 seconds (mean sampled reward: -805.43). Current reward after update: -403.00, Optimal reward -363.47
+Iteration 131 took 4.71 seconds (mean sampled reward: -815.30). Current reward after update: -431.14, Optimal reward -363.47
+Iteration 132 took 4.64 seconds (mean sampled reward: -819.26). Current reward after update: -383.27, Optimal reward -363.47
+Iteration 133 took 4.77 seconds (mean sampled reward: -831.55). Current reward after update: -399.42, Optimal reward -363.47
+Iteration 134 took 4.69 seconds (mean sampled reward: -825.01). Current reward after update: -427.67, Optimal reward -363.47
+Iteration 135 took 4.64 seconds (mean sampled reward: -772.78). Current reward after update: -392.31, Optimal reward -363.47
+Iteration 136 took 4.65 seconds (mean sampled reward: -738.58). Current reward after update: -381.43, Optimal reward -363.47
+Iteration 137 took 4.73 seconds (mean sampled reward: -736.34). Current reward after update: -400.78, Optimal reward -363.47
+Iteration 138 took 4.66 seconds (mean sampled reward: -762.43). Current reward after update: -411.83, Optimal reward -363.47
+Iteration 139 took 4.72 seconds (mean sampled reward: -806.34). Current reward after update: -391.42, Optimal reward -363.47
+Iteration 140 took 4.72 seconds (mean sampled reward: -769.74). Current reward after update: -370.28, Optimal reward -363.47
+Iteration 141 took 4.62 seconds (mean sampled reward: -878.73). Current reward after update: -416.83, Optimal reward -363.47
+Iteration 142 took 4.55 seconds (mean sampled reward: -824.36). Current reward after update: -426.73, Optimal reward -363.47
+Iteration 143 took 4.69 seconds (mean sampled reward: -798.81). Current reward after update: -409.19, Optimal reward -363.47
+Iteration 144 took 4.68 seconds (mean sampled reward: -796.52). Current reward after update: -386.67, Optimal reward -363.47
+Iteration 145 took 4.72 seconds (mean sampled reward: -751.47). Current reward after update: -374.88, Optimal reward -363.47
+Iteration 146 took 4.75 seconds (mean sampled reward: -770.83). Current reward after update: -393.12, Optimal reward -363.47
+Iteration 147 took 4.72 seconds (mean sampled reward: -753.57). Current reward after update: -386.70, Optimal reward -363.47
+Iteration 148 took 4.69 seconds (mean sampled reward: -818.58). Current reward after update: -408.75, Optimal reward -363.47
+Iteration 149 took 4.60 seconds (mean sampled reward: -845.92). Current reward after update: -424.40, Optimal reward -363.47
+Iteration 150 took 4.67 seconds (mean sampled reward: -792.58). Current reward after update: -401.27, Optimal reward -363.47
+Iteration 151 took 4.72 seconds (mean sampled reward: -782.78). Current reward after update: -490.24, Optimal reward -363.47
+Iteration 152 took 4.80 seconds (mean sampled reward: -768.22). Current reward after update: -397.97, Optimal reward -363.47
+Iteration 153 took 4.69 seconds (mean sampled reward: -829.60). Current reward after update: -395.87, Optimal reward -363.47
+Iteration 154 took 4.67 seconds (mean sampled reward: -849.32). Current reward after update: -418.84, Optimal reward -363.47
+Iteration 155 took 4.72 seconds (mean sampled reward: -859.08). Current reward after update: -415.74, Optimal reward -363.47
+Iteration 156 took 4.70 seconds (mean sampled reward: -837.46). Current reward after update: -450.22, Optimal reward -363.47
+Iteration 157 took 4.66 seconds (mean sampled reward: -848.92). Current reward after update: -422.46, Optimal reward -363.47
+Iteration 158 took 4.64 seconds (mean sampled reward: -815.72). Current reward after update: -434.78, Optimal reward -363.47
+Iteration 159 took 4.70 seconds (mean sampled reward: -847.94). Current reward after update: -461.34, Optimal reward -363.47
+Iteration 160 took 4.62 seconds (mean sampled reward: -835.34). Current reward after update: -486.72, Optimal reward -363.47
+Iteration 161 took 4.56 seconds (mean sampled reward: -928.41). Current reward after update: -449.93, Optimal reward -363.47
+Iteration 162 took 4.65 seconds (mean sampled reward: -924.15). Current reward after update: -468.40, Optimal reward -363.47
+Iteration 163 took 4.61 seconds (mean sampled reward: -898.03). Current reward after update: -838.03, Optimal reward -363.47
+Iteration 164 took 4.60 seconds (mean sampled reward: -881.79). Current reward after update: -513.09, Optimal reward -363.47
+Iteration 165 took 4.63 seconds (mean sampled reward: -929.03). Current reward after update: -516.22, Optimal reward -363.47
+Iteration 166 took 4.60 seconds (mean sampled reward: -868.05). Current reward after update: -477.06, Optimal reward -363.47
+Iteration 167 took 4.61 seconds (mean sampled reward: -876.47). Current reward after update: -513.19, Optimal reward -363.47
+Iteration 168 took 4.58 seconds (mean sampled reward: -876.29). Current reward after update: -427.48, Optimal reward -363.47
+Iteration 169 took 4.71 seconds (mean sampled reward: -876.96). Current reward after update: -450.10, Optimal reward -363.47
+Iteration 170 took 4.65 seconds (mean sampled reward: -858.42). Current reward after update: -433.49, Optimal reward -363.47
+Iteration 171 took 4.64 seconds (mean sampled reward: -893.72). Current reward after update: -521.52, Optimal reward -363.47
+Iteration 172 took 4.62 seconds (mean sampled reward: -923.63). Current reward after update: -467.84, Optimal reward -363.47
+Iteration 173 took 4.56 seconds (mean sampled reward: -891.66). Current reward after update: -482.46, Optimal reward -363.47
+Iteration 174 took 4.59 seconds (mean sampled reward: -877.78). Current reward after update: -466.13, Optimal reward -363.47
+Iteration 175 took 4.55 seconds (mean sampled reward: -904.63). Current reward after update: -520.40, Optimal reward -363.47
+Iteration 176 took 4.58 seconds (mean sampled reward: -893.34). Current reward after update: -423.87, Optimal reward -363.47
+Iteration 177 took 4.72 seconds (mean sampled reward: -850.71). Current reward after update: -515.72, Optimal reward -363.47
+Iteration 178 took 4.68 seconds (mean sampled reward: -853.40). Current reward after update: -461.93, Optimal reward -363.47
+Iteration 179 took 4.63 seconds (mean sampled reward: -831.77). Current reward after update: -544.44, Optimal reward -363.47
+Iteration 180 took 4.63 seconds (mean sampled reward: -842.06). Current reward after update: -578.85, Optimal reward -363.47
+Iteration 181 took 4.75 seconds (mean sampled reward: -835.66). Current reward after update: -522.18, Optimal reward -363.47
+Iteration 182 took 4.64 seconds (mean sampled reward: -863.56). Current reward after update: -567.69, Optimal reward -363.47
+Iteration 183 took 4.66 seconds (mean sampled reward: -851.69). Current reward after update: -527.10, Optimal reward -363.47
+Iteration 184 took 4.61 seconds (mean sampled reward: -865.84). Current reward after update: -544.91, Optimal reward -363.47
+Iteration 185 took 4.73 seconds (mean sampled reward: -851.49). Current reward after update: -535.18, Optimal reward -363.47
+Iteration 186 took 4.64 seconds (mean sampled reward: -858.07). Current reward after update: -560.66, Optimal reward -363.47
+Iteration 187 took 4.65 seconds (mean sampled reward: -865.80). Current reward after update: -553.97, Optimal reward -363.47
+Iteration 188 took 4.74 seconds (mean sampled reward: -829.99). Current reward after update: -529.85, Optimal reward -363.47
+Iteration 189 took 4.79 seconds (mean sampled reward: -847.83). Current reward after update: -527.53, Optimal reward -363.47
+Iteration 190 took 4.76 seconds (mean sampled reward: -840.83). Current reward after update: -476.43, Optimal reward -363.47
+Iteration 191 took 4.72 seconds (mean sampled reward: -861.17). Current reward after update: -453.12, Optimal reward -363.47
+Iteration 192 took 4.64 seconds (mean sampled reward: -883.85). Current reward after update: -485.58, Optimal reward -363.47
+Iteration 193 took 4.73 seconds (mean sampled reward: -913.44). Current reward after update: -596.72, Optimal reward -363.47
+Iteration 194 took 4.69 seconds (mean sampled reward: -899.87). Current reward after update: -560.48, Optimal reward -363.47
+Iteration 195 took 4.62 seconds (mean sampled reward: -867.82). Current reward after update: -582.72, Optimal reward -363.47
+Iteration 196 took 4.70 seconds (mean sampled reward: -853.80). Current reward after update: -527.60, Optimal reward -363.47
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+Iteration 197 took 4.62 seconds (mean sampled reward: -885.83). Current reward after update: -520.18, Optimal reward -363.47
+Iteration 198 took 4.71 seconds (mean sampled reward: -818.32). Current reward after update: -516.36, Optimal reward -363.47
+Iteration 199 took 4.65 seconds (mean sampled reward: -850.99). Current reward after update: -492.58, Optimal reward -363.47
+Iteration 200 took 4.70 seconds (mean sampled reward: -833.59). Current reward after update: -474.84, Optimal reward -363.47
+/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/gym/spaces/box.py:73: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(
+Iteration 1 took 4.60 seconds (mean sampled reward: -858.60). Current reward after update: -820.68, Optimal reward -820.68
+Iteration 2 took 5.03 seconds (mean sampled reward: -919.57). Current reward after update: -689.82, Optimal reward -689.82
+Iteration 3 took 4.91 seconds (mean sampled reward: -915.08). Current reward after update: -655.62, Optimal reward -655.62
+Iteration 4 took 4.95 seconds (mean sampled reward: -881.89). Current reward after update: -626.62, Optimal reward -626.62
+Iteration 5 took 4.94 seconds (mean sampled reward: -873.63). Current reward after update: -681.39, Optimal reward -626.62
+Iteration 6 took 4.98 seconds (mean sampled reward: -877.94). Current reward after update: -682.74, Optimal reward -626.62
+Iteration 7 took 5.14 seconds (mean sampled reward: -872.29). Current reward after update: -611.58, Optimal reward -611.58
+Iteration 8 took 5.51 seconds (mean sampled reward: -859.94). Current reward after update: -524.20, Optimal reward -524.20
+Iteration 9 took 5.57 seconds (mean sampled reward: -847.92). Current reward after update: -523.66, Optimal reward -523.66
+Iteration 10 took 5.58 seconds (mean sampled reward: -845.91). Current reward after update: -535.62, Optimal reward -523.66
+Iteration 11 took 5.54 seconds (mean sampled reward: -902.38). Current reward after update: -621.17, Optimal reward -523.66
+Iteration 12 took 5.41 seconds (mean sampled reward: -893.06). Current reward after update: -661.44, Optimal reward -523.66
+Iteration 13 took 5.46 seconds (mean sampled reward: -873.41). Current reward after update: -600.90, Optimal reward -523.66
+Iteration 14 took 5.29 seconds (mean sampled reward: -891.14). Current reward after update: -624.75, Optimal reward -523.66
+Iteration 15 took 5.27 seconds (mean sampled reward: -903.77). Current reward after update: -692.07, Optimal reward -523.66
+Iteration 16 took 4.95 seconds (mean sampled reward: -925.38). Current reward after update: -641.47, Optimal reward -523.66
+Iteration 17 took 4.92 seconds (mean sampled reward: -932.05). Current reward after update: -650.89, Optimal reward -523.66
+Iteration 18 took 4.71 seconds (mean sampled reward: -923.12). Current reward after update: -690.43, Optimal reward -523.66
+Iteration 19 took 4.67 seconds (mean sampled reward: -912.55). Current reward after update: -688.32, Optimal reward -523.66
+Iteration 20 took 4.77 seconds (mean sampled reward: -888.86). Current reward after update: -685.05, Optimal reward -523.66
+Iteration 21 took 4.63 seconds (mean sampled reward: -892.40). Current reward after update: -642.41, Optimal reward -523.66
+Iteration 22 took 4.72 seconds (mean sampled reward: -863.34). Current reward after update: -701.23, Optimal reward -523.66
+Iteration 23 took 4.71 seconds (mean sampled reward: -873.29). Current reward after update: -665.16, Optimal reward -523.66
+Iteration 24 took 4.67 seconds (mean sampled reward: -913.03). Current reward after update: -674.53, Optimal reward -523.66
+Iteration 25 took 4.74 seconds (mean sampled reward: -924.72). Current reward after update: -640.03, Optimal reward -523.66
+Iteration 26 took 4.70 seconds (mean sampled reward: -874.71). Current reward after update: -633.07, Optimal reward -523.66
+Iteration 27 took 4.71 seconds (mean sampled reward: -878.08). Current reward after update: -679.43, Optimal reward -523.66
+Iteration 28 took 4.74 seconds (mean sampled reward: -897.66). Current reward after update: -686.83, Optimal reward -523.66
+Iteration 29 took 4.72 seconds (mean sampled reward: -872.88). Current reward after update: -618.99, Optimal reward -523.66
+Iteration 30 took 4.72 seconds (mean sampled reward: -884.74). Current reward after update: -564.39, Optimal reward -523.66
+Iteration 31 took 4.58 seconds (mean sampled reward: -863.83). Current reward after update: -566.11, Optimal reward -523.66
+Iteration 32 took 4.63 seconds (mean sampled reward: -871.81). Current reward after update: -616.51, Optimal reward -523.66
+Iteration 33 took 4.57 seconds (mean sampled reward: -848.73). Current reward after update: -570.18, Optimal reward -523.66
+Iteration 34 took 4.62 seconds (mean sampled reward: -863.38). Current reward after update: -632.52, Optimal reward -523.66
+Iteration 35 took 4.54 seconds (mean sampled reward: -844.16). Current reward after update: -610.44, Optimal reward -523.66
+Iteration 36 took 4.57 seconds (mean sampled reward: -841.74). Current reward after update: -582.92, Optimal reward -523.66
+Iteration 37 took 4.57 seconds (mean sampled reward: -876.69). Current reward after update: -585.22, Optimal reward -523.66
+Iteration 38 took 4.61 seconds (mean sampled reward: -829.11). Current reward after update: -602.42, Optimal reward -523.66
+Iteration 39 took 4.68 seconds (mean sampled reward: -816.99). Current reward after update: -529.04, Optimal reward -523.66
+Iteration 40 took 4.76 seconds (mean sampled reward: -852.25). Current reward after update: -518.97, Optimal reward -518.97
+Iteration 41 took 4.67 seconds (mean sampled reward: -802.95). Current reward after update: -521.39, Optimal reward -518.97
+Iteration 42 took 4.74 seconds (mean sampled reward: -813.41). Current reward after update: -565.72, Optimal reward -518.97
+Iteration 43 took 4.71 seconds (mean sampled reward: -802.02). Current reward after update: -571.60, Optimal reward -518.97
+Iteration 44 took 4.63 seconds (mean sampled reward: -753.96). Current reward after update: -550.91, Optimal reward -518.97
+Iteration 45 took 4.62 seconds (mean sampled reward: -773.64). Current reward after update: -579.37, Optimal reward -518.97
+Iteration 46 took 4.63 seconds (mean sampled reward: -775.92). Current reward after update: -566.27, Optimal reward -518.97
+Iteration 47 took 4.64 seconds (mean sampled reward: -771.63). Current reward after update: -553.38, Optimal reward -518.97
+Iteration 48 took 4.56 seconds (mean sampled reward: -791.12). Current reward after update: -563.33, Optimal reward -518.97
+Iteration 49 took 4.64 seconds (mean sampled reward: -788.29). Current reward after update: -555.56, Optimal reward -518.97
+Iteration 50 took 4.74 seconds (mean sampled reward: -772.99). Current reward after update: -563.06, Optimal reward -518.97
+Iteration 51 took 4.62 seconds (mean sampled reward: -794.44). Current reward after update: -560.67, Optimal reward -518.97
+Iteration 52 took 4.49 seconds (mean sampled reward: -767.26). Current reward after update: -560.24, Optimal reward -518.97
+Iteration 53 took 4.65 seconds (mean sampled reward: -784.15). Current reward after update: -583.62, Optimal reward -518.97
+Iteration 54 took 4.62 seconds (mean sampled reward: -731.53). Current reward after update: -556.32, Optimal reward -518.97
+Iteration 55 took 4.64 seconds (mean sampled reward: -775.94). Current reward after update: -522.95, Optimal reward -518.97
+Iteration 56 took 4.63 seconds (mean sampled reward: -758.36). Current reward after update: -542.78, Optimal reward -518.97
+Iteration 57 took 4.71 seconds (mean sampled reward: -791.35). Current reward after update: -559.24, Optimal reward -518.97
+Iteration 58 took 4.67 seconds (mean sampled reward: -765.66). Current reward after update: -562.61, Optimal reward -518.97
+Iteration 59 took 4.82 seconds (mean sampled reward: -786.24). Current reward after update: -531.80, Optimal reward -518.97
+Iteration 60 took 4.66 seconds (mean sampled reward: -769.80). Current reward after update: -527.02, Optimal reward -518.97
+Iteration 61 took 4.73 seconds (mean sampled reward: -769.08). Current reward after update: -538.02, Optimal reward -518.97
+Iteration 62 took 4.75 seconds (mean sampled reward: -764.89). Current reward after update: -543.54, Optimal reward -518.97
+Iteration 63 took 4.76 seconds (mean sampled reward: -809.80). Current reward after update: -567.27, Optimal reward -518.97
+Iteration 64 took 4.66 seconds (mean sampled reward: -853.05). Current reward after update: -558.69, Optimal reward -518.97
+Iteration 65 took 4.72 seconds (mean sampled reward: -871.48). Current reward after update: -535.30, Optimal reward -518.97
+Iteration 66 took 4.73 seconds (mean sampled reward: -899.51). Current reward after update: -606.41, Optimal reward -518.97
+Iteration 67 took 4.80 seconds (mean sampled reward: -805.48). Current reward after update: -540.08, Optimal reward -518.97
+Iteration 68 took 4.80 seconds (mean sampled reward: -822.91). Current reward after update: -575.51, Optimal reward -518.97
+Iteration 69 took 4.72 seconds (mean sampled reward: -796.44). Current reward after update: -572.96, Optimal reward -518.97
+Iteration 70 took 4.62 seconds (mean sampled reward: -794.31). Current reward after update: -534.38, Optimal reward -518.97
+Iteration 71 took 4.69 seconds (mean sampled reward: -761.54). Current reward after update: -533.83, Optimal reward -518.97
+Iteration 72 took 4.79 seconds (mean sampled reward: -774.86). Current reward after update: -541.36, Optimal reward -518.97
+Iteration 73 took 4.87 seconds (mean sampled reward: -771.23). Current reward after update: -533.36, Optimal reward -518.97
+Iteration 74 took 4.76 seconds (mean sampled reward: -804.50). Current reward after update: -547.06, Optimal reward -518.97
+Iteration 75 took 4.77 seconds (mean sampled reward: -817.79). Current reward after update: -539.47, Optimal reward -518.97
+Iteration 76 took 4.82 seconds (mean sampled reward: -817.90). Current reward after update: -565.63, Optimal reward -518.97
+Iteration 77 took 4.78 seconds (mean sampled reward: -768.29). Current reward after update: -511.76, Optimal reward -511.76
+Iteration 78 took 4.67 seconds (mean sampled reward: -751.04). Current reward after update: -492.47, Optimal reward -492.47
+Iteration 79 took 4.87 seconds (mean sampled reward: -823.68). Current reward after update: -499.78, Optimal reward -492.47
+Iteration 80 took 4.88 seconds (mean sampled reward: -791.30). Current reward after update: -508.07, Optimal reward -492.47
+Iteration 81 took 4.85 seconds (mean sampled reward: -777.43). Current reward after update: -494.32, Optimal reward -492.47
+Iteration 82 took 4.85 seconds (mean sampled reward: -799.28). Current reward after update: -533.76, Optimal reward -492.47
+Iteration 83 took 4.76 seconds (mean sampled reward: -773.22). Current reward after update: -555.69, Optimal reward -492.47
+Iteration 84 took 4.70 seconds (mean sampled reward: -766.63). Current reward after update: -540.30, Optimal reward -492.47
+Iteration 85 took 4.54 seconds (mean sampled reward: -790.87). Current reward after update: -518.68, Optimal reward -492.47
+Iteration 86 took 4.77 seconds (mean sampled reward: -760.84). Current reward after update: -498.65, Optimal reward -492.47
+Iteration 87 took 4.85 seconds (mean sampled reward: -764.15). Current reward after update: -516.88, Optimal reward -492.47
+Iteration 88 took 4.78 seconds (mean sampled reward: -756.33). Current reward after update: -492.03, Optimal reward -492.03
+Iteration 89 took 4.65 seconds (mean sampled reward: -749.40). Current reward after update: -543.29, Optimal reward -492.03
+Iteration 90 took 4.91 seconds (mean sampled reward: -751.22). Current reward after update: -520.39, Optimal reward -492.03
+Iteration 91 took 4.73 seconds (mean sampled reward: -742.73). Current reward after update: -543.96, Optimal reward -492.03
+Iteration 92 took 4.71 seconds (mean sampled reward: -744.57). Current reward after update: -501.18, Optimal reward -492.03
+Iteration 93 took 4.65 seconds (mean sampled reward: -747.73). Current reward after update: -511.48, Optimal reward -492.03
+Iteration 94 took 4.56 seconds (mean sampled reward: -746.83). Current reward after update: -514.79, Optimal reward -492.03
+Iteration 95 took 4.71 seconds (mean sampled reward: -736.79). Current reward after update: -504.95, Optimal reward -492.03
+Iteration 96 took 4.71 seconds (mean sampled reward: -746.21). Current reward after update: -487.92, Optimal reward -487.92
+Iteration 97 took 4.83 seconds (mean sampled reward: -794.73). Current reward after update: -460.64, Optimal reward -460.64
+Iteration 98 took 4.72 seconds (mean sampled reward: -768.57). Current reward after update: -522.88, Optimal reward -460.64
+Iteration 99 took 4.71 seconds (mean sampled reward: -776.22). Current reward after update: -541.94, Optimal reward -460.64
+Iteration 100 took 4.69 seconds (mean sampled reward: -762.64). Current reward after update: -506.14, Optimal reward -460.64
+Iteration 101 took 4.72 seconds (mean sampled reward: -759.16). Current reward after update: -482.17, Optimal reward -460.64
+Iteration 102 took 4.74 seconds (mean sampled reward: -775.51). Current reward after update: -581.65, Optimal reward -460.64
+Iteration 103 took 4.73 seconds (mean sampled reward: -783.45). Current reward after update: -527.60, Optimal reward -460.64
+Iteration 104 took 4.79 seconds (mean sampled reward: -798.02). Current reward after update: -589.29, Optimal reward -460.64
+Iteration 105 took 4.71 seconds (mean sampled reward: -778.10). Current reward after update: -484.71, Optimal reward -460.64
+Iteration 106 took 4.68 seconds (mean sampled reward: -778.90). Current reward after update: -526.97, Optimal reward -460.64
+Iteration 107 took 4.61 seconds (mean sampled reward: -775.79). Current reward after update: -527.18, Optimal reward -460.64
+Iteration 108 took 4.64 seconds (mean sampled reward: -792.97). Current reward after update: -479.44, Optimal reward -460.64
+Iteration 109 took 4.84 seconds (mean sampled reward: -775.42). Current reward after update: -478.21, Optimal reward -460.64
+Iteration 110 took 4.81 seconds (mean sampled reward: -760.25). Current reward after update: -489.39, Optimal reward -460.64
+Iteration 111 took 4.74 seconds (mean sampled reward: -788.59). Current reward after update: -486.94, Optimal reward -460.64
+Iteration 112 took 4.67 seconds (mean sampled reward: -774.56). Current reward after update: -479.32, Optimal reward -460.64
+Iteration 113 took 4.81 seconds (mean sampled reward: -774.89). Current reward after update: -483.00, Optimal reward -460.64
+Iteration 114 took 4.75 seconds (mean sampled reward: -799.56). Current reward after update: -549.59, Optimal reward -460.64
+Iteration 115 took 4.90 seconds (mean sampled reward: -873.53). Current reward after update: -512.37, Optimal reward -460.64
+Iteration 116 took 4.76 seconds (mean sampled reward: -852.58). Current reward after update: -497.97, Optimal reward -460.64
+Iteration 117 took 4.72 seconds (mean sampled reward: -783.65). Current reward after update: -502.75, Optimal reward -460.64
+Iteration 118 took 4.67 seconds (mean sampled reward: -739.94). Current reward after update: -538.09, Optimal reward -460.64
+Iteration 119 took 4.66 seconds (mean sampled reward: -753.19). Current reward after update: -482.93, Optimal reward -460.64
+Iteration 120 took 4.69 seconds (mean sampled reward: -833.20). Current reward after update: -532.86, Optimal reward -460.64
+Iteration 121 took 4.77 seconds (mean sampled reward: -794.15). Current reward after update: -533.25, Optimal reward -460.64
+Iteration 122 took 4.72 seconds (mean sampled reward: -859.37). Current reward after update: -603.78, Optimal reward -460.64
+Iteration 123 took 4.88 seconds (mean sampled reward: -822.75). Current reward after update: -546.36, Optimal reward -460.64
+Iteration 124 took 4.80 seconds (mean sampled reward: -791.32). Current reward after update: -660.80, Optimal reward -460.64
+Iteration 125 took 4.86 seconds (mean sampled reward: -790.63). Current reward after update: -479.16, Optimal reward -460.64
+Iteration 126 took 4.78 seconds (mean sampled reward: -764.73). Current reward after update: -462.54, Optimal reward -460.64
+Iteration 127 took 4.84 seconds (mean sampled reward: -763.16). Current reward after update: -528.12, Optimal reward -460.64
+Iteration 128 took 4.87 seconds (mean sampled reward: -805.26). Current reward after update: -502.15, Optimal reward -460.64
+Iteration 129 took 4.87 seconds (mean sampled reward: -786.70). Current reward after update: -461.85, Optimal reward -460.64
+Iteration 130 took 4.75 seconds (mean sampled reward: -760.97). Current reward after update: -469.82, Optimal reward -460.64
+Iteration 131 took 4.75 seconds (mean sampled reward: -761.15). Current reward after update: -474.19, Optimal reward -460.64
+Iteration 132 took 4.71 seconds (mean sampled reward: -751.82). Current reward after update: -510.00, Optimal reward -460.64
+Iteration 133 took 4.75 seconds (mean sampled reward: -766.74). Current reward after update: -533.27, Optimal reward -460.64
+Iteration 134 took 4.83 seconds (mean sampled reward: -781.87). Current reward after update: -479.06, Optimal reward -460.64
+Iteration 135 took 4.88 seconds (mean sampled reward: -781.70). Current reward after update: -472.31, Optimal reward -460.64
+Iteration 136 took 4.89 seconds (mean sampled reward: -774.10). Current reward after update: -486.57, Optimal reward -460.64
+Iteration 137 took 4.80 seconds (mean sampled reward: -779.15). Current reward after update: -461.78, Optimal reward -460.64
+Iteration 138 took 4.89 seconds (mean sampled reward: -753.10). Current reward after update: -526.22, Optimal reward -460.64
+Iteration 139 took 4.93 seconds (mean sampled reward: -744.25). Current reward after update: -471.65, Optimal reward -460.64
+Iteration 140 took 5.09 seconds (mean sampled reward: -789.96). Current reward after update: -488.02, Optimal reward -460.64
+Iteration 141 took 4.99 seconds (mean sampled reward: -771.36). Current reward after update: -497.34, Optimal reward -460.64
+Iteration 142 took 5.07 seconds (mean sampled reward: -755.41). Current reward after update: -536.45, Optimal reward -460.64
+Iteration 143 took 5.00 seconds (mean sampled reward: -773.36). Current reward after update: -461.50, Optimal reward -460.64
+Iteration 144 took 4.97 seconds (mean sampled reward: -759.33). Current reward after update: -475.19, Optimal reward -460.64
+Iteration 145 took 4.88 seconds (mean sampled reward: -759.37). Current reward after update: -501.06, Optimal reward -460.64
+Iteration 146 took 4.98 seconds (mean sampled reward: -768.42). Current reward after update: -480.68, Optimal reward -460.64
+Iteration 147 took 5.06 seconds (mean sampled reward: -784.55). Current reward after update: -488.38, Optimal reward -460.64
+Iteration 148 took 4.89 seconds (mean sampled reward: -776.34). Current reward after update: -472.60, Optimal reward -460.64
+Iteration 149 took 4.88 seconds (mean sampled reward: -754.27). Current reward after update: -503.21, Optimal reward -460.64
+Iteration 150 took 4.74 seconds (mean sampled reward: -730.62). Current reward after update: -497.64, Optimal reward -460.64
+Iteration 151 took 4.80 seconds (mean sampled reward: -752.28). Current reward after update: -465.86, Optimal reward -460.64
+Iteration 152 took 4.82 seconds (mean sampled reward: -768.09). Current reward after update: -481.54, Optimal reward -460.64
+Iteration 153 took 4.79 seconds (mean sampled reward: -776.57). Current reward after update: -497.60, Optimal reward -460.64
+Iteration 154 took 4.85 seconds (mean sampled reward: -752.95). Current reward after update: -478.00, Optimal reward -460.64
+Iteration 155 took 4.73 seconds (mean sampled reward: -748.85). Current reward after update: -475.91, Optimal reward -460.64
+Iteration 156 took 4.73 seconds (mean sampled reward: -750.31). Current reward after update: -517.00, Optimal reward -460.64
+Iteration 157 took 4.60 seconds (mean sampled reward: -728.02). Current reward after update: -513.50, Optimal reward -460.64
+Iteration 158 took 4.77 seconds (mean sampled reward: -732.32). Current reward after update: -473.28, Optimal reward -460.64
+Iteration 159 took 4.77 seconds (mean sampled reward: -746.84). Current reward after update: -471.62, Optimal reward -460.64
+Iteration 160 took 4.75 seconds (mean sampled reward: -774.32). Current reward after update: -480.17, Optimal reward -460.64
+Iteration 161 took 4.87 seconds (mean sampled reward: -757.42). Current reward after update: -476.07, Optimal reward -460.64
+Iteration 162 took 4.86 seconds (mean sampled reward: -751.36). Current reward after update: -478.17, Optimal reward -460.64
+Iteration 163 took 4.80 seconds (mean sampled reward: -745.36). Current reward after update: -471.84, Optimal reward -460.64
+Iteration 164 took 4.85 seconds (mean sampled reward: -750.80). Current reward after update: -486.22, Optimal reward -460.64
+Iteration 165 took 4.83 seconds (mean sampled reward: -749.48). Current reward after update: -465.93, Optimal reward -460.64
+Iteration 166 took 4.75 seconds (mean sampled reward: -760.88). Current reward after update: -465.69, Optimal reward -460.64
+Iteration 167 took 4.80 seconds (mean sampled reward: -775.56). Current reward after update: -468.84, Optimal reward -460.64
+Iteration 168 took 4.82 seconds (mean sampled reward: -768.28). Current reward after update: -486.13, Optimal reward -460.64
+Iteration 169 took 4.77 seconds (mean sampled reward: -747.56). Current reward after update: -466.26, Optimal reward -460.64
+Iteration 170 took 4.77 seconds (mean sampled reward: -754.25). Current reward after update: -473.71, Optimal reward -460.64
+Iteration 171 took 4.83 seconds (mean sampled reward: -745.28). Current reward after update: -469.31, Optimal reward -460.64
+Iteration 172 took 4.72 seconds (mean sampled reward: -758.02). Current reward after update: -478.06, Optimal reward -460.64
+Iteration 173 took 4.69 seconds (mean sampled reward: -744.61). Current reward after update: -486.94, Optimal reward -460.64
+Iteration 174 took 4.70 seconds (mean sampled reward: -742.85). Current reward after update: -479.12, Optimal reward -460.64
+Iteration 175 took 4.73 seconds (mean sampled reward: -750.68). Current reward after update: -470.94, Optimal reward -460.64
+Iteration 176 took 4.72 seconds (mean sampled reward: -775.43). Current reward after update: -476.60, Optimal reward -460.64
+Iteration 177 took 4.78 seconds (mean sampled reward: -767.94). Current reward after update: -476.39, Optimal reward -460.64
+Iteration 178 took 4.64 seconds (mean sampled reward: -761.25). Current reward after update: -512.96, Optimal reward -460.64
+Iteration 179 took 4.68 seconds (mean sampled reward: -736.97). Current reward after update: -486.71, Optimal reward -460.64
+Iteration 180 took 4.77 seconds (mean sampled reward: -755.89). Current reward after update: -506.70, Optimal reward -460.64
+Iteration 181 took 4.78 seconds (mean sampled reward: -745.84). Current reward after update: -472.12, Optimal reward -460.64
+Iteration 182 took 4.73 seconds (mean sampled reward: -732.86). Current reward after update: -486.53, Optimal reward -460.64
+Iteration 183 took 4.79 seconds (mean sampled reward: -729.65). Current reward after update: -466.16, Optimal reward -460.64
+Iteration 184 took 4.79 seconds (mean sampled reward: -741.95). Current reward after update: -469.66, Optimal reward -460.64
+Iteration 185 took 4.78 seconds (mean sampled reward: -745.38). Current reward after update: -464.44, Optimal reward -460.64
+Iteration 186 took 4.79 seconds (mean sampled reward: -754.01). Current reward after update: -465.83, Optimal reward -460.64
+Iteration 187 took 4.82 seconds (mean sampled reward: -760.28). Current reward after update: -469.53, Optimal reward -460.64
+Iteration 188 took 4.73 seconds (mean sampled reward: -750.49). Current reward after update: -464.11, Optimal reward -460.64
+Iteration 189 took 4.84 seconds (mean sampled reward: -757.58). Current reward after update: -466.81, Optimal reward -460.64
+Iteration 190 took 4.74 seconds (mean sampled reward: -760.12). Current reward after update: -477.21, Optimal reward -460.64
+Iteration 191 took 4.73 seconds (mean sampled reward: -735.35). Current reward after update: -478.89, Optimal reward -460.64
+Iteration 192 took 4.81 seconds (mean sampled reward: -729.75). Current reward after update: -489.22, Optimal reward -460.64
+Iteration 193 took 4.72 seconds (mean sampled reward: -714.81). Current reward after update: -466.50, Optimal reward -460.64
+Iteration 194 took 4.71 seconds (mean sampled reward: -717.45). Current reward after update: -481.30, Optimal reward -460.64
+Iteration 195 took 4.67 seconds (mean sampled reward: -722.55). Current reward after update: -480.15, Optimal reward -460.64
+Iteration 196 took 4.67 seconds (mean sampled reward: -725.09). Current reward after update: -472.24, Optimal reward -460.64
+Iteration 197 took 4.66 seconds (mean sampled reward: -716.37). Current reward after update: -471.31, Optimal reward -460.64
+Iteration 198 took 4.74 seconds (mean sampled reward: -713.02). Current reward after update: -472.34, Optimal reward -460.64
+Iteration 199 took 4.63 seconds (mean sampled reward: -714.28). Current reward after update: -559.26, Optimal reward -460.64
+Iteration 200 took 4.79 seconds (mean sampled reward: -720.98). Current reward after update: -478.39, Optimal reward -460.64
+Iteration 1 took 4.57 seconds (mean sampled reward: -862.38). Current reward after update: -695.78, Optimal reward -695.78
+Iteration 2 took 4.52 seconds (mean sampled reward: -864.42). Current reward after update: -677.77, Optimal reward -677.77
+Iteration 3 took 4.66 seconds (mean sampled reward: -891.27). Current reward after update: -660.72, Optimal reward -660.72
+Iteration 4 took 4.47 seconds (mean sampled reward: -909.70). Current reward after update: -655.19, Optimal reward -655.19
+Iteration 5 took 4.58 seconds (mean sampled reward: -920.48). Current reward after update: -691.43, Optimal reward -655.19
+Iteration 6 took 4.48 seconds (mean sampled reward: -882.40). Current reward after update: -647.26, Optimal reward -647.26
+Iteration 7 took 4.62 seconds (mean sampled reward: -829.41). Current reward after update: -539.10, Optimal reward -539.10
+Iteration 8 took 4.49 seconds (mean sampled reward: -836.93). Current reward after update: -536.91, Optimal reward -536.91
+Iteration 9 took 4.58 seconds (mean sampled reward: -903.37). Current reward after update: -911.65, Optimal reward -536.91
+Iteration 10 took 4.57 seconds (mean sampled reward: -885.21). Current reward after update: -585.86, Optimal reward -536.91
+Iteration 11 took 4.54 seconds (mean sampled reward: -863.47). Current reward after update: -627.75, Optimal reward -536.91
+Iteration 12 took 4.56 seconds (mean sampled reward: -868.17). Current reward after update: -631.44, Optimal reward -536.91
+Iteration 13 took 4.67 seconds (mean sampled reward: -862.28). Current reward after update: -638.31, Optimal reward -536.91
+Iteration 14 took 4.65 seconds (mean sampled reward: -823.07). Current reward after update: -555.76, Optimal reward -536.91
+Iteration 15 took 4.67 seconds (mean sampled reward: -860.68). Current reward after update: -594.08, Optimal reward -536.91
+Iteration 16 took 4.67 seconds (mean sampled reward: -834.94). Current reward after update: -625.59, Optimal reward -536.91
+Iteration 17 took 4.68 seconds (mean sampled reward: -839.99). Current reward after update: -576.34, Optimal reward -536.91
+Iteration 18 took 4.57 seconds (mean sampled reward: -827.57). Current reward after update: -559.55, Optimal reward -536.91
+Iteration 19 took 4.59 seconds (mean sampled reward: -897.48). Current reward after update: -669.04, Optimal reward -536.91
+Iteration 20 took 4.51 seconds (mean sampled reward: -903.21). Current reward after update: -649.80, Optimal reward -536.91
+Iteration 21 took 4.52 seconds (mean sampled reward: -853.32). Current reward after update: -629.58, Optimal reward -536.91
+Iteration 22 took 4.48 seconds (mean sampled reward: -796.26). Current reward after update: -601.54, Optimal reward -536.91
+Iteration 23 took 4.57 seconds (mean sampled reward: -798.82). Current reward after update: -526.09, Optimal reward -526.09
+Iteration 24 took 4.53 seconds (mean sampled reward: -786.05). Current reward after update: -458.79, Optimal reward -458.79
+Iteration 25 took 4.55 seconds (mean sampled reward: -840.54). Current reward after update: -577.41, Optimal reward -458.79
+Iteration 26 took 4.62 seconds (mean sampled reward: -802.33). Current reward after update: -572.45, Optimal reward -458.79
+Iteration 27 took 4.55 seconds (mean sampled reward: -782.09). Current reward after update: -466.90, Optimal reward -458.79
+Iteration 28 took 4.45 seconds (mean sampled reward: -795.46). Current reward after update: -486.23, Optimal reward -458.79
+Iteration 29 took 4.66 seconds (mean sampled reward: -764.51). Current reward after update: -449.98, Optimal reward -449.98
+Iteration 30 took 4.67 seconds (mean sampled reward: -758.54). Current reward after update: -459.10, Optimal reward -449.98
+Iteration 31 took 4.66 seconds (mean sampled reward: -769.16). Current reward after update: -425.61, Optimal reward -425.61
+Iteration 32 took 4.54 seconds (mean sampled reward: -797.20). Current reward after update: -462.19, Optimal reward -425.61
+Iteration 33 took 4.52 seconds (mean sampled reward: -794.10). Current reward after update: -543.73, Optimal reward -425.61
+Iteration 34 took 4.55 seconds (mean sampled reward: -814.22). Current reward after update: -464.75, Optimal reward -425.61
+Iteration 35 took 4.52 seconds (mean sampled reward: -816.08). Current reward after update: -489.89, Optimal reward -425.61
+Iteration 36 took 4.49 seconds (mean sampled reward: -825.88). Current reward after update: -547.46, Optimal reward -425.61
+Iteration 37 took 4.44 seconds (mean sampled reward: -830.29). Current reward after update: -511.32, Optimal reward -425.61
+Iteration 38 took 4.41 seconds (mean sampled reward: -840.66). Current reward after update: -508.37, Optimal reward -425.61
+Iteration 39 took 4.45 seconds (mean sampled reward: -842.16). Current reward after update: -531.03, Optimal reward -425.61
+Iteration 40 took 4.43 seconds (mean sampled reward: -806.34). Current reward after update: -487.02, Optimal reward -425.61
+Iteration 41 took 4.62 seconds (mean sampled reward: -787.51). Current reward after update: -457.82, Optimal reward -425.61
+Iteration 42 took 4.46 seconds (mean sampled reward: -805.78). Current reward after update: -511.42, Optimal reward -425.61
+Iteration 43 took 4.60 seconds (mean sampled reward: -815.38). Current reward after update: -475.52, Optimal reward -425.61
+Iteration 44 took 4.42 seconds (mean sampled reward: -817.36). Current reward after update: -525.23, Optimal reward -425.61
+Iteration 45 took 4.46 seconds (mean sampled reward: -786.44). Current reward after update: -503.07, Optimal reward -425.61
+Iteration 46 took 4.47 seconds (mean sampled reward: -837.55). Current reward after update: -320.78, Optimal reward -320.78
+Iteration 47 took 4.47 seconds (mean sampled reward: -815.52). Current reward after update: -351.46, Optimal reward -320.78
+Iteration 48 took 4.50 seconds (mean sampled reward: -871.89). Current reward after update: -258.38, Optimal reward -258.38
+Iteration 49 took 4.53 seconds (mean sampled reward: -843.99). Current reward after update: -310.50, Optimal reward -258.38
+Iteration 50 took 4.51 seconds (mean sampled reward: -853.84). Current reward after update: -301.43, Optimal reward -258.38
+Iteration 51 took 4.56 seconds (mean sampled reward: -823.34). Current reward after update: -307.20, Optimal reward -258.38
+Iteration 52 took 4.51 seconds (mean sampled reward: -842.37). Current reward after update: -280.97, Optimal reward -258.38
+Iteration 53 took 4.65 seconds (mean sampled reward: -796.00). Current reward after update: -515.60, Optimal reward -258.38
+Iteration 54 took 4.62 seconds (mean sampled reward: -757.05). Current reward after update: -224.51, Optimal reward -224.51
+Iteration 55 took 4.59 seconds (mean sampled reward: -785.66). Current reward after update: -202.39, Optimal reward -202.39
+Iteration 56 took 4.53 seconds (mean sampled reward: -763.32). Current reward after update: -130.76, Optimal reward -130.76
+Iteration 57 took 4.49 seconds (mean sampled reward: -779.25). Current reward after update: -259.39, Optimal reward -130.76
+Iteration 58 took 4.47 seconds (mean sampled reward: -790.54). Current reward after update: -182.65, Optimal reward -130.76
+Iteration 59 took 4.51 seconds (mean sampled reward: -778.67). Current reward after update: -196.34, Optimal reward -130.76
+Iteration 60 took 4.54 seconds (mean sampled reward: -761.87). Current reward after update: -157.04, Optimal reward -130.76
+Iteration 61 took 4.58 seconds (mean sampled reward: -777.50). Current reward after update: -119.47, Optimal reward -119.47
+Iteration 62 took 4.53 seconds (mean sampled reward: -834.07). Current reward after update: -229.06, Optimal reward -119.47
+Iteration 63 took 4.60 seconds (mean sampled reward: -840.31). Current reward after update: -206.65, Optimal reward -119.47
+Iteration 64 took 4.70 seconds (mean sampled reward: -857.13). Current reward after update: -232.70, Optimal reward -119.47
+Iteration 65 took 4.57 seconds (mean sampled reward: -760.40). Current reward after update: -738.25, Optimal reward -119.47
+Iteration 66 took 4.55 seconds (mean sampled reward: -772.95). Current reward after update: -62.00, Optimal reward -62.00
+Iteration 67 took 4.61 seconds (mean sampled reward: -803.88). Current reward after update: -220.58, Optimal reward -62.00
+Iteration 68 took 4.69 seconds (mean sampled reward: -767.61). Current reward after update: -204.87, Optimal reward -62.00
+Iteration 69 took 4.68 seconds (mean sampled reward: -742.47). Current reward after update: -30.86, Optimal reward -30.86
+Iteration 70 took 4.71 seconds (mean sampled reward: -738.00). Current reward after update: -212.57, Optimal reward -30.86
+Iteration 71 took 4.62 seconds (mean sampled reward: -770.51). Current reward after update: -36.30, Optimal reward -30.86
+Iteration 72 took 4.79 seconds (mean sampled reward: -766.38). Current reward after update: -85.79, Optimal reward -30.86
+Iteration 73 took 4.66 seconds (mean sampled reward: -758.45). Current reward after update: -133.08, Optimal reward -30.86
+Iteration 74 took 4.60 seconds (mean sampled reward: -736.35). Current reward after update: -129.47, Optimal reward -30.86
+Iteration 75 took 4.64 seconds (mean sampled reward: -737.42). Current reward after update: 32.96, Optimal reward 32.96
+Iteration 76 took 4.70 seconds (mean sampled reward: -771.82). Current reward after update: -73.82, Optimal reward 32.96
+Iteration 77 took 4.71 seconds (mean sampled reward: -791.17). Current reward after update: -172.34, Optimal reward 32.96
+Iteration 78 took 4.76 seconds (mean sampled reward: -792.54). Current reward after update: -153.71, Optimal reward 32.96
+Iteration 79 took 4.75 seconds (mean sampled reward: -842.19). Current reward after update: -158.46, Optimal reward 32.96
+Iteration 80 took 4.72 seconds (mean sampled reward: -902.37). Current reward after update: -263.48, Optimal reward 32.96
+Iteration 81 took 4.69 seconds (mean sampled reward: -871.96). Current reward after update: -223.23, Optimal reward 32.96
+Iteration 82 took 4.73 seconds (mean sampled reward: -870.42). Current reward after update: -215.10, Optimal reward 32.96
+Iteration 83 took 4.77 seconds (mean sampled reward: -854.58). Current reward after update: -859.64, Optimal reward 32.96
+Iteration 84 took 4.74 seconds (mean sampled reward: -828.62). Current reward after update: -145.63, Optimal reward 32.96
+Iteration 85 took 4.73 seconds (mean sampled reward: -838.84). Current reward after update: -214.40, Optimal reward 32.96
+Iteration 86 took 4.63 seconds (mean sampled reward: -819.83). Current reward after update: -217.24, Optimal reward 32.96
+Iteration 87 took 4.65 seconds (mean sampled reward: -864.25). Current reward after update: -187.26, Optimal reward 32.96
+Iteration 88 took 4.55 seconds (mean sampled reward: -848.37). Current reward after update: -239.13, Optimal reward 32.96
+Iteration 89 took 4.57 seconds (mean sampled reward: -854.35). Current reward after update: -194.08, Optimal reward 32.96
+Iteration 90 took 4.56 seconds (mean sampled reward: -830.60). Current reward after update: -174.63, Optimal reward 32.96
+Iteration 91 took 4.59 seconds (mean sampled reward: -764.16). Current reward after update: -85.26, Optimal reward 32.96
+Iteration 92 took 4.51 seconds (mean sampled reward: -730.77). Current reward after update: -166.04, Optimal reward 32.96
+Iteration 93 took 4.54 seconds (mean sampled reward: -730.79). Current reward after update: -108.54, Optimal reward 32.96
+Iteration 94 took 4.68 seconds (mean sampled reward: -768.37). Current reward after update: -123.54, Optimal reward 32.96
+Iteration 95 took 4.64 seconds (mean sampled reward: -738.69). Current reward after update: -97.74, Optimal reward 32.96
+Iteration 96 took 4.48 seconds (mean sampled reward: -676.37). Current reward after update: -274.48, Optimal reward 32.96
+Iteration 97 took 4.60 seconds (mean sampled reward: -692.26). Current reward after update: -76.48, Optimal reward 32.96
+Iteration 98 took 4.49 seconds (mean sampled reward: -712.17). Current reward after update: -67.42, Optimal reward 32.96
+Iteration 99 took 4.66 seconds (mean sampled reward: -714.23). Current reward after update: -78.60, Optimal reward 32.96
+Iteration 100 took 4.56 seconds (mean sampled reward: -718.82). Current reward after update: -40.38, Optimal reward 32.96
+Iteration 101 took 4.55 seconds (mean sampled reward: -698.45). Current reward after update: -113.17, Optimal reward 32.96
+Iteration 102 took 4.55 seconds (mean sampled reward: -743.90). Current reward after update: -30.35, Optimal reward 32.96
+Iteration 103 took 4.67 seconds (mean sampled reward: -723.50). Current reward after update: -44.54, Optimal reward 32.96
+Iteration 104 took 4.71 seconds (mean sampled reward: -775.67). Current reward after update: -74.60, Optimal reward 32.96
+Iteration 105 took 4.59 seconds (mean sampled reward: -748.18). Current reward after update: -65.58, Optimal reward 32.96
+Iteration 106 took 4.75 seconds (mean sampled reward: -723.27). Current reward after update: -57.65, Optimal reward 32.96
+Iteration 107 took 4.71 seconds (mean sampled reward: -749.88). Current reward after update: -47.17, Optimal reward 32.96
+Iteration 108 took 4.74 seconds (mean sampled reward: -736.17). Current reward after update: 13.55, Optimal reward 32.96
+Iteration 109 took 4.81 seconds (mean sampled reward: -701.82). Current reward after update: -9.43, Optimal reward 32.96
+Iteration 110 took 4.74 seconds (mean sampled reward: -758.53). Current reward after update: 2.63, Optimal reward 32.96
+Iteration 111 took 4.76 seconds (mean sampled reward: -777.74). Current reward after update: -49.79, Optimal reward 32.96
+Iteration 112 took 4.75 seconds (mean sampled reward: -753.68). Current reward after update: -91.72, Optimal reward 32.96
+Iteration 113 took 4.67 seconds (mean sampled reward: -755.90). Current reward after update: -196.99, Optimal reward 32.96
+Iteration 114 took 4.55 seconds (mean sampled reward: -761.18). Current reward after update: -182.53, Optimal reward 32.96
+Iteration 115 took 4.70 seconds (mean sampled reward: -728.79). Current reward after update: -119.48, Optimal reward 32.96
+Iteration 116 took 4.73 seconds (mean sampled reward: -723.78). Current reward after update: -24.66, Optimal reward 32.96
+Iteration 117 took 4.78 seconds (mean sampled reward: -742.41). Current reward after update: 15.00, Optimal reward 32.96
+Iteration 118 took 4.78 seconds (mean sampled reward: -746.74). Current reward after update: -57.16, Optimal reward 32.96
+Iteration 119 took 4.73 seconds (mean sampled reward: -756.46). Current reward after update: -17.31, Optimal reward 32.96
+Iteration 120 took 4.91 seconds (mean sampled reward: -763.22). Current reward after update: -183.18, Optimal reward 32.96
+Iteration 121 took 4.94 seconds (mean sampled reward: -753.18). Current reward after update: -97.63, Optimal reward 32.96
+Iteration 122 took 4.82 seconds (mean sampled reward: -793.41). Current reward after update: -145.54, Optimal reward 32.96
+Iteration 123 took 4.89 seconds (mean sampled reward: -776.85). Current reward after update: -117.38, Optimal reward 32.96
+Iteration 124 took 4.87 seconds (mean sampled reward: -782.16). Current reward after update: -46.04, Optimal reward 32.96
+Iteration 125 took 4.83 seconds (mean sampled reward: -762.25). Current reward after update: 70.34, Optimal reward 70.34
+Iteration 126 took 4.93 seconds (mean sampled reward: -787.71). Current reward after update: -42.36, Optimal reward 70.34
+Iteration 127 took 4.96 seconds (mean sampled reward: -747.32). Current reward after update: -46.32, Optimal reward 70.34
+Iteration 128 took 4.94 seconds (mean sampled reward: -745.61). Current reward after update: -14.89, Optimal reward 70.34
+Iteration 129 took 5.03 seconds (mean sampled reward: -759.10). Current reward after update: 71.27, Optimal reward 71.27
+Iteration 130 took 5.02 seconds (mean sampled reward: -776.01). Current reward after update: -60.39, Optimal reward 71.27
+Iteration 131 took 4.99 seconds (mean sampled reward: -793.53). Current reward after update: 76.52, Optimal reward 76.52
+Iteration 132 took 4.90 seconds (mean sampled reward: -812.40). Current reward after update: 14.84, Optimal reward 76.52
+Iteration 133 took 4.85 seconds (mean sampled reward: -783.25). Current reward after update: -6.26, Optimal reward 76.52
+Iteration 134 took 4.86 seconds (mean sampled reward: -722.90). Current reward after update: 34.02, Optimal reward 76.52
+Iteration 135 took 4.93 seconds (mean sampled reward: -749.00). Current reward after update: 59.28, Optimal reward 76.52
+Iteration 136 took 4.94 seconds (mean sampled reward: -776.76). Current reward after update: 79.67, Optimal reward 79.67
+Iteration 137 took 4.96 seconds (mean sampled reward: -776.37). Current reward after update: 13.64, Optimal reward 79.67
+Iteration 138 took 4.97 seconds (mean sampled reward: -811.44). Current reward after update: 125.79, Optimal reward 125.79
+Iteration 139 took 4.96 seconds (mean sampled reward: -820.26). Current reward after update: -37.16, Optimal reward 125.79
+Iteration 140 took 4.91 seconds (mean sampled reward: -808.02). Current reward after update: -52.45, Optimal reward 125.79
+Iteration 141 took 5.05 seconds (mean sampled reward: -783.81). Current reward after update: -12.18, Optimal reward 125.79
+Iteration 142 took 5.04 seconds (mean sampled reward: -763.37). Current reward after update: 63.73, Optimal reward 125.79
+Iteration 143 took 5.00 seconds (mean sampled reward: -756.95). Current reward after update: -25.72, Optimal reward 125.79
+Iteration 144 took 4.95 seconds (mean sampled reward: -737.73). Current reward after update: -48.89, Optimal reward 125.79
+Iteration 145 took 4.91 seconds (mean sampled reward: -737.66). Current reward after update: 14.33, Optimal reward 125.79
+Iteration 146 took 5.02 seconds (mean sampled reward: -738.67). Current reward after update: 27.93, Optimal reward 125.79
+Iteration 147 took 4.90 seconds (mean sampled reward: -762.62). Current reward after update: 18.89, Optimal reward 125.79
+Iteration 148 took 5.02 seconds (mean sampled reward: -798.73). Current reward after update: 131.20, Optimal reward 131.20
+Iteration 149 took 5.04 seconds (mean sampled reward: -795.69). Current reward after update: 81.93, Optimal reward 131.20
+Iteration 150 took 5.06 seconds (mean sampled reward: -781.54). Current reward after update: -15.08, Optimal reward 131.20
+Iteration 151 took 5.06 seconds (mean sampled reward: -730.69). Current reward after update: 2.06, Optimal reward 131.20
+Iteration 152 took 5.10 seconds (mean sampled reward: -746.71). Current reward after update: 45.78, Optimal reward 131.20
+Iteration 153 took 4.96 seconds (mean sampled reward: -726.75). Current reward after update: 65.10, Optimal reward 131.20
+Iteration 154 took 5.16 seconds (mean sampled reward: -798.59). Current reward after update: 1.30, Optimal reward 131.20
+Iteration 155 took 5.64 seconds (mean sampled reward: -789.47). Current reward after update: 109.64, Optimal reward 131.20
+Iteration 156 took 5.83 seconds (mean sampled reward: -763.08). Current reward after update: 138.18, Optimal reward 138.18
+Iteration 157 took 5.81 seconds (mean sampled reward: -756.22). Current reward after update: 119.92, Optimal reward 138.18
+Iteration 158 took 5.68 seconds (mean sampled reward: -719.53). Current reward after update: 84.85, Optimal reward 138.18
+Iteration 159 took 5.63 seconds (mean sampled reward: -732.36). Current reward after update: 163.86, Optimal reward 163.86
+Iteration 160 took 5.50 seconds (mean sampled reward: -757.14). Current reward after update: 150.05, Optimal reward 163.86
+Iteration 161 took 5.43 seconds (mean sampled reward: -769.38). Current reward after update: 112.29, Optimal reward 163.86
+Iteration 162 took 5.45 seconds (mean sampled reward: -769.81). Current reward after update: 95.08, Optimal reward 163.86
+Iteration 163 took 5.49 seconds (mean sampled reward: -767.20). Current reward after update: -81.63, Optimal reward 163.86
+Iteration 164 took 5.34 seconds (mean sampled reward: -784.78). Current reward after update: 0.13, Optimal reward 163.86
+Iteration 165 took 5.08 seconds (mean sampled reward: -774.83). Current reward after update: 26.48, Optimal reward 163.86
+Iteration 166 took 5.05 seconds (mean sampled reward: -776.29). Current reward after update: 119.15, Optimal reward 163.86
+Iteration 167 took 5.07 seconds (mean sampled reward: -764.47). Current reward after update: -6.77, Optimal reward 163.86
+Iteration 168 took 5.05 seconds (mean sampled reward: -765.34). Current reward after update: -141.90, Optimal reward 163.86
+Iteration 169 took 5.13 seconds (mean sampled reward: -750.97). Current reward after update: 111.84, Optimal reward 163.86
+Iteration 170 took 5.13 seconds (mean sampled reward: -708.04). Current reward after update: 154.79, Optimal reward 163.86
+Iteration 171 took 5.00 seconds (mean sampled reward: -720.26). Current reward after update: 128.87, Optimal reward 163.86
+Iteration 172 took 5.22 seconds (mean sampled reward: -684.24). Current reward after update: 123.53, Optimal reward 163.86
+Iteration 173 took 5.03 seconds (mean sampled reward: -726.77). Current reward after update: 120.94, Optimal reward 163.86
+Iteration 174 took 5.03 seconds (mean sampled reward: -749.18). Current reward after update: 98.68, Optimal reward 163.86
+Iteration 175 took 4.98 seconds (mean sampled reward: -759.37). Current reward after update: 53.38, Optimal reward 163.86
+Iteration 176 took 4.95 seconds (mean sampled reward: -770.09). Current reward after update: 85.18, Optimal reward 163.86
+Iteration 177 took 4.98 seconds (mean sampled reward: -720.60). Current reward after update: 138.03, Optimal reward 163.86
+Iteration 178 took 4.93 seconds (mean sampled reward: -669.35). Current reward after update: 143.23, Optimal reward 163.86
+Iteration 179 took 5.07 seconds (mean sampled reward: -712.63). Current reward after update: 103.31, Optimal reward 163.86
+Iteration 180 took 5.24 seconds (mean sampled reward: -764.37). Current reward after update: 36.83, Optimal reward 163.86
+Iteration 181 took 5.63 seconds (mean sampled reward: -726.23). Current reward after update: 117.69, Optimal reward 163.86
+Iteration 182 took 5.98 seconds (mean sampled reward: -777.91). Current reward after update: 156.28, Optimal reward 163.86
+Iteration 183 took 5.89 seconds (mean sampled reward: -731.98). Current reward after update: 124.76, Optimal reward 163.86
+Iteration 184 took 5.94 seconds (mean sampled reward: -757.58). Current reward after update: 148.17, Optimal reward 163.86
+Iteration 185 took 5.80 seconds (mean sampled reward: -754.92). Current reward after update: 110.92, Optimal reward 163.86
+Iteration 186 took 5.74 seconds (mean sampled reward: -726.72). Current reward after update: 144.24, Optimal reward 163.86
+Iteration 187 took 5.59 seconds (mean sampled reward: -714.45). Current reward after update: 57.03, Optimal reward 163.86
+Iteration 188 took 5.53 seconds (mean sampled reward: -723.55). Current reward after update: -3.32, Optimal reward 163.86
+Iteration 189 took 5.58 seconds (mean sampled reward: -739.21). Current reward after update: 128.94, Optimal reward 163.86
+Iteration 190 took 5.75 seconds (mean sampled reward: -725.91). Current reward after update: 156.19, Optimal reward 163.86
+Iteration 191 took 5.80 seconds (mean sampled reward: -718.14). Current reward after update: 153.01, Optimal reward 163.86
+Iteration 192 took 5.93 seconds (mean sampled reward: -735.92). Current reward after update: 165.25, Optimal reward 165.25
+Iteration 193 took 5.79 seconds (mean sampled reward: -719.45). Current reward after update: 132.54, Optimal reward 165.25
+Iteration 194 took 5.85 seconds (mean sampled reward: -738.81). Current reward after update: 191.35, Optimal reward 191.35
+Iteration 195 took 5.83 seconds (mean sampled reward: -688.81). Current reward after update: 190.81, Optimal reward 191.35
+Iteration 196 took 5.73 seconds (mean sampled reward: -734.18). Current reward after update: 166.10, Optimal reward 191.35
+Iteration 197 took 5.80 seconds (mean sampled reward: -753.33). Current reward after update: 138.25, Optimal reward 191.35
+Iteration 198 took 5.83 seconds (mean sampled reward: -768.28). Current reward after update: 162.93, Optimal reward 191.35
+Iteration 199 took 5.82 seconds (mean sampled reward: -796.83). Current reward after update: 141.32, Optimal reward 191.35
+Iteration 200 took 5.79 seconds (mean sampled reward: -714.01). Current reward after update: 101.08, Optimal reward 191.35
+Sigma: 0.8 mean rewards: -210.92012107480193, best rewards:191.35185780596595
+
+argv[0]=
+argv[0]=
+argv[0]=
+argv[0]=
+argv[0]=
+argv[0]=

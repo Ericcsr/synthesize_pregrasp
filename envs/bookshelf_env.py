@@ -35,7 +35,7 @@ from utils.math_utils import rotation_matrix_from_vectors, minimumDist2dBox
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 CLEARANCE_H = 0.05
-USE_RENDERER = False
+USE_RENDERER = True
 
 
 class BookShelfBulletEnv(gym.Env):
@@ -346,7 +346,7 @@ class BookShelfBulletEnv(gym.Env):
                     # 4 fingers assumed
                     if fin_ind == 0:
                         # thumb, which have diffrent action mapping
-                        loc_x = (sub_a[-3] + 1) * 0.5 * 0.2  # [-1, 1] ->[0, 2]-> [0.0, 0.2]
+                        loc_x = (sub_a[-3] + 1) * 0.5 * 0.15 + 0.05  # [-1, 1] ->[0, 2]-> [0.0, 0.2]
                         loc_z = 0.05        # always on top hard coded assumption
                         loc_y = sub_a[-2] * 0.1  # [-1, 1] -> [-0.1, 0.1]
                         surface_norm = np.array([0., 0., 1.])
