@@ -571,14 +571,17 @@ class BookShelfBulletEnv(gym.Env):
         final_r = 0
         # Let the system evolve naturally Then stabilize the system for final eval
         # Only avaiable in final epoch
+        print(self.c_step_timer, self.n_steps)
         if self.c_step_timer == self.n_steps - 1:
             for _ in range(300):
                 self._p.stepSimulation()
                 final_r += calc_reward_value()
 
-                if self.render and USE_RENDERER:
-                    time.sleep(self._ts * 4.0)
-                    self.renderer.render()
+                if self.render:
+                    time.sleep(self._ts * 20.0)
+                    if USE_RENDERER:
+                        self.renderer.render()
+                    print("In Between")
         self.c_step_timer += 1
         obs = self.get_extended_observation()
 
