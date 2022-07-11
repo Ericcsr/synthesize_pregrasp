@@ -274,8 +274,9 @@ class LaptopBulletEnv(gym.Env):
 
         # print("stepping")
         contact_state = self.path[self.step_cnt]
+        prev_contact_state = None if self.step_cnt == 0 else self.path[self.step_cnt-1]
         self.step_cnt += 1
-        next_contact_state = None if self.step_cnt == len(self.path) else self.path[self.step_cnt]
+        
         # TODO: during step, small block might slide away
         # Compansate for thickness of the object
         # This face should be a surface norm
@@ -337,11 +338,12 @@ class LaptopBulletEnv(gym.Env):
 
             pos_force_vec += pos_vec
             
-            # if (next_contact_state is None) or (self.csg.getState(contact_state)[fin_ind] != self.csg.getState(next_contact_state)[fin_ind]):
-            #     pos_force_vec += [0.0]
-            # else:
-            #     pos_force_vec += [1.0] if sub_a[-1] > 0 else [0.0]      # last bit on / off (non-colliding finger) if next contact region is different then directly break
-            pos_force_vec += [1.0] if sub_a[-1] > 0 else [0.0]
+            # If previous state is in contact and current state is different then the previous on, then break contact.
+            if  (prev_contact_state != None and self.csg.getState(contact_state)[fin_ind] != self.csg.getState(prev_contact_state)[fin_ind]) and previous_fins[fin_ind][1]:
+                pos_force_vec += [0.0]
+            else:
+                pos_force_vec += [1.0] if sub_a[-1] > 0 else [0.0]      # last bit on / off (non-colliding finger) if next contact region is different then directly break
+            #pos_force_vec += [1.0] if sub_a[-1] > 0 else [0.0]
             # Current decision will be effective next time.
             assert len(pos_force_vec) == self.single_action_dim + 1
             return pos_force_vec
