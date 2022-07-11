@@ -35,12 +35,22 @@ if __name__ == '__main__':
 
     # Create a reference environment
     ref_env = envs_dict[args.env](steps=args.steps, render=False, init_obj_pose=init_obj_pose)
-    paths, weight = ref_env.csg.samplePathFromState(0, args.steps, 10)
+    #paths, weight = ref_env.csg.getPathFromState(2, args.steps-1)
+    paths = np.array([[2,1,0],[2,1,1]])
+    weight = np.array([0.5, 0.5])
+
+    #idx = np.argsort(weight)[:-11:-1]
+    # weight = weight[idx]
+    # paths = paths[idx]
+    # print(paths)
+    # print(weight)
+    # exit()
 
     weight /= weight.sum()
 
-    total_resources = 64 * 10
-    resource_each_steps = total_resources * weight
+    total_resources = 128
+    resource_each_paths = total_resources * weight
+    print(resource_each_paths)
 
     log_text_list = []
     f = open(f"data/log/{args.exp_name}.txt", 'w')
@@ -48,7 +58,7 @@ if __name__ == '__main__':
         for i, path in enumerate(paths):
             optimizer = StochTrajOptimizer(env=envs_dict[args.env], sigma=0.8, initial_guess=None,
                                     TimeSteps=args.steps, seed=12367134, render=False, Iterations=args.iters, num_fingertips=4, num_interp_f=7,
-                                    Num_processes=64, Traj_per_process=10, opt_time=False, verbose=1, 
+                                    Num_processes=int(resource_each_paths[i]), Traj_per_process=10, opt_time=False, verbose=1, 
                                     last_fins=fin_data, init_obj_pose=init_obj_pose, steps=args.steps, path=path)
 
             uopt = None
@@ -56,7 +66,7 @@ if __name__ == '__main__':
             r_log = []
             Jopt_total = 0
             Jopt = -np.inf
-            for i in range(args.runs):
+            for j in range(args.runs):
                 _uopt, _Jopt, _Jopt_log, _r_log = optimizer.optimize()
                 Jopt_total += _Jopt/args.runs
                 if _Jopt > Jopt:

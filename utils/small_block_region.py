@@ -6,9 +6,10 @@ class SmallBlockRegionDummy:
         self.y_range = [-0.2, 0.2]
         self.z_range = [-0.05, 0.05]
         self.csg = contact_state_graph
-        region_data = np.load("../data/regions/small_block_dummy_region.npz")
+        region_data = np.load("data/regions/small_block_dummy_region.npz")
         self.regions = region_data["regions"]
         self.fixed_axis = region_data["fixed_axes"]
+        self.surface_norm = region_data["surface_norm"]
 
     def parse_action(self, state_id, action):
         """
@@ -24,6 +25,7 @@ class SmallBlockRegionDummy:
         print(fixed_axes)
         scaled_action = (action+1) * 0.5 # Mapped to [0, 1]
         finger_tip_pos = []
+        finger_tip_norm = []
 
         for i,region in enumerate(finger_regions):
             sub_a = scaled_action[i]
@@ -53,6 +55,7 @@ class SmallBlockRegionDummy:
                 y = y_range * sub_a[0] + y_start
                 z = region[4]
             finger_tip_pos.append(np.array([x,y,z]))
+            finger_tip_norm.append(self.surface_norm[state[i]])
         return finger_tip_pos
 
     def parse_sub_action(self, state_id, finger_id, sub_action):
@@ -84,4 +87,4 @@ class SmallBlockRegionDummy:
             y_start = region[2]
             y = y_range * scaled_action[0] + y_start
             z = region[4]
-        return [x,y,z]
+        return np.array([x,y,z]), self.surface_norm[region_id]

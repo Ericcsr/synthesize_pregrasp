@@ -63,7 +63,7 @@ class LaptopBulletEnv(gym.Env):
         self._ts = 1. / 250. # A constant
         self.num_fingertips = num_fingertips
         self.num_interp_f = num_interp_f
-        self.csg = ContactStateGraph(np.load("data/contact_states/laptop_env/dummy_states.npy"))
+        self.csg = ContactStateGraph(np.load("data/contact_states/laptop_env/dummy_states_2.npy"))
         self.contact_region = SmallBlockRegionDummy(self.csg)
         self.path = path
         assert num_fingertips == 4         # TODO: 3/4/5?
@@ -275,6 +275,7 @@ class LaptopBulletEnv(gym.Env):
         # print("stepping")
         contact_state = self.path[self.step_cnt]
         self.step_cnt += 1
+        next_contact_state = None if self.step_cnt == len(self.path) else self.path[self.step_cnt]
         # TODO: during step, small block might slide away
         # Compansate for thickness of the object
         # This face should be a surface norm
@@ -309,7 +310,8 @@ class LaptopBulletEnv(gym.Env):
                 assert not (self.last_surface_norm is None)
                 surface_norm = self.last_surface_norm[fin_ind]
             else: # Currently we always use split region
-                pos_vec = self.contact_region.parse_sub_action(contact_state, fin_ind, sub_a[-3:-1])
+                pos_vec, surface_norm = self.contact_region.parse_sub_action(contact_state, fin_ind, sub_a[-3:-1]) # It also need to output contact norm
+                # Need to compute surface norm based on current pos_vec
                 pos_vec = get_small_block_location_local(surface_norm, pos_vec.copy())
                 self.last_surface_norm[fin_ind] = surface_norm
 
@@ -334,7 +336,12 @@ class LaptopBulletEnv(gym.Env):
                 pos_force_vec += v.tolist()
 
             pos_force_vec += pos_vec
-            pos_force_vec += [1.0] if sub_a[-1] > 0 else [0.0]      # last bit on / off (non-colliding finger)
+            
+            # if (next_contact_state is None) or (self.csg.getState(contact_state)[fin_ind] != self.csg.getState(next_contact_state)[fin_ind]):
+            #     pos_force_vec += [0.0]
+            # else:
+            #     pos_force_vec += [1.0] if sub_a[-1] > 0 else [0.0]      # last bit on / off (non-colliding finger) if next contact region is different then directly break
+            pos_force_vec += [1.0] if sub_a[-1] > 0 else [0.0]
             # Current decision will be effective next time.
             assert len(pos_force_vec) == self.single_action_dim + 1
             return pos_force_vec
@@ -443,12 +450,8 @@ class LaptopBulletEnv(gym.Env):
         pre_simulate(self.cur_fins)
 
         ave_r = 0.0
-        if not self.use_split_region:
-            cost_remaining=0.0
-            #_,_, cost_remaining = self.get_hand_pose(self.cur_fins, self.last_fins)
-        else:
-            #cost_remaining=0.0
-            _,_, cost_remaining = self.get_hand_pose(self.cur_fins, self.last_fins)
+        
+        _,_, cost_remaining = self.get_hand_pose(self.cur_fins, self.last_fins)
 
         if not self.train:
             object_poses = []

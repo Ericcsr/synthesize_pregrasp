@@ -54,7 +54,7 @@ class ContactStateGraph:
         self.paths = []
         self.weights = []
         self._getPathFromState(state_id, steps,current_path=[])
-        return self.paths, self.weights
+        return np.asarray(self.paths), np.asarray(self.weights)
 
     def samplePathFromState(self, state_id, steps, n_paths):
         self.paths = []
@@ -74,7 +74,7 @@ class ContactStateGraph:
                 total_weight *= weights[idx]
             self.paths.append(path)
             self.weights.append(total_weight)
-        return self.paths, self.weights
+        return np.asarray(self.paths), np.asarray(self.weights)
             
     
 if __name__ == "__main__":

@@ -1,0 +1,10 @@
+Sigma: 0 mean rewards: -882.6488941634182, best rewards:-771.7706491756529
+Sigma: 1 mean rewards: -836.6765522331748, best rewards:-667.6861538796132
+Sigma: 2 mean rewards: -752.9657520886786, best rewards:-645.8794671442265
+Sigma: 3 mean rewards: -758.027131086078, best rewards:-412.4773739988827
+Sigma: 4 mean rewards: -799.6438987601827, best rewards:-479.4277216901282
+Sigma: 5 mean rewards: -792.7644763920555, best rewards:-547.3746527867454
+Sigma: 6 mean rewards: -839.8121097349685, best rewards:-785.2365187898598
+Sigma: 7 mean rewards: -879.4601994633236, best rewards:-595.598333665498
+Sigma: 8 mean rewards: -768.3499829496878, best rewards:-127.49505654579855
+Sigma: 9 mean rewards: -1092.4410367933933, best rewards:-784.5433869990145
