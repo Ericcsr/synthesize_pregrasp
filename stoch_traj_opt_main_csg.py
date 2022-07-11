@@ -1,5 +1,4 @@
 #from my_pybullet_envs.point_contact_env import PointContactBulletEnv
-from torch import Argument
 from envs.small_block_contact_graph_env import LaptopBulletEnv
 from envs.bookshelf_env import BookShelfBulletEnv
 #from my_pybullet_envs.shadow_hand_grasp_env import ShadowHandGraspEnv
