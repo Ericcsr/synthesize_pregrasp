@@ -35,7 +35,7 @@ if __name__ == '__main__':
     # Create a reference environment
     ref_env = envs_dict[args.env](steps=args.steps, render=False, init_obj_pose=init_obj_pose)
     #paths, weight = ref_env.csg.getPathFromState(2, args.steps-1)
-    paths = np.array([[2,1,0],[2,1,1]])
+    paths = np.array([[2,0,0],[2,1,1]])
     weight = np.array([0.5, 0.5])
 
     #idx = np.argsort(weight)[:-11:-1]
