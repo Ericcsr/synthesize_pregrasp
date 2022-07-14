@@ -32,6 +32,7 @@ import  model.param as model_param
 from utils.math_utils import rotation_matrix_from_vectors
 from utils.small_block_region import SmallBlockRegionDummy
 from utils.contact_state_graph import ContactStateGraph
+from utils.contact_state_embedding import ContactStateEmbedding
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 CLEARANCE_H = 0.05
@@ -63,8 +64,11 @@ class LaptopBulletEnv(gym.Env):
         self._ts = 1. / 250. # A constant
         self.num_fingertips = num_fingertips
         self.num_interp_f = num_interp_f
-        self.csg = ContactStateGraph(np.load("data/contact_states/laptop_env/dummy_states_2.npy"))
-        self.contact_region = SmallBlockRegionDummy(self.csg)
+        #self.csg = ContactStateGraph(np.load("data/contact_states/laptop_env/dummy_states_2.npy"))
+        self.contact_region = SmallBlockRegionDummy()
+        self.contact_region.create_geodesic_agent()
+        self.distance_matrix = self.contact_region.construct_distance_matrix()
+        self.csg = ContactStateEmbedding(np.load("data/contact_states/laptop_env/dummy_states_2.npy"), distance_table=self.distance_matrix, beta=0.5)
         self.path = path
         assert num_fingertips == 4         # TODO: 3/4/5?
         self.opt_time = opt_time

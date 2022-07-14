@@ -6,6 +6,7 @@ from stoch_traj_opt import StochTrajOptimizer
 import numpy as np
 import traceback
 from argparse import ArgumentParser
+from utils.path_filter import filter_paths
 
 envs_dict = {
     "bookshelf":BookShelfBulletEnv,
@@ -34,9 +35,13 @@ if __name__ == '__main__':
 
     # Create a reference environment
     ref_env = envs_dict[args.env](steps=args.steps, render=False, init_obj_pose=init_obj_pose)
-    #paths, weight = ref_env.csg.getPathFromState(2, args.steps-1)
-    paths = np.array([[2,0,0],[2,1,1]])
-    weight = np.array([0.5, 0.5])
+    paths_raw, distances = ref_env.csg.getPathFromState(2, args.steps)
+
+    paths = filter_paths(paths_raw, ref_env.csg, ref_env.contact_region)
+    # Need to check final state dynamical feasibility here
+    
+    #paths = np.array([[2,0,0],[2,1,1]])
+    #weight = np.array([0.5, 0.5])
 
     #idx = np.argsort(weight)[:-11:-1]
     # weight = weight[idx]
@@ -45,19 +50,13 @@ if __name__ == '__main__':
     # print(weight)
     # exit()
 
-    weight /= weight.sum()
-
-    total_resources = 128
-    resource_each_paths = total_resources * weight
-    print(resource_each_paths)
-
     log_text_list = []
     f = open(f"data/log/{args.exp_name}.txt", 'w')
     try:
-        for i, path in enumerate(paths):
+        for i, path in enumerate(paths): # Search for all the paths.
             optimizer = StochTrajOptimizer(env=envs_dict[args.env], sigma=0.8, initial_guess=None,
                                     TimeSteps=args.steps, seed=12367134, render=False, Iterations=args.iters, num_fingertips=4, num_interp_f=7,
-                                    Num_processes=int(resource_each_paths[i]), Traj_per_process=10, opt_time=False, verbose=1, 
+                                    Num_processes=64, Traj_per_process=10, opt_time=False, verbose=1, 
                                     last_fins=fin_data, init_obj_pose=init_obj_pose, steps=args.steps, path=path)
 
             uopt = None
