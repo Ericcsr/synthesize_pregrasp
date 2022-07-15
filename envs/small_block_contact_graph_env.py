@@ -175,12 +175,18 @@ class LaptopBulletEnv(gym.Env):
         for i in range(self.num_fingertips):
             color = colors[i]
 
-            size = [0.02, 0.02, 0.01] if i == 0 else [0.01, 0.01, 0.01]       # thumb larger
+            size = [0.04, 0.04, 0.01] if i == 0 else [0.02, 0.02, 0.02]       # thumb larger
 
             tip_id = rb.create_primitive_shape(self._p, 0.01, pybullet.GEOM_BOX, size,         # half-extend
                                                color=color, collidable=True,
                                                init_xyz=(i+2.0, i+2.0, i+2.0),
                                                init_quat=(0, 0, 0, 1))
+            # tip_id = rb.create_primitive_shape(self._p, 0.01, 
+            #                                    pybullet.GEOM_SPHERE, 
+            #                                    [size[0]], 
+            #                                    color=color,
+            #                                    init_xyz=(i+2.0, i+2.0, i+2.0),
+            #                                    init_quat = (0, 0, 0, 1))
             self.tip_ids.append(tip_id)
             self._p.changeDynamics(tip_id, -1,
                                    lateralFriction=30.0, restitution=0.0)                       # TODO

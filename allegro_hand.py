@@ -144,6 +144,8 @@ class AllegroHandDrake:
         self.solver = SnoptSolver()
         self.regularize=regularize
         self.first_solve = True
+        self.joint_idx = list(range(p.getNumJoints(self.hand_id)))
+        self.joint_init_pose = np.zeros(len(self.joint_idx))
 
     def setObjectPose(self, pos, orn):
         self.obj_pose = pos
@@ -362,6 +364,16 @@ class AllegroHandDrake:
 
     def draw_point_cloud(self, pc):
         p.addUserDebugPoints(np.random.random(size=pc.shape), np.ones((len(pc), 3)))
+
+    def setAction(self, action):
+        p.setJointMotorControlArray(self.hand_id, 
+                                    self.joint_idx, 
+                                    controlMode=p.POSITION_CONTROL,
+                                    targetPositions=action)
+
+    def reset(self):
+        for i in range(len(self.joint_idx)):
+            p.resetJointState(self.hand_id, self.joint_idx[i], self.joint_init_pose[i])
 
 def target_norm_cost(q,q_target):
     return 10 * (q-q_target).dot(q-q_target)
