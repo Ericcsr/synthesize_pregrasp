@@ -64,11 +64,11 @@ class LaptopBulletEnv(gym.Env):
         self._ts = 1. / 250. # A constant
         self.num_fingertips = num_fingertips
         self.num_interp_f = num_interp_f
-        #self.csg = ContactStateGraph(np.load("data/contact_states/laptop_env/dummy_states_2.npy"))
+        self.csg = ContactStateGraph(np.load("data/contact_states/laptop_env/dummy_states_2.npy"))
         self.contact_region = SmallBlockRegionDummy()
-        self.contact_region.create_geodesic_agent()
-        self.distance_matrix = self.contact_region.construct_distance_matrix()
-        self.csg = ContactStateEmbedding(np.load("data/contact_states/laptop_env/dummy_states_2.npy"), distance_table=self.distance_matrix, beta=0.5)
+        #self.contact_region.create_geodesic_agent()
+        #self.distance_matrix = self.contact_region.construct_distance_matrix()
+        #self.csg = ContactStateEmbedding(np.load("data/contact_states/laptop_env/dummy_states_2.npy"), distance_table=self.distance_matrix, beta=0.5)
         self.path = path
         assert num_fingertips == 4         # TODO: 3/4/5?
         self.opt_time = opt_time
@@ -315,7 +315,7 @@ class LaptopBulletEnv(gym.Env):
                 assert not (self.last_surface_norm is None)
                 surface_norm = self.last_surface_norm[fin_ind]
             else: # Currently we always use split region
-                pos_vec, surface_norm = self.contact_region.parse_sub_action(contact_state, fin_ind, sub_a[-3:-1]) # It also need to output contact norm
+                pos_vec, surface_norm = self.contact_region.parse_sub_action(contact_state, fin_ind, sub_a[-3:-1], self.csg) # It also need to output contact norm
                 # Need to compute surface norm based on current pos_vec
                 pos_vec = get_small_block_location_local(surface_norm, pos_vec.copy())
                 self.last_surface_norm[fin_ind] = surface_norm

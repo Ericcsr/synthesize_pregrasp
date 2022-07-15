@@ -6,7 +6,7 @@ from stoch_traj_opt import StochTrajOptimizer
 import numpy as np
 import traceback
 from argparse import ArgumentParser
-from utils.path_filter import filter_paths
+#from utils.path_filter import filter_paths
 
 envs_dict = {
     "bookshelf":BookShelfBulletEnv,
@@ -34,14 +34,14 @@ if __name__ == '__main__':
     sigma_list = [0.8] #[0.1, 0.2, 0.4, 0.8]
 
     # Create a reference environment
-    ref_env = envs_dict[args.env](steps=args.steps, render=False, init_obj_pose=init_obj_pose)
-    paths_raw, distances = ref_env.csg.getPathFromState(2, args.steps)
+    # ref_env = envs_dict[args.env](steps=args.steps, render=False, init_obj_pose=init_obj_pose)
+    # paths_raw, distances = ref_env.csg.getPathFromState(2, args.steps)
 
-    paths = filter_paths(paths_raw, ref_env.csg, ref_env.contact_region)
+    # paths = filter_paths(paths_raw, ref_env.csg, ref_env.contact_region)
     # Need to check final state dynamical feasibility here
     
-    #paths = np.array([[2,0,0],[2,1,1]])
-    #weight = np.array([0.5, 0.5])
+    paths = np.array([[2,0,0]])
+    weight = np.array([0.5])
 
     #idx = np.argsort(weight)[:-11:-1]
     # weight = weight[idx]

@@ -40,7 +40,7 @@ if __name__ == '__main__':
         init_obj_pose = None
 
     # Define paths
-    path = np.array([2,1,1])
+    path = np.array([2,0,0])
 
     env = envs_dict[args.env]
     world = env(render=True, 

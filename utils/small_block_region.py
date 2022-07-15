@@ -83,14 +83,14 @@ class SmallBlockRegionDummy:
                 y = region[2]
                 z_range = region[5] - region[4]
                 z_start = region[4]
-                z = x_range * sub_a[1] + z_start
+                z = z_range * sub_a[1] + z_start
             else:
                 x_range = region[1] - region[0]
                 x_start = region[0]
                 x = x_range * sub_a[0] + x_start
                 y_range = region[3] - region[2]
                 y_start = region[2]
-                y = y_range * sub_a[0] + y_start
+                y = y_range * sub_a[1] + y_start
                 z = region[4]
             finger_tip_pos.append(np.array([x,y,z]))
             finger_tip_norm.append(self.surface_norm[state[i]])
@@ -116,14 +116,14 @@ class SmallBlockRegionDummy:
             y = region[2]
             z_range = region[5] - region[4]
             z_start = region[4]
-            z = x_range * scaled_action[1] + z_start
+            z = z_range * scaled_action[1] + z_start
         else:
             x_range = region[1] - region[0]
             x_start = region[0]
             x = x_range * scaled_action[0] + x_start
             y_range = region[3] - region[2]
             y_start = region[2]
-            y = y_range * scaled_action[0] + y_start
+            y = y_range * scaled_action[1] + y_start
             z = region[4]
         return np.array([x,y,z]), self.surface_norm[region_id]
 
