@@ -6,7 +6,7 @@ import time
 import utils.rigidBodySento as rb
 import  model.param as model_params
 import pytorch_kinematics as pk
-import helper
+import utils.helper as helper
 import utils.render as render
 from argparse import ArgumentParser
 

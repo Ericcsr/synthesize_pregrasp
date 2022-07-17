@@ -1,0 +1,1262 @@
+<?xml version="1.0"?>
+<sdf version='1.7'>
+    <model name='shadow_hand'>
+        <self_collide>false</self_collide>
+
+        <!-- Fix To World -->
+        <joint name="panda_joint_world" type="fixed">
+            <parent>world</parent>
+            <child>forearm</child>
+        </joint>
+
+        <!-- Forearm-Wrist-Palm Links -->
+        <link name='forearm'>
+            <self_collide>false</self_collide>
+            <visual name='forearm_visual'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/visual/forearm.dae</uri>
+                    </mesh>
+                </geometry>
+            </visual>
+            <collision name='forearm_collision'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/collision/forearm.stl</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+            <inertial>
+                <pose>0.000158665 -0.000296213 0.0939161 0 0 0</pose>
+                <mass>1.8670590993494502</mass>
+                <inertia>
+                    <ixx>0.007479321336534709</ixx>
+                    <iyy>0.007475478330362289</iyy>
+                    <izz>0.004156257054350847</izz>
+                    <ixy>-7.267790891410464e-08</ixy>
+                    <ixz>4.2529549726838906e-07</ixz>
+                    <iyz>3.883949104746152e-05</iyz>
+                </inertia>
+            </inertial>
+        </link>
+
+        <link name='wrist'>
+            <self_collide>false</self_collide>
+            <pose relative_to='forearm_joint'>0 0 0 0 0 0</pose>
+            <visual name='wrist_visual'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/visual/wrist.dae</uri>
+                    </mesh>
+                </geometry>
+            </visual>
+            <collision name='wrist_collision'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/collision/wrist.stl</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+            <inertial>
+                <pose>0.00199931 -4.79026e-05 0.0114013 0 0 0</pose>
+                <mass>0.20946475291094357</mass>
+                <inertia>
+                    <ixx>5.593091243122308e-05</ixx>
+                    <iyy>0.00012848029174956482</iyy>
+                    <izz>8.86688859858151e-05</izz>
+                    <ixy>-1.8807050662536076e-08</ixy>
+                    <ixz>-1.3060607259007272e-06</ixz>
+                    <iyz>-1.1433247253685913e-07</iyz>
+                </inertia>
+            </inertial>
+        </link>
+
+        <link name='palm'>
+            <self_collide>false</self_collide>
+            <pose relative_to='wrist_joint'>0 0 0 0 0 0</pose>
+            <visual name='palm_visual'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/visual/palm.dae</uri>
+                    </mesh>
+                </geometry>
+            </visual>
+            <collision name='palm_collision'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/collision/palm.stl</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+            <inertial>
+                <pose>0.00560659 0.000168738 0.0406171 0 0 0</pose>
+                <mass>0.8989030155430766</mass>
+                <inertia>
+                    <ixx>0.0007551001272989889</ixx>
+                    <iyy>0.001091486701981928</iyy>
+                    <izz>0.0004204867341503172</izz>
+                    <ixy>-3.492739878765091e-06</ixy>
+                    <ixz>-8.196253003214903e-05</ixz>
+                    <iyz>-2.266383206764121e-05</iyz>
+                </inertia>
+            </inertial>
+        </link>
+
+
+        <!-- Forearm-Wrist Joints -->
+        <joint name='forearm_joint' type='revolute'>
+            <pose relative_to='forearm'>0 -0.01 0.213 0 0 0</pose>
+            <parent>forearm</parent>
+            <child>wrist</child>
+            <axis>
+                <xyz>0 1 0</xyz>
+                <limit>
+                    <lower>-0.523599</lower>
+                    <upper>0.174533</upper>
+                    <effort>10</effort>
+                    <velocity>2</velocity>
+                </limit>
+                <dynamics>
+                    <damping>0.3</damping>
+                    <friction>0.002</friction>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+            </axis>
+        </joint>
+
+        <joint name='wrist_joint' type='revolute'>
+            <pose relative_to='wrist'>0 0 0.034 0 0 0</pose>
+            <parent>wrist</parent>
+            <child>palm</child>
+            <axis>
+                <xyz>1 0 0</xyz>
+                <limit>
+                    <lower>-0.698132</lower>
+                    <upper>0.488692</upper>
+                    <effort>5</effort>
+                    <velocity>2</velocity>
+                </limit>
+                <dynamics>
+                    <damping>0.25</damping>
+                    <friction>0.0015</friction>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+            </axis>
+        </joint>
+
+
+        <!-- Thumb Links -->
+        <link name='thumb_base'>
+            <pose relative_to='thumb_joint1'>0 0 0 0 0 0</pose>
+        </link>
+
+        <link name='thumb_proximal'>
+            <self_collide>false</self_collide>
+            <pose relative_to='thumb_joint2'>0 0 0 0 0 0</pose>
+            <visual name='thumb_proximal_visual'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/visual/thumb_proximal.dae</uri>
+                    </mesh>
+                </geometry>
+            </visual>
+            <collision name='thumb_proximal_collision'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/collision/thumb_proximal.stl</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+            <inertial>
+                <pose>-6.37678e-06 -2.60263e-05 0.0167151 0 0 0</pose>
+                <mass>0.14945225599921122</mass>
+                <inertia>
+                    <ixx>4.411418271322683e-05</ixx>
+                    <iyy>4.4102721450521684e-05</iyy>
+                    <izz>8.856520036977598e-06</izz>
+                    <ixy>5.554615670778389e-09</ixy>
+                    <ixz>-3.57753482568105e-08</ixz>
+                    <iyz>-1.4658342135322015e-08</iyz>
+                </inertia>
+            </inertial>
+        </link>
+
+        <link name='thumb_hub'>
+            <pose relative_to='thumb_joint3'>0 0 0 0 0 0</pose>
+        </link>
+
+        <link name='thumb_middle'>
+            <self_collide>false</self_collide>
+            <pose relative_to='thumb_joint4'>0 0 0 0 0 0</pose>
+            <visual name='thumb_middle_visual'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/visual/thumb_middle.dae</uri>
+                    </mesh>
+                </geometry>
+            </visual>
+            <collision name='thumb_middle_collision'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/collision/thumb_middle.stl</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+            <inertial>
+                <pose>7.47896e-05 -4.5082e-05 0.0153482 0 0 0</pose>
+                <mass>0.11021476278915708</mass>
+                <inertia>
+                    <ixx>2.4368918444527592e-05</ixx>
+                    <iyy>2.3749026220471563e-05</iyy>
+                    <izz>5.6166937499601026e-06</izz>
+                    <ixy>2.681795007815437e-12</ixy>
+                    <ixz>1.6935381501090475e-08</ixz>
+                    <iyz>4.266902097800442e-12</iyz>
+                </inertia>
+            </inertial>
+        </link>
+
+        <link name='thumb_distal'>
+            <self_collide>false</self_collide>
+            <pose relative_to='thumb_joint5'>0 0 0 0 0 0</pose>
+            <visual name='thumb_distal_visual'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/visual/thumb_distal.dae</uri>
+                    </mesh>
+                </geometry>
+            </visual>
+            <collision name='thumb_distal_collision'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/collision/thumb_distal.stl</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+            <inertial>
+                <pose>2.55227e-05 0.000159331 0.0160141 0 0 0</pose>
+                <mass>0.06104943729865724</mass>
+                <inertia>
+                    <ixx>5.578197585761807e-06</ixx>
+                    <iyy>6.068884597217566e-06</iyy>
+                    <izz>2.809810687287833e-06</izz>
+                    <ixy>-7.712412276601149e-09</ixy>
+                    <ixz>2.6443953020771643e-08</ixz>
+                    <iyz>3.177683019939289e-07</iyz>
+                </inertia>
+            </inertial>
+        </link>
+
+
+        <!-- Thumb Joints -->
+        <joint name='thumb_joint1' type='revolute'>
+            <pose relative_to='palm'>0.034 -0.0085 0.029 0 0.785398 0</pose>
+            <parent>palm</parent>
+            <child>thumb_base</child>
+            <axis>
+                <xyz>0 0 -1</xyz>
+                <limit>
+                    <lower>-1.0472</lower>
+                    <upper>1.0472</upper>
+                    <effort>4</effort>
+                    <velocity>4</velocity>
+                </limit>
+                <dynamics>
+                    <damping>0.2</damping>
+                    <friction>0.0005</friction>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+            </axis>
+        </joint>
+
+        <joint name='thumb_joint2' type='revolute'>
+            <pose relative_to='thumb_base'>0 0 0 0 0 0</pose>
+            <parent>thumb_base</parent>
+            <child>thumb_proximal</child>
+            <axis>
+                <xyz>1 0 0</xyz>
+                <limit>
+                    <lower>0</lower>
+                    <upper>1.22173</upper>
+                    <effort>4</effort>
+                    <velocity>4</velocity>
+                </limit>
+                <dynamics>
+                    <damping>0.2</damping>
+                    <friction>0.0005</friction>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+            </axis>
+        </joint>
+
+        <joint name='thumb_joint3' type='revolute'>
+            <pose relative_to='thumb_proximal'>0 0 0.038 0 0 0</pose>
+            <parent>thumb_proximal</parent>
+            <child>thumb_hub</child>
+            <axis>
+                <xyz>1 0 0</xyz>
+                <limit>
+                    <lower>-0.20944</lower>
+                    <upper>0.20944</upper>
+                    <effort>4</effort>
+                    <velocity>4</velocity>
+                </limit>
+                <dynamics>
+                    <damping>0.1</damping>
+                    <friction>0.00005</friction>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+            </axis>
+        </joint>
+
+        <joint name='thumb_joint4' type='revolute'>
+            <pose relative_to='thumb_hub'>0 0 0 0 0 0</pose>
+            <parent>thumb_hub</parent>
+            <child>thumb_middle</child>
+            <axis>
+                <xyz>0 -1 0</xyz>
+                <limit>
+                    <lower>-0.698132</lower>
+                    <upper>0.698132</upper>
+                    <effort>4</effort>
+                    <velocity>2</velocity>
+                </limit>
+                <dynamics>
+                    <damping>0.05</damping>
+                    <friction>0.00005</friction>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+            </axis>
+        </joint>
+
+        <joint name='thumb_joint5' type='revolute'>
+            <pose relative_to='thumb_middle'>0 0 0.032 0 0 -1.5708</pose>
+            <parent>thumb_middle</parent>
+            <child>thumb_distal</child>
+            <axis>
+                <xyz>1 0 0</xyz>
+                <limit>
+                    <lower>0</lower>
+                    <upper>1.5708</upper>
+                    <effort>4</effort>
+                    <velocity>4</velocity>
+                </limit>
+                <dynamics>
+                    <damping>0.025</damping>
+                    <friction>0.00001</friction>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+            </axis>
+        </joint>
+
+
+        <!-- Index Finger Links -->
+        <link name='index_finger_knuckle'>
+            <self_collide>false</self_collide>
+            <pose relative_to='index_finger_joint1'>0 0 0.0005 0 0 0</pose>
+            <visual name='index_finger_knuckle_visual'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/visual/knuckle.dae</uri>
+                    </mesh>
+                </geometry>
+            </visual>
+            <collision name='index_finger_knuckle_collision'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/collision/knuckle.stl</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+            <inertial>
+                <pose>-1.04918e-05 0.000479353 -0.000502517 0 0 0</pose>
+                <mass>0.01756170743072032</mass>
+                <inertia>
+                    <ixx>6.316479307176084e-07</ixx>
+                    <iyy>5.565126662837287e-07</iyy>
+                    <izz>5.418430344218945e-07</izz>
+                    <ixy>-1.2382869141168063e-09</ixy>
+                    <ixz>-5.831177123574035e-10</ixz>
+                    <iyz>1.0137214702954782e-08</iyz>
+                </inertia>
+            </inertial>
+        </link>
+
+        <link name='index_finger_proximal'>
+            <self_collide>false</self_collide>
+            <pose relative_to='index_finger_joint2'>0 0 0 0 0 0</pose>
+            <visual name='index_finger_proximal_visual'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/visual/finger_proximal.dae</uri>
+                    </mesh>
+                </geometry>
+            </visual>
+            <collision name='index_finger_proximal_collision'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/collision/finger_proximal.stl</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+            <inertial>
+                <pose>1.36393e-06 5.46069e-05 0.0253411 0 0 0</pose>
+                <mass>0.08285889035010244</mass>
+                <inertia>
+                    <ixx>1.64199692748578e-05</ixx>
+                    <iyy>1.7157966187680744e-05</iyy>
+                    <izz>3.747449913981619e-06</izz>
+                    <ixy>1.253825845654266e-11</ixy>
+                    <ixz>-7.420066134437321e-10</ixz>
+                    <iyz>-1.7510504779955134e-07</iyz>
+                </inertia>
+            </inertial>
+        </link>
+
+        <link name='index_finger_middle'>
+            <self_collide>false</self_collide>
+            <pose relative_to='index_finger_joint3'>0 0 0 0 0 0</pose>
+            <visual name='index_finger_middle_visual'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/visual/finger_middle.dae</uri>
+                    </mesh>
+                </geometry>
+            </visual>
+            <collision name='index_finger_middle_collision'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/collision/finger_middle.stl</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+            <inertial>
+                <pose>-2.71515e-06 -3.22079e-05 0.0115512 0 0 0</pose>
+                <mass>0.06213685090672571</mass>
+                <inertia>
+                    <ixx>7.92822501939719e-06</ixx>
+                    <iyy>8.29486054080741e-06</iyy>
+                    <izz>2.3370015376721975e-06</izz>
+                    <ixy>1.358464044894204e-12</ixy>
+                    <ixz>8.557150053771225e-11</ixz>
+                    <iyz>1.5315102261449506e-09</iyz>
+                </inertia>
+            </inertial>
+        </link>
+
+        <link name='index_finger_distal'>
+            <self_collide>false</self_collide>
+            <pose relative_to='index_finger_joint4'>0 0 0 0 0 0</pose>
+            <visual name='index_finger_distal_visual'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/visual/finger_distal.dae</uri>
+                    </mesh>
+                </geometry>
+            </visual>
+            <collision name='index_finger_distal_collision'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/collision/finger_distal.stl</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+            <inertial>
+                <pose>6.76188e-09 -0.000120361 0.0153037 0 0 0</pose>
+                <mass>0.02746135061792896</mass>
+                <inertia>
+                    <ixx>1.4194224188403926e-06</ixx>
+                    <iyy>1.5806235334852189e-06</iyy>
+                    <izz>8.420308791621785e-07</izz>
+                    <ixy>1.6317994313320325e-12</ixy>
+                    <ixz>1.2231062439498777e-12</ixz>
+                    <iyz>4.943899859930379e-09</iyz>
+                </inertia>
+            </inertial>
+        </link>
+
+
+        <!-- Index Finger Joints -->
+        <joint name='index_finger_joint1' type='revolute'>
+            <pose relative_to='palm'>0.033 0 0.095 0 0 0</pose>
+            <parent>palm</parent>
+            <child>index_finger_knuckle</child>
+            <axis>
+                <xyz>0 -1 0</xyz>
+                <limit>
+                    <lower>-0.349066</lower>
+                    <upper>0.349066</upper>
+                    <effort>4</effort>
+                    <velocity>2</velocity>
+                </limit>
+                <dynamics>
+                    <damping>0.15</damping>
+                    <friction>0.0002</friction>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+            </axis>
+        </joint>
+
+        <joint name='index_finger_joint2' type='revolute'>
+            <pose relative_to='index_finger_knuckle'>0 0 0 0 0 0</pose>
+            <parent>index_finger_knuckle</parent>
+            <child>index_finger_proximal</child>
+            <axis>
+                <xyz>1 0 0</xyz>
+                <limit>
+                    <lower>0</lower>
+                    <upper>1.5708</upper>
+                    <effort>4</effort>
+                    <velocity>2</velocity>
+                </limit>
+                <dynamics>
+                    <damping>0.1</damping>
+                    <friction>0.0001</friction>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+            </axis>
+        </joint>
+
+        <joint name='index_finger_joint3' type='revolute'>
+            <pose relative_to='index_finger_proximal'>0 0 0.045 0 0 0</pose>
+            <parent>index_finger_proximal</parent>
+            <child>index_finger_middle</child>
+            <axis>
+                <xyz>1 0 0</xyz>
+                <limit>
+                    <lower>0</lower>
+                    <upper>1.5708</upper>
+                    <effort>4</effort>
+                    <velocity>2</velocity>
+                </limit>
+                <dynamics>
+                    <damping>0.05</damping>
+                    <friction>0.00005</friction>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+            </axis>
+        </joint>
+
+        <joint name='index_finger_joint4' type='revolute'>
+            <pose relative_to='index_finger_middle'>0 0 0.025 0 0 0</pose>
+            <parent>index_finger_middle</parent>
+            <child>index_finger_distal</child>
+            <axis>
+                <xyz>1 0 0</xyz>
+                <limit>
+                    <lower>0</lower>
+                    <upper>1.5708</upper>
+                    <effort>4</effort>
+                    <velocity>2</velocity>
+                </limit>
+                <dynamics>
+                    <damping>0.025</damping>
+                    <friction>0.00001</friction>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+            </axis>
+        </joint>
+
+
+        <!-- Middle Finger Links -->
+        <link name='middle_finger_knuckle'>
+            <self_collide>false</self_collide>
+            <pose relative_to='middle_finger_joint1'>0 0 0.0005 0 0 0</pose>
+            <visual name='middle_finger_knuckle_visual'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/visual/knuckle.dae</uri>
+                    </mesh>
+                </geometry>
+            </visual>
+            <collision name='middle_finger_knuckle_collision'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/collision/knuckle.stl</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+            <inertial>
+                <pose>-1.04918e-05 0.000479353 -0.000502517 0 0 0</pose>
+                <mass>0.01756170743072032</mass>
+                <inertia>
+                    <ixx>6.316479307176084e-07</ixx>
+                    <iyy>5.565126662837287e-07</iyy>
+                    <izz>5.418430344218945e-07</izz>
+                    <ixy>-1.2382869141168063e-09</ixy>
+                    <ixz>-5.831177123574035e-10</ixz>
+                    <iyz>1.0137214702954782e-08</iyz>
+                </inertia>
+            </inertial>
+        </link>
+
+        <link name='middle_finger_proximal'>
+            <self_collide>false</self_collide>
+            <pose relative_to='middle_finger_joint2'>0 0 0 0 0 0</pose>
+            <visual name='middle_finger_proximal_visual'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/visual/finger_proximal.dae</uri>
+                    </mesh>
+                </geometry>
+            </visual>
+            <collision name='middle_finger_proximal_collision'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/collision/finger_proximal.stl</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+            <inertial>
+                <pose>1.36393e-06 5.46069e-05 0.0253411 0 0 0</pose>
+                <mass>0.08285889035010244</mass>
+                <inertia>
+                    <ixx>1.64199692748578e-05</ixx>
+                    <iyy>1.7157966187680744e-05</iyy>
+                    <izz>3.747449913981619e-06</izz>
+                    <ixy>1.253825845654266e-11</ixy>
+                    <ixz>-7.420066134437321e-10</ixz>
+                    <iyz>-1.7510504779955134e-07</iyz>
+                </inertia>
+            </inertial>
+        </link>
+
+        <link name='middle_finger_middle'>
+            <self_collide>false</self_collide>
+            <pose relative_to='middle_finger_joint3'>0 0 0 0 0 0</pose>
+            <visual name='middle_finger_middle_visual'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/visual/finger_middle.dae</uri>
+                    </mesh>
+                </geometry>
+            </visual>
+            <collision name='middle_finger_middle_collision'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/collision/finger_middle.stl</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+            <inertial>
+                <pose>-2.71515e-06 -3.22079e-05 0.0115512 0 0 0</pose>
+                <mass>0.06213685090672571</mass>
+                <inertia>
+                    <ixx>7.92822501939719e-06</ixx>
+                    <iyy>8.29486054080741e-06</iyy>
+                    <izz>2.3370015376721975e-06</izz>
+                    <ixy>1.358464044894204e-12</ixy>
+                    <ixz>8.557150053771225e-11</ixz>
+                    <iyz>1.5315102261449506e-09</iyz>
+                </inertia>
+            </inertial>
+        </link>
+
+        <link name='middle_finger_distal'>
+            <self_collide>false</self_collide>
+            <pose relative_to='middle_finger_joint4'>0 0 0 0 0 0</pose>
+            <visual name='middle_finger_distal_visual'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/visual/finger_distal.dae</uri>
+                    </mesh>
+                </geometry>
+            </visual>
+            <collision name='middle_finger_distal_collision'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/collision/finger_distal.stl</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+            <inertial>
+                <pose>6.76188e-09 -0.000120361 0.0153037 0 0 0</pose>
+                <mass>0.02746135061792896</mass>
+                <inertia>
+                    <ixx>1.4194224188403926e-06</ixx>
+                    <iyy>1.5806235334852189e-06</iyy>
+                    <izz>8.420308791621785e-07</izz>
+                    <ixy>1.6317994313320325e-12</ixy>
+                    <ixz>1.2231062439498777e-12</ixz>
+                    <iyz>4.943899859930379e-09</iyz>
+                </inertia>
+            </inertial>
+        </link>
+
+
+
+
+        <!-- Middle Finger Joints -->
+        <joint name='middle_finger_joint1' type='revolute'>
+            <pose relative_to='palm'>0.011 0 0.099 0 0 0</pose>
+            <parent>palm</parent>
+            <child>middle_finger_knuckle</child>
+            <axis>
+                <xyz>0 -1 0</xyz>
+                <limit>
+                    <lower>-0.349066</lower>
+                    <upper>0.349066</upper>
+                    <effort>4</effort>
+                    <velocity>2</velocity>
+                </limit>
+                <dynamics>
+                    <damping>0.15</damping>
+                    <friction>0.0002</friction>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+            </axis>
+        </joint>
+
+        <joint name='middle_finger_joint2' type='revolute'>
+            <pose relative_to='middle_finger_knuckle'>0 0 0 0 0 0</pose>
+            <parent>middle_finger_knuckle</parent>
+            <child>middle_finger_proximal</child>
+            <axis>
+                <xyz>1 0 0</xyz>
+                <limit>
+                    <lower>0</lower>
+                    <upper>1.5708</upper>
+                    <effort>4</effort>
+                    <velocity>2</velocity>
+                </limit>
+                <dynamics>
+                    <damping>0.1</damping>
+                    <friction>0.0001</friction>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+            </axis>
+        </joint>
+
+        <joint name='middle_finger_joint3' type='revolute'>
+            <pose relative_to='middle_finger_proximal'>0 0 0.045 0 0 0</pose>
+            <parent>middle_finger_proximal</parent>
+            <child>middle_finger_middle</child>
+            <axis>
+                <xyz>1 0 0</xyz>
+                <limit>
+                    <lower>0</lower>
+                    <upper>1.5708</upper>
+                    <effort>4</effort>
+                    <velocity>2</velocity>
+                </limit>
+                <dynamics>
+                    <damping>0.05</damping>
+                    <friction>0.00005</friction>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+            </axis>
+        </joint>
+
+        <joint name='middle_finger_joint4' type='revolute'>
+            <pose relative_to='middle_finger_middle'>0 0 0.025 0 0 0</pose>
+            <parent>middle_finger_middle</parent>
+            <child>middle_finger_distal</child>
+            <axis>
+                <xyz>1 0 0</xyz>
+                <limit>
+                    <lower>0</lower>
+                    <upper>1.5708</upper>
+                    <effort>4</effort>
+                    <velocity>2</velocity>
+                </limit>
+                <dynamics>
+                    <damping>0.025</damping>
+                    <friction>0.00001</friction>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+            </axis>
+        </joint>
+
+
+        <!-- Ring Finger Links -->
+        <link name='ring_finger_knuckle'>
+            <self_collide>false</self_collide>
+            <pose relative_to='ring_finger_joint1'>0 0 0.0005 0 0 0</pose>
+            <visual name='ring_finger_knuckle_visual'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/visual/knuckle.dae</uri>
+                    </mesh>
+                </geometry>
+            </visual>
+            <collision name='ring_finger_knuckle_collision'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/collision/knuckle.stl</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+            <inertial>
+                <pose>-1.04918e-05 0.000479353 -0.000502517 0 0 0</pose>
+                <mass>0.01756170743072032</mass>
+                <inertia>
+                    <ixx>6.316479307176084e-07</ixx>
+                    <iyy>5.565126662837287e-07</iyy>
+                    <izz>5.418430344218945e-07</izz>
+                    <ixy>-1.2382869141168063e-09</ixy>
+                    <ixz>-5.831177123574035e-10</ixz>
+                    <iyz>1.0137214702954782e-08</iyz>
+                </inertia>
+            </inertial>
+        </link>
+
+        <link name='ring_finger_proximal'>
+            <self_collide>false</self_collide>
+            <pose relative_to='ring_finger_joint2'>0 0 0 0 0 0</pose>
+            <visual name='ring_finger_proximal_visual'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/visual/finger_proximal.dae</uri>
+                    </mesh>
+                </geometry>
+            </visual>
+            <collision name='ring_finger_proximal_collision'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/collision/finger_proximal.stl</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+            <inertial>
+                <pose>1.36393e-06 5.46069e-05 0.0253411 0 0 0</pose>
+                <mass>0.08285889035010244</mass>
+                <inertia>
+                    <ixx>1.64199692748578e-05</ixx>
+                    <iyy>1.7157966187680744e-05</iyy>
+                    <izz>3.747449913981619e-06</izz>
+                    <ixy>1.253825845654266e-11</ixy>
+                    <ixz>-7.420066134437321e-10</ixz>
+                    <iyz>-1.7510504779955134e-07</iyz>
+                </inertia>
+            </inertial>
+        </link>
+
+        <link name='ring_finger_middle'>
+            <self_collide>false</self_collide>
+            <pose relative_to='ring_finger_joint3'>0 0 0 0 0 0</pose>
+            <visual name='ring_finger_middle_visual'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/visual/finger_middle.dae</uri>
+                    </mesh>
+                </geometry>
+            </visual>
+            <collision name='ring_finger_middle_collision'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/collision/finger_middle.stl</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+            <inertial>
+                <pose>-2.71515e-06 -3.22079e-05 0.0115512 0 0 0</pose>
+                <mass>0.06213685090672571</mass>
+                <inertia>
+                    <ixx>7.92822501939719e-06</ixx>
+                    <iyy>8.29486054080741e-06</iyy>
+                    <izz>2.3370015376721975e-06</izz>
+                    <ixy>1.358464044894204e-12</ixy>
+                    <ixz>8.557150053771225e-11</ixz>
+                    <iyz>1.5315102261449506e-09</iyz>
+                </inertia>
+            </inertial>
+        </link>
+
+        <link name='ring_finger_distal'>
+            <self_collide>false</self_collide>
+            <pose relative_to='ring_finger_joint4'>0 0 0 0 0 0</pose>
+            <visual name='ring_finger_distal_visual'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/visual/finger_distal.dae</uri>
+                    </mesh>
+                </geometry>
+            </visual>
+            <collision name='ring_finger_distal_collision'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/collision/finger_distal.stl</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+            <inertial>
+                <pose>6.76188e-09 -0.000120361 0.0153037 0 0 0</pose>
+                <mass>0.02746135061792896</mass>
+                <inertia>
+                    <ixx>1.4194224188403926e-06</ixx>
+                    <iyy>1.5806235334852189e-06</iyy>
+                    <izz>8.420308791621785e-07</izz>
+                    <ixy>1.6317994313320325e-12</ixy>
+                    <ixz>1.2231062439498777e-12</ixz>
+                    <iyz>4.943899859930379e-09</iyz>
+                </inertia>
+            </inertial>
+        </link>
+
+
+        <!-- Ring Finger Joints -->
+        <joint name='ring_finger_joint1' type='revolute'>
+            <pose relative_to='palm'>-0.011 0 0.095 0 0 0</pose>
+            <parent>palm</parent>
+            <child>ring_finger_knuckle</child>
+            <axis>
+                <xyz>0 1 0</xyz>
+                <limit>
+                    <lower>-0.349066</lower>
+                    <upper>0.349066</upper>
+                    <effort>4</effort>
+                    <velocity>2</velocity>
+                </limit>
+                <dynamics>
+                    <damping>0.15</damping>
+                    <friction>0.0002</friction>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+            </axis>
+        </joint>
+
+        <joint name='ring_finger_joint2' type='revolute'>
+            <pose relative_to='ring_finger_knuckle'>0 0 0 0 0 0</pose>
+            <parent>ring_finger_knuckle</parent>
+            <child>ring_finger_proximal</child>
+            <axis>
+                <xyz>1 0 0</xyz>
+                <limit>
+                    <lower>0</lower>
+                    <upper>1.5708</upper>
+                    <effort>4</effort>
+                    <velocity>2</velocity>
+                </limit>
+                <dynamics>
+                    <damping>0.1</damping>
+                    <friction>0.0001</friction>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+            </axis>
+        </joint>
+
+        <joint name='ring_finger_joint3' type='revolute'>
+            <pose relative_to='ring_finger_proximal'>0 0 0.045 0 0 0</pose>
+            <parent>ring_finger_proximal</parent>
+            <child>ring_finger_middle</child>
+            <axis>
+                <xyz>1 0 0</xyz>
+                <limit>
+                    <lower>0</lower>
+                    <upper>1.5708</upper>
+                    <effort>4</effort>
+                    <velocity>2</velocity>
+                </limit>
+                <dynamics>
+                    <damping>0.05</damping>
+                    <friction>0.00005</friction>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+            </axis>
+        </joint>
+
+        <joint name='ring_finger_joint4' type='revolute'>
+            <pose relative_to='ring_finger_middle'>0 0 0.025 0 0 0</pose>
+            <parent>ring_finger_middle</parent>
+            <child>ring_finger_distal</child>
+            <axis>
+                <xyz>1 0 0</xyz>
+                <limit>
+                    <lower>0</lower>
+                    <upper>1.5708</upper>
+                    <effort>4</effort>
+                    <velocity>2</velocity>
+                </limit>
+                <dynamics>
+                    <damping>0.025</damping>
+                    <friction>0.00001</friction>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+            </axis>
+        </joint>
+
+
+        <!-- Little Finger Links -->
+        <link name='little_finger_metacarpal'>
+            <self_collide>false</self_collide>
+            <pose relative_to='little_finger_joint1'>0 0 0 0 0 0</pose>
+            <visual name='little_finger_metacarpal_visual'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/visual/metacarpal.dae</uri>
+                    </mesh>
+                </geometry>
+            </visual>
+            <collision name='little_finger_metacarpal_collision'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/collision/metacarpal.stl</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+            <inertial>
+                <pose>0.00256076 0.000530977 0.0357809 0 0 0</pose>
+                <mass>0.1437814788875964</mass>
+                <inertia>
+                    <ixx>3.19475650762325e-05</ixx>
+                    <iyy>3.6120384617440835e-05</iyy>
+                    <izz>1.58472918335685e-05</izz>
+                    <ixy>2.1306799619147762e-07</ixy>
+                    <ixz>4.34652595971126e-06</ixz>
+                    <iyz>-6.148711513920819e-07</iyz>
+                </inertia>
+            </inertial>
+        </link>
+
+        <link name='little_finger_knuckle'>
+            <self_collide>false</self_collide>
+            <pose relative_to='little_finger_joint2'>0 0 0.0005 0 0 0</pose>
+            <visual name='little_finger_knuckle_visual'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/visual/knuckle.dae</uri>
+                    </mesh>
+                </geometry>
+            </visual>
+            <collision name='little_finger_knuckle_collision'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/collision/knuckle.stl</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+            <inertial>
+                <pose>-1.04918e-05 0.000479353 -0.000502517 0 0 0</pose>
+                <mass>0.01756170743072032</mass>
+                <inertia>
+                    <ixx>6.316479307176084e-07</ixx>
+                    <iyy>5.565126662837287e-07</iyy>
+                    <izz>5.418430344218945e-07</izz>
+                    <ixy>-1.2382869141168063e-09</ixy>
+                    <ixz>-5.831177123574035e-10</ixz>
+                    <iyz>1.0137214702954782e-08</iyz>
+                </inertia>
+            </inertial>
+        </link>
+
+        <link name='little_finger_proximal'>
+            <self_collide>false</self_collide>
+            <pose relative_to='little_finger_joint3'>0 0 0 0 0 0</pose>
+            <visual name='little_finger_proximal_visual'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/visual/finger_proximal.dae</uri>
+                    </mesh>
+                </geometry>
+            </visual>
+            <collision name='little_finger_proximal_collision'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/collision/finger_proximal.stl</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+            <inertial>
+                <pose>1.36393e-06 5.46069e-05 0.0253411 0 0 0</pose>
+                <mass>0.08285889035010244</mass>
+                <inertia>
+                    <ixx>1.64199692748578e-05</ixx>
+                    <iyy>1.7157966187680744e-05</iyy>
+                    <izz>3.747449913981619e-06</izz>
+                    <ixy>1.253825845654266e-11</ixy>
+                    <ixz>-7.420066134437321e-10</ixz>
+                    <iyz>-1.7510504779955134e-07</iyz>
+                </inertia>
+            </inertial>
+        </link>
+
+        <link name='little_finger_middle'>
+            <self_collide>false</self_collide>
+            <pose relative_to='little_finger_joint4'>0 0 0 0 0 0</pose>
+            <visual name='little_finger_middle_visual'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/visual/finger_middle.dae</uri>
+                    </mesh>
+                </geometry>
+            </visual>
+            <collision name='little_finger_middle_collision'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/collision/finger_middle.stl</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+            <inertial>
+                <pose>-2.71515e-06 -3.22079e-05 0.0115512 0 0 0</pose>
+                <mass>0.06213685090672571</mass>
+                <inertia>
+                    <ixx>7.92822501939719e-06</ixx>
+                    <iyy>8.29486054080741e-06</iyy>
+                    <izz>2.3370015376721975e-06</izz>
+                    <ixy>1.358464044894204e-12</ixy>
+                    <ixz>8.557150053771225e-11</ixz>
+                    <iyz>1.5315102261449506e-09</iyz>
+                </inertia>
+            </inertial>
+        </link>
+
+        <link name='little_finger_distal'>
+            <self_collide>false</self_collide>
+            <pose relative_to='little_finger_joint5'>0 0 0 0 0 0</pose>
+            <visual name='little_finger_distal_visual'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/visual/finger_distal.dae</uri>
+                    </mesh>
+                </geometry>
+            </visual>
+            <collision name='little_finger_distal_collision'>
+                <geometry>
+                    <mesh>
+                        <uri>meshes/collision/finger_distal.stl</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+            <inertial>
+                <pose>6.76188e-09 -0.000120361 0.0153037 0 0 0</pose>
+                <mass>0.02746135061792896</mass>
+                <inertia>
+                    <ixx>1.4194224188403926e-06</ixx>
+                    <iyy>1.5806235334852189e-06</iyy>
+                    <izz>8.420308791621785e-07</izz>
+                    <ixy>1.6317994313320325e-12</ixy>
+                    <ixz>1.2231062439498777e-12</ixz>
+                    <iyz>4.943899859930379e-09</iyz>
+                </inertia>
+            </inertial>
+        </link>
+
+
+        <!-- Little Finger Joints -->
+        <joint name='little_finger_joint1' type='revolute'>
+            <pose relative_to='palm'>-0.033 0 0.02071 0 0 0</pose>
+            <parent>palm</parent>
+            <child>little_finger_metacarpal</child>
+            <axis>
+                <xyz>0.573576 0 0.819152</xyz>
+                <limit>
+                    <lower>0</lower>
+                    <upper>0.785398</upper>
+                    <effort>4</effort>
+                    <velocity>2</velocity>
+                </limit>
+                <dynamics>
+                    <damping>0.2</damping>
+                    <friction>0.0005</friction>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+            </axis>
+        </joint>
+
+        <joint name='little_finger_joint2' type='revolute'>
+            <pose relative_to='little_finger_metacarpal'>0 0 0.06579 0 0 0</pose>
+            <parent>little_finger_metacarpal</parent>
+            <child>little_finger_knuckle</child>
+            <axis>
+                <xyz>0 1 0</xyz>
+                <limit>
+                    <lower>-0.349066</lower>
+                    <upper>0.349066</upper>
+                    <effort>4</effort>
+                    <velocity>2</velocity>
+                </limit>
+                <dynamics>
+                    <damping>0.15</damping>
+                    <friction>0.0002</friction>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+            </axis>
+        </joint>
+
+        <joint name='little_finger_joint3' type='revolute'>
+            <pose relative_to='little_finger_knuckle'>0 0 0 0 0 0</pose>
+            <parent>little_finger_knuckle</parent>
+            <child>little_finger_proximal</child>
+            <axis>
+                <xyz>1 0 0</xyz>
+                <limit>
+                    <lower>0</lower>
+                    <upper>1.5708</upper>
+                    <effort>4</effort>
+                    <velocity>2</velocity>
+                </limit>
+                <dynamics>
+                    <damping>0.1</damping>
+                    <friction>0.0001</friction>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+            </axis>
+        </joint>
+
+        <joint name='little_finger_joint4' type='revolute'>
+            <pose relative_to='little_finger_proximal'>0 0 0.045 0 0 0</pose>
+            <parent>little_finger_proximal</parent>
+            <child>little_finger_middle</child>
+            <axis>
+                <xyz>1 0 0</xyz>
+                <limit>
+                    <lower>0</lower>
+                    <upper>1.5708</upper>
+                    <effort>4</effort>
+                    <velocity>2</velocity>
+                </limit>
+                <dynamics>
+                    <damping>0.05</damping>
+                    <friction>0.00005</friction>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+            </axis>
+        </joint>
+
+        <joint name='little_finger_joint5' type='revolute'>
+            <pose relative_to='little_finger_middle'>0 0 0.025 0 0 0</pose>
+            <parent>little_finger_middle</parent>
+            <child>little_finger_distal</child>
+            <axis>
+                <xyz>1 0 0</xyz>
+                <limit>
+                    <lower>0</lower>
+                    <upper>1.5708</upper>
+                    <effort>4</effort>
+                    <velocity>2</velocity>
+                </limit>
+                <dynamics>
+                    <damping>0.025</damping>
+                    <friction>0.00001</friction>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+            </axis>
+        </joint>
+
+    </model>
+</sdf>

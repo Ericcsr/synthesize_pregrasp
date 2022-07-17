@@ -1,5 +1,5 @@
 import numpy as np
-from compute_dyn_feasible_contacts import check_dyn_feasible
+from utils.compute_dyn_feasible_contacts import check_dyn_feasible
 
 def filter_paths(paths, csg, region, n_paths=20):
     filtered_path = []

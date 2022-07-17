@@ -29,19 +29,87 @@ from pydrake.multibody.parsing import Parser
 from pydrake.multibody.tree import JacobianWrtVariable
 import pydrake.solvers.mathematicalprogram as mp
 from pydrake.systems.analysis import Simulator
+from pydrake.common import eigen_geometry
 from pydrake.systems.meshcat_visualizer import ConnectMeshcatVisualizer
 
 #################################
 def norm_cost(q):
     return q.dot(q)
 
+def createLaptopEnv(plant, object_collidable, parser):
+    scenario.AddShape(
+                plant, 
+                Box(0.2 * SCALE *2, 0.2 * SCALE*2, 0.05 * SCALE*2),
+                "manipulated_object",
+                collidable=object_collidable,
+                color=(0.6,0,0,0.8))
+    drake_floor_path = FindResourceOrThrow(model_param.floor_urdf_path)
+    parser.AddModelFromFile(drake_floor_path)
+    obstacles = [plant.GetBodyByName("planeLink")]
+    object_body = plant.GetBodyByName("manipulated_object")
+    object_frame = plant.GetFrameByName("manipulated_object")
+    return object_body, object_frame, obstacles
+
+def createBookShelfEnv(plant, object_collidable, parser):
+    scenario.AddShape(
+                plant, 
+                Box(0.2 * SCALE *2, 0.2 * SCALE*2, 0.05 * SCALE*2),
+                "manipulated_object",
+                collidable=object_collidable,
+                color=(0.6,0,0,0.8))
+    object_body = plant.GetBodyByName("manipulated_object")
+    object_frame = plant.GetFrameByName("manipulated_object")
+
+    # Also add walls
+    scenario.AddShape(
+                plant, 
+                Box(0.2 * SCALE *2, 0.2 * SCALE*2, 0.05 * SCALE*2),
+                "wall_1",
+                collidable=True,
+                color=(0.0,0,6,0.8))
+    scenario.AddShape(
+                plant,
+                Box(0.2 * SCALE * 2, 0.2 * SCALE * 2, 0.5 * SCALE * 2),
+                "wall_2",
+                collidable=True,
+                color=(0.0,0,6,0.8))
+
+    drake_floor_path = FindResourceOrThrow(model_param.floor_urdf_path)
+    parser.AddModelFromFile(drake_floor_path)
+
+    obstacles = [plant.GetBodyByName("wall_1"), 
+                 plant.GetBodyByName("wall_2"),
+                 plant.GetBodyByName("planeLink")]
+    
+    wall_frame = plant.GetFrameByName("wall_1")
+    wall_frame2 = plant.GetFrameByName("wall_2")
+    
+    # Using obj orn and poses
+    plant.WeldFrames(
+            plant.world_frame(),
+            wall_frame, 
+            RigidTransform(quaternion=eigen_geometry.Quaternion([0.7071068, 0, 0, 0.7071068]), 
+                                        p=[0, 0.11, 0.2]))
+    
+    plant.WeldFrames(
+        plant.world_frame(),
+        wall_frame2,
+        RigidTransform(quaternion=eigen_geometry.Quaternion([0.7071068, 0, 0, 0.7071068]),
+                       p=[0, -0.11, 0.2]))
+    return object_body, object_frame, obstacles
+    
+
+env_dict = {"laptop":createLaptopEnv,
+            "bookshelf":createBookShelfEnv}
+
+# TODO: Need to adapt to new environment
 class AllegroHandPlantDrake:
     def __init__(self, 
                  object_path=None, 
                  object_base_link_name=None,
                  object_world_pose=None, 
                  meshcat_open_brower=True,
-                 num_finger_tips=3, 
+                 num_finger_tips=4, 
                  object_collidable=True, 
                  useFixedBase=False,
                  base_pose=None,
@@ -49,8 +117,10 @@ class AllegroHandPlantDrake:
                  baseName="hand_root",
                  baseOffset=model_param.allegro_hand_offset,
                  all_fingers = AllAllegroHandFingers,
-                 interp_mode = False):
+                 interp_mode = False,
+                 env='laptop'):
         self.interp_mode = interp_mode
+        self.env = env
         self.baseOffset = baseOffset
         self.all_fingers = all_fingers
         self.useFixedBase = useFixedBase
@@ -59,13 +129,19 @@ class AllegroHandPlantDrake:
             self.tip_offset_map = AllegroHandFingertipDrakeLinkOffset
             self.finger_map = AllegroHandFinger
             self.name_to_idx = NameToFingerIndex
-        else:
+        elif all_fingers == AllAllegroArmFingers:
             self.tip_drake_link_map = AllegroArmFingertipDrakeLink
             self.tip_offset_map = AllegroArmFingertipDrakeLinkOffset
             self.finger_map = AllegroArmFinger
             self.name_to_idx = NameToArmFingerIndex
-        self.num_fingers = 4
-        self.dof_per_finger = 4
+        else:
+            self.tip_drake_link_map = model_param.ShadowHandFingertipDrakeLink
+            self.tip_offset_map = model_param.ShadowHandFingertipDrakeLinkOffset
+            self.finger_map = model_param.ShadowHandFinger
+            self.name_to_idx = NameToShadowFingerIndex
+
+        self.num_fingers = num_finger_tips
+        self.dof_per_finger = 4 # TODO: Adapt for more general hand
         builder = DiagramBuilder()
         self.plant, self.scene_graph = AddMultibodyPlantSceneGraph(
             builder, MultibodyPlant(time_step=0.01))
@@ -79,17 +155,17 @@ class AllegroHandPlantDrake:
             parser.AddModelFromFile(drake_object_path)
             self.object_body = self.plant.GetBodyByName(object_base_link_name)
             self.object_frame = self.plant.GetFrameByName(object_base_link_name)
+            drake_floor_path = FindResourceOrThrow(model_param.floor_urdf_path)
+            parser.AddModelFromFile(drake_floor_path)
+            obstacles = [self.plant.GetBodyByName("planeLink")] # Only consider ground as obstacles
         else:
-            self.box = scenario.AddShape(
-                self.plant, 
-                Box(0.2 * SCALE *2, 0.2 * SCALE*2, 0.05 * SCALE*2),
-                "manipulated_object",
-                collidable=object_collidable,
-                color=(0.6,0,0,0.8))
-            self.object_body = self.plant.GetBodyByName("manipulated_object")
-            self.object_frame = self.plant.GetFrameByName("manipulated_object")
+            self.object_body, self.object_frame, obstacles = env_dict[env](self.plant, object_collidable)
+
+            
         if object_world_pose is None:
             raise NotImplementedError
+        
+        # Fix the object
         self.plant.WeldFrames(
             self.plant.world_frame(),
             self.object_frame, 
@@ -106,11 +182,12 @@ class AllegroHandPlantDrake:
         self.hand_base_bullet_frame = pydrake.multibody.tree.FixedOffsetFrame_[float](
                 name=f"pybullet_base",
                 P=self.hand_body_drake_frame,
-                X_PF=pydrake.math.RigidTransform(p=np.array(baseOffset[:3]))) #TODO: May need to change for whole arm
+                X_PF=pydrake.math.RigidTransform(p=np.array([0, 0, 0])))
         self.plant.AddFrame(self.hand_base_bullet_frame)
         self.fingertip_frames = {}
         self.fingertip_bodies = {}
         self.fingertip_sphere_collision = {}
+        
         for _, finger in enumerate(all_fingers):
             X_FT = pydrake.math.RigidTransform(p=self.tip_offset_map[finger])
             self.fingertip_bodies[finger] = self.plant.GetBodyByName(f"link_{self.tip_drake_link_map[finger]}")
@@ -133,7 +210,10 @@ class AllegroHandPlantDrake:
             all_collision_candidates.add(c[0])
             all_collision_candidates.add(c[1])
 
-        object_collision_candidates = self.plant.GetCollisionGeometriesForBody(self.object_body)
+        object_collision_candidates = self.plant.GetCollisionGeometriesForBody(self.object_body) # Seems to be a set
+            
+        for o in obstacles:
+            object_collision_candidates.union(self.plant.GetCollisionGeometriesForBody(o))
         non_object_collision_candidates = all_collision_candidates.difference(object_collision_candidates)
         hand_nontip_collision_candidates = non_object_collision_candidates.difference(
             self.fingertip_sphere_collision.values())
@@ -175,10 +255,18 @@ class AllegroHandPlantDrake:
                                    self.plant.GetJointByName("elbow_0").position_start(),
                                    self.plant.GetJointByName("elbow_1").position_start(),
                                    self.plant.GetJointByName("wrist_0").position_start()]
+        elif self.all_fingers == model_param.AllShadowHandFingers:
+            self.arm_joints_idx = [self.plant.GetJointByName["forearm_joint"].position_start(),
+                                   self.plant.GetJointByName["wrist_joint"].position_start()]
         self.finger_joints_idx = {}
-        for finger in self.finger_map:
+        if self.all_fingers in [AllAllegroHandFingers, AllAllegroArmFingers]:
+            self.num_joints_finger = [4, 4, 4, 4]
+        else:
+            self.num_joints_finger = [5, 4, 4, 4, 5]
+        
+        for i,finger in enumerate(self.finger_map):
             self.finger_joints_idx[finger] = []
-            for link_idx in range(self.tip_drake_link_map[finger] - 3,
+            for link_idx in range(self.tip_drake_link_map[finger] - self.num_joints_finger[i]+1,
                                   self.tip_drake_link_map[finger] + 1):
                 link_name = f'joint_{link_idx}'
                 self.finger_joints_idx[finger].append(
@@ -214,13 +302,23 @@ class AllegroHandPlantDrake:
             else:
                 finger_angles[finger] = q[self.finger_joints_idx[finger]]
         
-        order = ['ifinger','mfinger','rfinger','thumb']
-        bullet_joint_state = np.zeros(21+self.baseOffset[3])
-        if self.all_fingers == AllAllegroArmFingers:
-            for i in range(5):
+        if self.all_fingers in [AllAllegroHandFingers, AllAllegroArmFingers]:
+            order = ['ifinger','mfinger','rfinger','thumb']
+            bullet_joint_state = np.zeros(21+self.baseOffset)
+            if self.all_fingers == AllAllegroArmFingers:
+                for i in range(5):
+                    bullet_joint_state[i] = q[self.arm_joints_idx[i]]
+            for i in range(4):
+                bullet_joint_state[5*i+1+self.baseOffset:5*i+5+self.baseOffset] = finger_angles[self.name_to_idx[order[i]]]
+        else:
+            order = ['thumb', 'ifinger', 'mfinger', 'rfinger', 'lfinger']
+            bullet_joint_state = np.zeros(24)
+            for i in range(2):
                 bullet_joint_state[i] = q[self.arm_joints_idx[i]]
-        for i in range(4):
-            bullet_joint_state[5*i+1+self.baseOffset[3]:5*i+5+self.baseOffset[3]] = finger_angles[self.name_to_idx[order[i]]]
+            cur = 2
+            for i in range(5):
+                bullet_joint_state[cur:cur + self.num_joints_finger[i]] = finger_angles[self.name_to_idx[order[i]]]
+                cur += self.num_joints_finger[i]
         return base_position, base_quaternion, bullet_joint_state
 
     def create_context(self):
@@ -278,7 +376,6 @@ class AllegroHandPlantDrake:
         desired_positions = {}
         for finger in finger_normal_map.keys():
             # TODO: permute finger
-            # [:3] is position [3:] is the direction
             contact_position = np.squeeze(finger_normal_map[finger][:3])
             if has_normals:
                 contact_normal = finger_normal_map[finger][3:]
