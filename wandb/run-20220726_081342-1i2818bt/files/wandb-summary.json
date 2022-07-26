@@ -1,1 +1,0 @@
-{"epoch": 3, "epoch_iter": 112, "t": 0.003476560115814209, "t_data": 0.0007944107055664062, "total_loss": 1.664494514465332, "kl_loss": 0.010730955749750137, "fingertip_pos_loss": 1.6537635326385498, "_timestamp": 1658794432, "_runtime": 10, "_step": 0, "_wandb": {"runtime": 10}}

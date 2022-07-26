@@ -1,8 +1,0 @@
-Traceback (most recent call last):
-  File "neurals/scripts/train.py", line 136, in <module>
-    main()
-  File "neurals/scripts/train.py", line 26, in main
-    full_dataset = neurals.dataset.SmallDataset()
-  File "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/dataset.py", line 156, in __init__
-    self.point_clouds = np.concatenate(self.point_clouds, axis=0)
-  File "<__array_function__ internals>", line 180, in concatenate
