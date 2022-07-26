@@ -146,7 +146,7 @@ class SmallDataset(torch.utils.data.dataset.Dataset):
             pcd_np = np.asarray(pcd.points)
             assert(pcd_np.shape[0] > 1024)
             idx = np.random.choice(pcd_np.shape[0], 1024, replace=False)
-            self.point_clouds.append(pcd_np[idx].reshape(1,-1,3))
+            self.point_clouds.append(pcd_np[idx])
         if not(negative_grasp_files is None):
             self.grasps = np.concatenate(self.positive_grasps+self.negative_grasps, axis=0)
             self.pcd_mapping = np.array(self.positive_pcd_mapping+self.negative_pcd_mapping)
@@ -156,7 +156,7 @@ class SmallDataset(torch.utils.data.dataset.Dataset):
             self.pcd_mapping = np.array(self.positive_pcd_mapping)
             self.labels = np.array([1]*len(self.grasps))
         self.grasps = self.grasps.reshape(len(self.grasps),-1)
-        self.point_clouds = np.concatenate(self.point_clouds, axis=0)
+        self.point_clouds = np.asarray(self.point_clouds)
     
     def __len__(self):
         return len(self.pcd_mapping)

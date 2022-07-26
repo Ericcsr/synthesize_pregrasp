@@ -2,16 +2,16 @@ import os
 import time
 import neurals.dataset
 import neurals.dex_grasp_net as dgn
-from neurals.network import ScoreFunction 
+from neurals.network import ScoreFunction, LargeScoreFunction
 from neurals.train_options import TrainOptions
 import torch.utils.data
 import torch
 import torch.nn as nn
 
-current_dir = "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/pretrained_score_function"
+current_dir = "/home/ericcsr/sirui/contact_planning_dexterous_hand/neurals/pretrained_score_function"
 
 def parse_input(data):
-    return data['point_cloud'].cuda(), data['fingertip_pos'].cuda(), data['label'].cuda().float()
+    return data['point_cloud'].cuda().float(), data['fingertip_pos'].cuda().float(), data['label'].cuda().float()
 
 def main():
     parser = TrainOptions()
@@ -32,6 +32,11 @@ def main():
         '--use_object_model',
         action='store_true'
     )
+    parser.parser.add_argument(
+        '--use_large_model',
+        action='store_true',
+        default=False
+    )
     opt = parser.parse()
     if opt == None:
         return
@@ -45,10 +50,12 @@ def main():
         wandb.init()
         wandb.config.update(opt)
         wandb.config.update({'objects': objects})
-    model = dgn.DexGraspNetModel(opt, pred_base=False, pred_fingers=[2], extra_cond_fingers=[0,1])
-
-    # Create model for score predictor
-    score_function = ScoreFunction(model.get_latent_size()).cuda()
+    if opt.use_large_model:
+        score_function = LargeScoreFunction(num_fingers=3).cuda()
+    else:
+        model = dgn.DexGraspNetModel(opt, pred_base=False, pred_fingers=[2], extra_cond_fingers=[0,1])
+        # Create model for score predictor
+        score_function = ScoreFunction(model.get_latent_size()).cuda()
     loss_fn = nn.BCELoss()
     optimizer = torch.optim.Adam(score_function.parameters(), lr=1e-3)
 
@@ -62,6 +69,7 @@ def main():
     dataset_size = len(full_dataset)
     test_size = int(dataset_size*opt.test_ratio)
     train_size = dataset_size - test_size
+    print(f"Total size: {dataset_size} Training size: {train_size} Test size: {test_size}")
     (training_dataset, test_dataset) = \
         torch.utils.data.random_split(
             full_dataset, (train_size, test_size))
@@ -70,11 +78,13 @@ def main():
     # TODO: Ask Michelle why not using batch training?
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1)
     if use_wandb:
-        wandb.config.update({'save_dir': model.save_dir})
+        if not opt.use_large_model:
+            wandb.config.update({'save_dir': model.save_dir})    
     # writer = Writer(opt)
     total_steps = 0
     print('Dataset loaded, beginning training')
-    model.eval() # The encoder and decoder should not be trained
+    if not opt.use_large_model:
+        model.eval() # The encoder and decoder should not be trained
     for epoch in range(opt.epoch_count, opt.niter + opt.niter_decay + 1):
         epoch_start_time = time.time()
         iter_data_time = time.time()
@@ -89,10 +99,13 @@ def main():
             total_steps += opt.batch_size
             epoch_iter += opt.batch_size
             pcd, tip_pos, label = parse_input(data)
-            grasp_idx = model.finger_to_idx([2])
-            cond_idx = model.finger_to_idx([0, 1])
-            latent_state = model.encode(pcd, tip_pos[:,grasp_idx], tip_pos[:,cond_idx])
-            pred_sigmoid_score = score_function(latent_state).float()
+            if not opt.use_large_model:
+                grasp_idx = model.finger_to_idx([2])
+                cond_idx = model.finger_to_idx([0, 1])
+                latent_state = model.encode(pcd, tip_pos[:,grasp_idx], tip_pos[:,cond_idx])
+                pred_sigmoid_score = score_function(latent_state).float()
+            else:
+                pred_sigmoid_score = score_function(pcd, tip_pos).float()
             loss = loss_fn(pred_sigmoid_score, label.view(-1,1))
             loss.backward()
             optimizer.step()
@@ -103,10 +116,13 @@ def main():
                 print(f"Time: {t} Cumulative Loss: {cum_loss/cum_cnt}")
                 cum_loss = 0
                 cum_cnt = 0
-            if i % opt.save_latest_freq == 0:
-                print('saving the latest model (epoch %d, total_steps %d)' %
-                      (epoch, total_steps))
-                torch.save(score_function.state_dict(), f"{current_dir}/model_{i}.pth")
+        if epoch % 20 == 0:
+            print('saving the latest model (epoch %d, total_steps %d)' %
+                    (epoch, total_steps))
+            if opt.use_large_model:
+                torch.save(score_function.state_dict(), f"{current_dir}/large_model_{epoch}.pth")
+            else:
+                torch.save(score_function.state_dict(), f"{current_dir}/model_{epoch}.pth")
 
             iter_data_time = time.time()
 
@@ -118,14 +134,20 @@ def main():
     #
         if epoch % opt.run_test_freq == 0:
             # Turn off training
-            model.eval()
+            if not opt.use_large_model:
+                model.eval()
             score_function.eval()
             with torch.no_grad():
                 loss_test_all = 0.
                 for i, test_data in enumerate(test_loader):
                     pcd, fingertip_pos, label = parse_input(test_data)
-                    latent_state = model.encode(pcd, fingertip_pos)
-                    pred_score_sigmoid = score_function(latent_state)
+                    if not opt.use_large_model:
+                        grasp_idx = model.finger_to_idx([2])
+                        cond_idx = model.finger_to_idx([0, 1])
+                        latent_state = model.encode(pcd, fingertip_pos[:,grasp_idx], fingertip_pos[:,cond_idx])
+                        pred_score_sigmoid = score_function(latent_state)
+                    else:
+                        pred_score_sigmoid = score_function(pcd, fingertip_pos)
                     loss = loss_fn(pred_score_sigmoid, label.view(1,-1))
                     loss_test_all += loss
                 loss_test_all /= test_size

@@ -308,6 +308,52 @@ class ScoreFunction(nn.Module):
         z = self.fc2(z).relu()
         return self.out(z)
 
+class PCN(nn.Module):
+    def __init__(self,state_dim=3,latent_dim=128):
+        super(PCN,self).__init__()
+        self.latent_dim = latent_dim
+        self.conv1 = nn.Conv1d(state_dim, 32, 1)
+        self.conv2 = nn.Conv1d(32,64,1)
+        self.conv3 = nn.Conv1d(128,128,1)
+        self.conv4 = nn.Conv1d(128,latent_dim,1)
+
+    def get_latent_dim(self):
+        return self.latent_dim
+
+    def forward(self,x):
+        """
+        Assume input x is: [batch_size, num_points, 3]
+        """
+        x = x.permute(0, 2, 1).contiguous()
+        batch_size, _, num_points = x.size()
+        x = F.relu(self.conv1(x))
+        x = self.conv2(x)
+        global_feature, _ = torch.max(x,2)
+        x = torch.cat([x,global_feature.view(batch_size,-1,1).repeat(1,1,num_points).contiguous()],1)
+        x = F.relu(self.conv3(x))
+        x = self.conv4(x)
+        global_feature,_ = torch.max(x,2)
+        ret = global_feature.view(batch_size,-1)
+        return ret
+
+class LargeScoreFunction(nn.Module):
+    def __init__(self, num_fingers=3):
+        super(LargeScoreFunction, self).__init__()
+        self.pcn = PCN()
+        self.fc1 = nn.Linear(self.pcn.get_latent_dim()+3 * num_fingers, 256)
+        self.fc2 = nn.Linear(256, 128)
+        self.out = nn.Linear(128,1)
+
+    def pred_score(self, pcs, grasp_pts):
+        pcs_latent = self.pcn(pcs)
+        latent = torch.hstack([pcs_latent, grasp_pts])
+        latent = self.fc1(latent).relu()
+        latent = self.fc2(latent).relu()
+        return self.out(latent)
+
+    def forward(self, pcs, grasp_pts):
+        return self.pred_score(pcs, grasp_pts).sigmoid()
+
 def base_network(pointnet_radius, pointnet_nclusters, scale, in_features):
     """
     Create network from PointNet

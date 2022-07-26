@@ -5,7 +5,7 @@ from envs.bookshelf_env import BookShelfBulletEnv
 from stoch_traj_opt import StochTrajOptimizer
 import numpy as np
 import traceback
-from argparse import ArgumentParser
+from neurals.test_options import TestOptions
 #from utils.path_filter import filter_paths
 
 envs_dict = {
@@ -14,7 +14,8 @@ envs_dict = {
 }
 
 if __name__ == '__main__':
-    parser = ArgumentParser()
+    original_parser = TestOptions()
+    parser = original_parser.parser
     parser.add_argument("--exp_name", type=str, default="u_opt_0-10_tp4")
     parser.add_argument("--env", type=str, default="laptop")
     parser.add_argument("--render", action="store_true",default=False)
@@ -22,7 +23,9 @@ if __name__ == '__main__':
     parser.add_argument("--steps", type=int, default=3)
     parser.add_argument("--runs", type=int, default=3)
     parser.add_argument("--init_data",type=str, default="")
-    args = parser.parse_args()
+    parser.add_argument("--use_large_model", action="store_true", default=False)
+    parser.add_argument("--name_score", type=str, default="")
+    args = original_parser.parse()
 
     if args.init_data != "":
         fin_data = np.load(f"data/fin_data/{args.init_data}_fin_data.npy")[-1]
@@ -53,11 +56,15 @@ if __name__ == '__main__':
     log_text_list = []
     f = open(f"data/log/{args.exp_name}.txt", 'w')
     try:
+        opt_dict=args.__dict__
+        opt_dict["force_skip_load"] = True
         for i, path in enumerate(paths): # Search for all the paths.
             optimizer = StochTrajOptimizer(env=envs_dict[args.env], sigma=0.8, initial_guess=None,
                                     TimeSteps=args.steps, seed=12367134, render=False, Iterations=args.iters, active_finger_tips=[0,2], num_interp_f=7,
-                                    Num_processes=64, Traj_per_process=10, opt_time=False, verbose=1, 
-                                    last_fins=fin_data, init_obj_pose=init_obj_pose, steps=args.steps, path=path)
+                                    Num_processes=8, Traj_per_process=80, opt_time=False, verbose=1, 
+                                    last_fins=fin_data, init_obj_pose=init_obj_pose, steps=args.steps, path=path,
+                                    sc_path=f"neurals/pretrained_score_function/{args.name_score}.pth",
+                                    dex_path=f"checkpoints/{args.name}/latest_net.pth", opt_dict=opt_dict)
 
             uopt = None
             Jopt_log = []

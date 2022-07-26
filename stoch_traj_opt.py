@@ -4,7 +4,9 @@ Created on Tue Feb 18 14:50:12 2020
 @author: yannis
 """
 
-from multiprocessing import Process, Pipe
+#from multiprocessing import Process, Pipe
+import torch.multiprocessing as mp
+from torch.multiprocessing import Process, Pipe
 import os
 import numpy as np
 import time
@@ -46,6 +48,7 @@ class StochTrajOptimizer:
         self.patience = patience
         self.current_patience = patience
         self.kwargs = kwargs  # environment arguments
+        mp.set_start_method("spawn")
         if self.verbose==2:
             print('main program process id:', os.getpid())
 

@@ -49,7 +49,7 @@ class LaptopBulletEnv(gym.Env):
                  render=True,
                  init_noise=True,
                  control_skip=50,
-                 active_finger_tips=[0, 1, 2, 3],
+                 active_finger_tips=[0, 1],
                  num_interp_f=5,
                  opt_time=False,
                  last_fins=None,
@@ -62,9 +62,11 @@ class LaptopBulletEnv(gym.Env):
                  dex_path=None,
                  sc_path=None,
                  opt_dict=None,
+                 use_large_model=True,
                  sigma=0.5):
         self.train = train
         self.observe_last_action=observe_last_action
+        self.use_large_model = use_large_model
         self.max_forces = model_param.MAX_FORCE
         self.init_obj_pose=init_obj_pose
         self.render = render
@@ -129,11 +131,11 @@ class LaptopBulletEnv(gym.Env):
             self.action_dim += 1
         
         # Load Neural net related component
-        pred_fingers = [0, 1, 2, 3]
+        pred_fingers = [0, 1, 2]
         for finger in self.active_finger_tips:
             pred_fingers.remove(finger)
         # Here all active controlled finger are considered as conditions
-        self.score_function = NPGraspNet(opt_dict, pred_fingers=pred_fingers, extra_cond_fingers=self.active_finger_tips, device="cuda:0")
+        self.score_function = NPGraspNet(opt_dict, pred_fingers=pred_fingers, extra_cond_fingers=self.active_finger_tips, use_large_model=self.use_large_model, device="cuda:0")
         self.score_function.load_dex_grasp_net(dex_path)
         self.score_function.load_score_function(sc_path)
 

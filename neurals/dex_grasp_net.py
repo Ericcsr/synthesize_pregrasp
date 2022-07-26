@@ -53,7 +53,7 @@ class DexGraspNetModel:
         #         self.save_dir = join(opt.checkpoints_dir, opt.name, opt.store_timestamp)
         # self.save_dir_no_time = join(opt.checkpoints_dir, opt.name)
         else:
-            if opt["store_timestamp"] is None:
+            if not(opt["store_timestamp"] is None):
                 self.save_dir = join(opt["checkpoints_dir"], opt["name"], opt["store_timestamp"])
             else:
                 self.save_dir = join(opt["checkpoints_dir"], opt["name"])
@@ -101,7 +101,7 @@ class DexGraspNetModel:
             self.scheduler = network.get_scheduler(self.optimizer, opt)
         # if not self.is_train or opt.continue_train:
         #     self.load_network(opt.which_epoch, self.is_train, opt.which_timestamp)
-        if not self.is_train or opt["continue_train"]:
+        if (not self.is_train or opt["continue_train"]) and not opt["force_skip_load"]:
             self.load_network(opt["which_epoch"], self.is_train, opt["which_timestamp"])
         # Weight on distance between grasp points
         '''
