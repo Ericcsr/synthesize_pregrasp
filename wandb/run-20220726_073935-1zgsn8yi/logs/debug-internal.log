@@ -1,0 +1,156 @@
+2022-07-26 07:39:35,588 INFO    StreamThr :2230033 [internal.py:wandb_internal():90] W&B internal server running at pid: 2230033, started at: 2022-07-26 07:39:35.587417
+2022-07-26 07:39:35,591 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: status
+2022-07-26 07:39:35,595 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: status
+2022-07-26 07:39:35,599 DEBUG   SenderThread:2230033 [sender.py:send():235] send: header
+2022-07-26 07:39:35,599 INFO    WriterThread:2230033 [datastore.py:open_for_write():75] open: /home/sirius/sirui/contact_planning_dexterous_hand/wandb/run-20220726_073935-1zgsn8yi/run-1zgsn8yi.wandb
+2022-07-26 07:39:35,604 DEBUG   SenderThread:2230033 [sender.py:send():235] send: run
+2022-07-26 07:39:35,925 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: check_version
+2022-07-26 07:39:35,928 INFO    SenderThread:2230033 [dir_watcher.py:__init__():205] watching files in: /home/sirius/sirui/contact_planning_dexterous_hand/wandb/run-20220726_073935-1zgsn8yi/files
+2022-07-26 07:39:35,928 INFO    SenderThread:2230033 [sender.py:_start_run_threads():812] run started: 1zgsn8yi with start time 1658792375
+2022-07-26 07:39:35,928 DEBUG   SenderThread:2230033 [sender.py:send():235] send: summary
+2022-07-26 07:39:35,929 INFO    SenderThread:2230033 [sender.py:_save_file():949] saving file wandb-summary.json with policy end
+2022-07-26 07:39:35,929 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: check_version
+2022-07-26 07:39:36,008 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: run_start
+2022-07-26 07:39:36,017 DEBUG   HandlerThread:2230033 [meta.py:__init__():35] meta init
+2022-07-26 07:39:36,017 DEBUG   HandlerThread:2230033 [meta.py:__init__():49] meta init done
+2022-07-26 07:39:36,017 DEBUG   HandlerThread:2230033 [meta.py:probe():209] probe
+2022-07-26 07:39:36,024 DEBUG   HandlerThread:2230033 [meta.py:_setup_git():199] setup git
+2022-07-26 07:39:36,054 DEBUG   HandlerThread:2230033 [meta.py:_setup_git():206] setup git done
+2022-07-26 07:39:36,054 DEBUG   HandlerThread:2230033 [meta.py:_save_pip():53] save pip
+2022-07-26 07:39:36,055 DEBUG   HandlerThread:2230033 [meta.py:_save_pip():67] save pip done
+2022-07-26 07:39:36,055 DEBUG   HandlerThread:2230033 [meta.py:_save_conda():74] save conda
+2022-07-26 07:39:36,934 INFO    Thread-12 :2230033 [dir_watcher.py:_on_file_created():256] file/dir created: /home/sirius/sirui/contact_planning_dexterous_hand/wandb/run-20220726_073935-1zgsn8yi/files/requirements.txt
+2022-07-26 07:39:36,935 INFO    Thread-12 :2230033 [dir_watcher.py:_on_file_created():256] file/dir created: /home/sirius/sirui/contact_planning_dexterous_hand/wandb/run-20220726_073935-1zgsn8yi/files/conda-environment.yaml
+2022-07-26 07:39:36,935 INFO    Thread-12 :2230033 [dir_watcher.py:_on_file_created():256] file/dir created: /home/sirius/sirui/contact_planning_dexterous_hand/wandb/run-20220726_073935-1zgsn8yi/files/wandb-summary.json
+2022-07-26 07:39:39,608 DEBUG   HandlerThread:2230033 [meta.py:_save_conda():84] save conda done
+2022-07-26 07:39:39,608 DEBUG   HandlerThread:2230033 [meta.py:probe():247] probe done
+2022-07-26 07:39:39,652 DEBUG   SenderThread:2230033 [sender.py:send():235] send: files
+2022-07-26 07:39:39,653 INFO    SenderThread:2230033 [sender.py:_save_file():949] saving file wandb-metadata.json with policy now
+2022-07-26 07:39:39,666 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: stop_status
+2022-07-26 07:39:39,667 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: stop_status
+2022-07-26 07:39:39,936 INFO    Thread-12 :2230033 [dir_watcher.py:_on_file_created():256] file/dir created: /home/sirius/sirui/contact_planning_dexterous_hand/wandb/run-20220726_073935-1zgsn8yi/files/wandb-metadata.json
+2022-07-26 07:39:39,937 INFO    Thread-12 :2230033 [dir_watcher.py:_on_file_created():256] file/dir created: /home/sirius/sirui/contact_planning_dexterous_hand/wandb/run-20220726_073935-1zgsn8yi/files/output.log
+2022-07-26 07:39:40,021 DEBUG   SenderThread:2230033 [sender.py:send():235] send: telemetry
+2022-07-26 07:39:40,022 DEBUG   SenderThread:2230033 [sender.py:send():235] send: config
+2022-07-26 07:39:40,023 DEBUG   SenderThread:2230033 [sender.py:send():235] send: config
+2022-07-26 07:39:40,283 INFO    Thread-16 :2230033 [upload_job.py:push():132] Uploaded file /tmp/tmpqtwb7qy3wandb/2wq74oil-wandb-metadata.json
+2022-07-26 07:39:41,372 DEBUG   SenderThread:2230033 [sender.py:send():235] send: config
+2022-07-26 07:39:41,382 DEBUG   SenderThread:2230033 [sender.py:send():235] send: exit
+2022-07-26 07:39:41,382 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: poll_exit
+2022-07-26 07:39:41,382 INFO    SenderThread:2230033 [sender.py:send_exit():371] handling exit code: 1
+2022-07-26 07:39:41,383 INFO    SenderThread:2230033 [sender.py:send_exit():373] handling runtime: 5
+2022-07-26 07:39:41,388 INFO    SenderThread:2230033 [sender.py:_save_file():949] saving file wandb-summary.json with policy end
+2022-07-26 07:39:41,388 INFO    SenderThread:2230033 [sender.py:send_exit():379] send defer
+2022-07-26 07:39:41,389 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: poll_exit
+2022-07-26 07:39:41,390 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: defer
+2022-07-26 07:39:41,390 INFO    HandlerThread:2230033 [handler.py:handle_request_defer():164] handle defer: 0
+2022-07-26 07:39:41,391 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: defer
+2022-07-26 07:39:41,391 INFO    SenderThread:2230033 [sender.py:send_request_defer():388] handle sender defer: 0
+2022-07-26 07:39:41,391 INFO    SenderThread:2230033 [sender.py:transition_state():392] send defer: 1
+2022-07-26 07:39:41,392 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: defer
+2022-07-26 07:39:41,392 INFO    HandlerThread:2230033 [handler.py:handle_request_defer():164] handle defer: 1
+2022-07-26 07:39:41,485 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: defer
+2022-07-26 07:39:41,486 INFO    SenderThread:2230033 [sender.py:send_request_defer():388] handle sender defer: 1
+2022-07-26 07:39:41,486 INFO    SenderThread:2230033 [sender.py:transition_state():392] send defer: 2
+2022-07-26 07:39:41,486 DEBUG   SenderThread:2230033 [sender.py:send():235] send: stats
+2022-07-26 07:39:41,488 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: defer
+2022-07-26 07:39:41,488 INFO    HandlerThread:2230033 [handler.py:handle_request_defer():164] handle defer: 2
+2022-07-26 07:39:41,488 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: defer
+2022-07-26 07:39:41,488 INFO    SenderThread:2230033 [sender.py:send_request_defer():388] handle sender defer: 2
+2022-07-26 07:39:41,489 INFO    SenderThread:2230033 [sender.py:transition_state():392] send defer: 3
+2022-07-26 07:39:41,489 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: defer
+2022-07-26 07:39:41,489 INFO    HandlerThread:2230033 [handler.py:handle_request_defer():164] handle defer: 3
+2022-07-26 07:39:41,490 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: defer
+2022-07-26 07:39:41,490 INFO    SenderThread:2230033 [sender.py:send_request_defer():388] handle sender defer: 3
+2022-07-26 07:39:41,490 INFO    SenderThread:2230033 [sender.py:transition_state():392] send defer: 4
+2022-07-26 07:39:41,491 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: defer
+2022-07-26 07:39:41,491 INFO    HandlerThread:2230033 [handler.py:handle_request_defer():164] handle defer: 4
+2022-07-26 07:39:41,491 DEBUG   SenderThread:2230033 [sender.py:send():235] send: summary
+2022-07-26 07:39:41,493 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: poll_exit
+2022-07-26 07:39:41,493 INFO    SenderThread:2230033 [sender.py:_save_file():949] saving file wandb-summary.json with policy end
+2022-07-26 07:39:41,494 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: defer
+2022-07-26 07:39:41,494 INFO    SenderThread:2230033 [sender.py:send_request_defer():388] handle sender defer: 4
+2022-07-26 07:39:41,494 INFO    SenderThread:2230033 [sender.py:transition_state():392] send defer: 5
+2022-07-26 07:39:41,494 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: poll_exit
+2022-07-26 07:39:41,495 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: defer
+2022-07-26 07:39:41,496 INFO    HandlerThread:2230033 [handler.py:handle_request_defer():164] handle defer: 5
+2022-07-26 07:39:41,496 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: defer
+2022-07-26 07:39:41,496 INFO    SenderThread:2230033 [sender.py:send_request_defer():388] handle sender defer: 5
+2022-07-26 07:39:41,603 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: poll_exit
+2022-07-26 07:39:41,803 INFO    SenderThread:2230033 [sender.py:transition_state():392] send defer: 6
+2022-07-26 07:39:41,803 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: poll_exit
+2022-07-26 07:39:41,804 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: defer
+2022-07-26 07:39:41,805 INFO    HandlerThread:2230033 [handler.py:handle_request_defer():164] handle defer: 6
+2022-07-26 07:39:41,805 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: defer
+2022-07-26 07:39:41,805 INFO    SenderThread:2230033 [sender.py:send_request_defer():388] handle sender defer: 6
+2022-07-26 07:39:41,806 INFO    SenderThread:2230033 [dir_watcher.py:finish():336] shutting down directory watcher
+2022-07-26 07:39:41,906 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: poll_exit
+2022-07-26 07:39:41,938 INFO    Thread-12 :2230033 [dir_watcher.py:_on_file_modified():269] file/dir modified: /home/sirius/sirui/contact_planning_dexterous_hand/wandb/run-20220726_073935-1zgsn8yi/files/config.yaml
+2022-07-26 07:39:41,939 INFO    SenderThread:2230033 [dir_watcher.py:_on_file_modified():269] file/dir modified: /home/sirius/sirui/contact_planning_dexterous_hand/wandb/run-20220726_073935-1zgsn8yi/files/wandb-summary.json
+2022-07-26 07:39:41,939 INFO    SenderThread:2230033 [dir_watcher.py:finish():366] scan: /home/sirius/sirui/contact_planning_dexterous_hand/wandb/run-20220726_073935-1zgsn8yi/files
+2022-07-26 07:39:41,940 INFO    SenderThread:2230033 [dir_watcher.py:finish():380] scan save: /home/sirius/sirui/contact_planning_dexterous_hand/wandb/run-20220726_073935-1zgsn8yi/files/requirements.txt requirements.txt
+2022-07-26 07:39:41,940 INFO    SenderThread:2230033 [dir_watcher.py:finish():380] scan save: /home/sirius/sirui/contact_planning_dexterous_hand/wandb/run-20220726_073935-1zgsn8yi/files/config.yaml config.yaml
+2022-07-26 07:39:41,940 INFO    SenderThread:2230033 [dir_watcher.py:finish():380] scan save: /home/sirius/sirui/contact_planning_dexterous_hand/wandb/run-20220726_073935-1zgsn8yi/files/output.log output.log
+2022-07-26 07:39:41,954 INFO    SenderThread:2230033 [dir_watcher.py:finish():380] scan save: /home/sirius/sirui/contact_planning_dexterous_hand/wandb/run-20220726_073935-1zgsn8yi/files/conda-environment.yaml conda-environment.yaml
+2022-07-26 07:39:41,957 INFO    SenderThread:2230033 [dir_watcher.py:finish():380] scan save: /home/sirius/sirui/contact_planning_dexterous_hand/wandb/run-20220726_073935-1zgsn8yi/files/wandb-summary.json wandb-summary.json
+2022-07-26 07:39:41,958 INFO    SenderThread:2230033 [dir_watcher.py:finish():380] scan save: /home/sirius/sirui/contact_planning_dexterous_hand/wandb/run-20220726_073935-1zgsn8yi/files/wandb-metadata.json wandb-metadata.json
+2022-07-26 07:39:41,958 INFO    SenderThread:2230033 [sender.py:transition_state():392] send defer: 7
+2022-07-26 07:39:41,958 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: poll_exit
+2022-07-26 07:39:41,968 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: defer
+2022-07-26 07:39:41,968 INFO    HandlerThread:2230033 [handler.py:handle_request_defer():164] handle defer: 7
+2022-07-26 07:39:41,969 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: defer
+2022-07-26 07:39:41,970 INFO    SenderThread:2230033 [sender.py:send_request_defer():388] handle sender defer: 7
+2022-07-26 07:39:41,970 INFO    SenderThread:2230033 [file_pusher.py:finish():145] shutting down file pusher
+2022-07-26 07:39:42,071 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: poll_exit
+2022-07-26 07:39:42,071 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: poll_exit
+2022-07-26 07:39:42,173 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: poll_exit
+2022-07-26 07:39:42,174 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: poll_exit
+2022-07-26 07:39:42,276 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: poll_exit
+2022-07-26 07:39:42,277 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: poll_exit
+2022-07-26 07:39:42,379 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: poll_exit
+2022-07-26 07:39:42,380 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: poll_exit
+2022-07-26 07:39:42,482 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: poll_exit
+2022-07-26 07:39:42,482 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: poll_exit
+2022-07-26 07:39:42,566 INFO    Thread-18 :2230033 [upload_job.py:push():132] Uploaded file /home/sirius/sirui/contact_planning_dexterous_hand/wandb/run-20220726_073935-1zgsn8yi/files/config.yaml
+2022-07-26 07:39:42,580 INFO    Thread-19 :2230033 [upload_job.py:push():132] Uploaded file /home/sirius/sirui/contact_planning_dexterous_hand/wandb/run-20220726_073935-1zgsn8yi/files/wandb-summary.json
+2022-07-26 07:39:42,585 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: poll_exit
+2022-07-26 07:39:42,585 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: poll_exit
+2022-07-26 07:39:42,601 INFO    Thread-17 :2230033 [upload_job.py:push():132] Uploaded file /home/sirius/sirui/contact_planning_dexterous_hand/wandb/run-20220726_073935-1zgsn8yi/files/requirements.txt
+2022-07-26 07:39:42,687 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: poll_exit
+2022-07-26 07:39:42,688 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: poll_exit
+2022-07-26 07:39:42,790 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: poll_exit
+2022-07-26 07:39:42,791 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: poll_exit
+2022-07-26 07:39:42,802 INFO    Thread-11 :2230033 [sender.py:transition_state():392] send defer: 8
+2022-07-26 07:39:42,803 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: defer
+2022-07-26 07:39:42,803 INFO    HandlerThread:2230033 [handler.py:handle_request_defer():164] handle defer: 8
+2022-07-26 07:39:42,804 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: defer
+2022-07-26 07:39:42,804 INFO    SenderThread:2230033 [sender.py:send_request_defer():388] handle sender defer: 8
+2022-07-26 07:39:42,893 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: poll_exit
+2022-07-26 07:39:43,444 INFO    SenderThread:2230033 [sender.py:transition_state():392] send defer: 9
+2022-07-26 07:39:43,444 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: poll_exit
+2022-07-26 07:39:43,446 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: defer
+2022-07-26 07:39:43,446 INFO    HandlerThread:2230033 [handler.py:handle_request_defer():164] handle defer: 9
+2022-07-26 07:39:43,447 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: defer
+2022-07-26 07:39:43,447 INFO    SenderThread:2230033 [sender.py:send_request_defer():388] handle sender defer: 9
+2022-07-26 07:39:43,447 INFO    SenderThread:2230033 [sender.py:transition_state():392] send defer: 10
+2022-07-26 07:39:43,449 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: defer
+2022-07-26 07:39:43,449 DEBUG   SenderThread:2230033 [sender.py:send():235] send: final
+2022-07-26 07:39:43,449 INFO    HandlerThread:2230033 [handler.py:handle_request_defer():164] handle defer: 10
+2022-07-26 07:39:43,450 DEBUG   SenderThread:2230033 [sender.py:send():235] send: footer
+2022-07-26 07:39:43,450 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: defer
+2022-07-26 07:39:43,450 INFO    SenderThread:2230033 [sender.py:send_request_defer():388] handle sender defer: 10
+2022-07-26 07:39:43,548 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: poll_exit
+2022-07-26 07:39:43,549 DEBUG   SenderThread:2230033 [sender.py:send_request():249] send_request: poll_exit
+2022-07-26 07:39:43,549 INFO    SenderThread:2230033 [file_pusher.py:join():150] waiting for file pusher
+2022-07-26 07:39:44,124 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: sampled_history
+2022-07-26 07:39:44,126 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: get_summary
+2022-07-26 07:39:44,127 INFO    MainThread:2230033 [wandb_run.py:_footer_history_summary_info():3104] rendering history
+2022-07-26 07:39:44,127 INFO    MainThread:2230033 [wandb_run.py:_footer_history_summary_info():3136] rendering summary
+2022-07-26 07:39:44,127 INFO    MainThread:2230033 [wandb_run.py:_footer_sync_info():3060] logging synced files
+2022-07-26 07:39:44,128 DEBUG   HandlerThread:2230033 [handler.py:handle_request():141] handle_request: shutdown
+2022-07-26 07:39:44,129 INFO    HandlerThread:2230033 [handler.py:finish():806] shutting down handler
+2022-07-26 07:39:44,449 INFO    WriterThread:2230033 [datastore.py:close():279] close: /home/sirius/sirui/contact_planning_dexterous_hand/wandb/run-20220726_073935-1zgsn8yi/run-1zgsn8yi.wandb
+2022-07-26 07:39:45,022 INFO    SenderThread:2230033 [sender.py:finish():1111] shutting down sender
+2022-07-26 07:39:45,022 INFO    SenderThread:2230033 [file_pusher.py:finish():145] shutting down file pusher
+2022-07-26 07:39:45,023 INFO    SenderThread:2230033 [file_pusher.py:join():150] waiting for file pusher
+2022-07-26 07:39:45,132 INFO    MainThread:2230033 [internal.py:handle_exit():80] Internal process exited

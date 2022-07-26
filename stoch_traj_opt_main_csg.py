@@ -55,7 +55,7 @@ if __name__ == '__main__':
     try:
         for i, path in enumerate(paths): # Search for all the paths.
             optimizer = StochTrajOptimizer(env=envs_dict[args.env], sigma=0.8, initial_guess=None,
-                                    TimeSteps=args.steps, seed=12367134, render=False, Iterations=args.iters, num_fingertips=4, num_interp_f=7,
+                                    TimeSteps=args.steps, seed=12367134, render=False, Iterations=args.iters, active_finger_tips=[0,2], num_interp_f=7,
                                     Num_processes=64, Traj_per_process=10, opt_time=False, verbose=1, 
                                     last_fins=fin_data, init_obj_pose=init_obj_pose, steps=args.steps, path=path)
 

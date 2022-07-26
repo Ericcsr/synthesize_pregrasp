@@ -1,0 +1,24 @@
+{
+    "os": "Linux-5.4.0-122-generic-x86_64-with-glibc2.17",
+    "python": "3.8.11",
+    "heartbeatAt": "2022-07-21T01:20:55.060732",
+    "startedAt": "2022-07-21T01:20:54.189690",
+    "docker": null,
+    "gpu": "NVIDIA GeForce RTX 3090",
+    "gpu_count": 4,
+    "cpu_count": 64,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "neurals/scripts/train.py",
+    "codePath": "neurals/scripts/train.py",
+    "git": {
+        "remote": "https://github.com/Ericcsr/contact_planning_dexterous_hand.git",
+        "commit": "e24cc8cdb19b345c73f7eec1affe60fe3c26e87c"
+    },
+    "email": "ericcsr@connect.hku.hk",
+    "root": "/home/sirius/sirui/contact_planning_dexterous_hand",
+    "host": "garmentp36",
+    "username": "sirius",
+    "executable": "/home/sirius/anaconda3/envs/taichi/bin/python"
+}

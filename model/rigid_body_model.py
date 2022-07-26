@@ -43,8 +43,8 @@ def createLaptopEnv(plant, object_collidable, parser):
                 "manipulated_object",
                 collidable=object_collidable,
                 color=(0.6,0,0,0.8))
-    drake_floor_path = FindResourceOrThrow(model_param.floor_urdf_path)
-    parser.AddModelFromFile(drake_floor_path)
+    #drake_floor_path = FindResourceOrThrow(model_param.floor_urdf_path)
+    parser.AddModelFromFile(model_param.floor_urdf_path)
     obstacles = [plant.GetBodyByName("planeLink")]
     object_body = plant.GetBodyByName("manipulated_object")
     object_frame = plant.GetFrameByName("manipulated_object")

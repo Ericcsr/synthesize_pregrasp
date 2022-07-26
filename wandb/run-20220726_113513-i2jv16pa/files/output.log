@@ -1,0 +1,9 @@
+
+Dataset loaded, beginning training
+Traceback (most recent call last):
+  File "neurals/scripts/train_classifier.py", line 146, in <module>
+    main()
+  File "neurals/scripts/train_classifier.py", line 94, in main
+    latent_state = model.encode(pcd, tip_pos[grasp_idx], tip_pos[cond_idx])
+  File "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/dex_grasp_net.py", line 175, in encode
+    input_features = torch.cat(

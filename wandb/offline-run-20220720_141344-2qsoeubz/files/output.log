@@ -1,0 +1,18 @@
+Making dataset for object 003_cracker_box
+Dataset loaded, beginning training
+Traceback (most recent call last):
+  File "neurals/scripts/train_classifier.py", line 142, in <module>
+    main()
+  File "neurals/scripts/train_classifier.py", line 90, in main
+    latent_state = model.encode(pcd, tip_pos)
+  File "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/dex_grasp_net.py", line 127, in encode
+    return self.net.encode(pcs, input_features)
+  File "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/network.py", line 210, in encode
+    xyz, xyz_features = module(xyz, xyz_features)
+  File "/home/sirius/anaconda3/envs/taichi/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/sirius/anaconda3/envs/taichi/lib/python3.8/site-packages/pointnet2_ops/pointnet2_modules.py", line 53, in forward
+    xyz_flipped, pointnet2_utils.furthest_point_sample(xyz, self.npoint)
+  File "/home/sirius/anaconda3/envs/taichi/lib/python3.8/site-packages/pointnet2_ops/pointnet2_utils.py", line 54, in forward
+    out = _ext.furthest_point_sampling(xyz, npoint)
+RuntimeError: false INTERNAL ASSERT FAILED at "/tmp/pip-req-build-t9j9oon0/pointnet2_ops/_ext-src/src/sampling.cpp":83, please report a bug to PyTorch. CPU not supported

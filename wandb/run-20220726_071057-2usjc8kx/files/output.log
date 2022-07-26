@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "neurals/scripts/train.py", line 136, in <module>
+    main()
+  File "neurals/scripts/train.py", line 21, in main
+    model = dgn.DexGraspNetModel(opt, pred_base=False,pred_fingers=[0,1], extra_cond_fingers=[2])
+  File "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/dex_grasp_net.py", line 38, in __init__
+    if self.opt.override_saved:

@@ -1,0 +1,17 @@
+Dataset loaded, beginning training
+Point cloud shape: torch.Size([16, 1024, 3])
+torch.Size([16, 3]) torch.Size([16, 6]) torch.Size([16, 1024, 3])
+Traceback (most recent call last):
+  File "neurals/scripts/train.py", line 136, in <module>
+    main()
+  File "neurals/scripts/train.py", line 55, in main
+    model.optimize_parameters()
+  File "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/dex_grasp_net.py", line 238, in optimize_parameters
+    self.backward(out)
+  File "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/dex_grasp_net.py", line 232, in backward
+    self._compute_loss(out, self.targets)
+  File "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/dex_grasp_net.py", line 188, in _compute_loss
+    targets = targets[:,self.finger_to_idx(self.pred_fingers)]
+RuntimeError: CUDA error: device-side assert triggered
+Compute Loss
+[2, 3, 4]

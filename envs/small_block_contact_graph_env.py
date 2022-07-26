@@ -17,6 +17,7 @@ import open3d as o3d
 import pybullet
 import utils.render as r
 import time
+import copy
 import gym, gym.utils.seeding, gym.spaces
 import numpy as np
 
@@ -30,9 +31,13 @@ import utils.rigidBodySento as rb
 from scipy.optimize import minimize
 import  model.param as model_param 
 from utils.math_utils import rotation_matrix_from_vectors
+from utils.helper import convert_q_bullet_to_matrix, getSGSigmapoints
 from utils.small_block_region import SmallBlockRegionDummy
 from utils.contact_state_graph import ContactStateGraph
 from utils.contact_state_embedding import ContactStateEmbedding
+
+# Import neural network related information
+from neurals.NPGraspNet import NPGraspNet
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 CLEARANCE_H = 0.05
@@ -44,7 +49,7 @@ class LaptopBulletEnv(gym.Env):
                  render=True,
                  init_noise=True,
                  control_skip=50,
-                 num_fingertips=4,
+                 active_finger_tips=[0, 1, 2, 3],
                  num_interp_f=5,
                  opt_time=False,
                  last_fins=None,
@@ -53,16 +58,25 @@ class LaptopBulletEnv(gym.Env):
                  train=True,
                  steps=3,
                  observe_last_action=False,
-                 path=None):
+                 path=None,
+                 dex_path=None,
+                 sc_path=None,
+                 opt_dict=None,
+                 sigma=0.5):
         self.train = train
         self.observe_last_action=observe_last_action
         self.max_forces = model_param.MAX_FORCE
         self.init_obj_pose=init_obj_pose
         self.render = render
+        self.sigma = sigma
         self.init_noise = init_noise
         self.control_skip = int(control_skip)
         self._ts = 1. / 250. # A constant
-        self.num_fingertips = num_fingertips
+        self.num_fingertips = len(active_finger_tips)
+        self.active_finger_tips = active_finger_tips
+        self.active_finger_tips_idx = dict()
+        for i,finger in enumerate(self.active_finger_tips):
+            self.active_finger_tips_idx[finger] = i
         self.num_interp_f = num_interp_f
         self.csg = ContactStateGraph(np.load("data/contact_states/laptop_env/dummy_states_2.npy"))
         self.contact_region = SmallBlockRegionDummy()
@@ -70,16 +84,15 @@ class LaptopBulletEnv(gym.Env):
         #self.distance_matrix = self.contact_region.construct_distance_matrix()
         #self.csg = ContactStateEmbedding(np.load("data/contact_states/laptop_env/dummy_states_2.npy"), distance_table=self.distance_matrix, beta=0.5)
         self.path = path
-        assert num_fingertips == 4         # TODO: 3/4/5?
+        if self.num_fingertips != 4:         # TODO: 3/4/5?
+            print(f"[Warning]: Using {self.num_fingertips}")
         self.opt_time = opt_time
         self.task = task
 
         self.n_steps = steps
-        self.last_surface_norm = {
-            0:None,
-            1:None,
-            2:None,
-            3:None}
+        self.last_surface_norm = dict()
+        for finger in active_finger_tips:
+            self.last_surface_norm[finger] = None
 
         if self.render:
             self._p = bullet_client.BulletClient(connection_mode=pybullet.DIRECT)
@@ -89,9 +102,6 @@ class LaptopBulletEnv(gym.Env):
 
         self.np_random = None
         self.o_id = None
-
-        self.cps_vids = []
-        self.hand_bones_vids = []
 
         self.tip_ids = []
         self.tip_cids = []
@@ -103,20 +113,29 @@ class LaptopBulletEnv(gym.Env):
 
         self.floor_id = None
 
-        self.interped_fs = [np.zeros((3, self.control_skip))] * num_fingertips
+        self.interped_fs = [np.zeros((3, self.control_skip))] * self.num_fingertips
         # True means last control step cp was on (fixed pos) initialize
-        self.last_fins = [([0.0] * 3, False)] * num_fingertips
+        self.last_fins = [([0.0] * 3, False)] * self.num_fingertips
         if isinstance(last_fins, np.ndarray):
-            for i in range(num_fingertips):
+            for i in range(self.num_fingertips):
                 self.last_fins[i] = (last_fins[i,:3], bool(last_fins[i,3]))
-        self.cur_fins = [([0.0] * 3, False)] * num_fingertips
+        self.cur_fins = [([0.0] * 3, False)] * self.num_fingertips
 
-        self.all_active_fins = [[[0.0] * 3] * num_fingertips] * self.n_steps
+        self.all_active_fins = [[[0.0] * 3] * self.num_fingertips] * self.n_steps
 
         self.single_action_dim = num_interp_f * 3 + 3               # f position (2) & on/off (1)
-        self.action_dim = self.single_action_dim * num_fingertips
+        self.action_dim = self.single_action_dim * self.num_fingertips
         if self.opt_time:
             self.action_dim += 1
+        
+        # Load Neural net related component
+        pred_fingers = [0, 1, 2, 3]
+        for finger in self.active_finger_tips:
+            pred_fingers.remove(finger)
+        # Here all active controlled finger are considered as conditions
+        self.score_function = NPGraspNet(opt_dict, pred_fingers=pred_fingers, extra_cond_fingers=self.active_finger_tips, device="cuda:0")
+        self.score_function.load_dex_grasp_net(dex_path)
+        self.score_function.load_score_function(sc_path)
 
         obs = self.reset()  # and update init obs
 
@@ -150,36 +169,25 @@ class LaptopBulletEnv(gym.Env):
                                               init_xyz=init_xyz,
                                               init_quat=init_orn)
         # Need to create corresponding pointcloud
+        self.mesh_obj = o3d.geometry.TriangleMesh.create_box(0.4, 0.4, 0.1) # Not half extend
+        self.mesh_obj.translate([-0.2, -0.2, 0])
+        self.pcd_obj = self.mesh_obj.sample_points_poisson_disk(2048)
+
         self._p.changeDynamics(self.floor_id, -1,
                                lateralFriction=70.0, restitution=0.0)            # TODO
         self._p.changeDynamics(self.o_id, -1,
                                lateralFriction=70.0, restitution=0.0)             # TODO
 
-        self.cps_vids = []
-        for i in range(10):
-            color = [0.5, 0.0, 1.0, 1.0]
-            visual_id = self._p.createVisualShape(self._p.GEOM_SPHERE,
-                                                  radius=0.02,
-                                                  rgbaColor=color,
-                                                  specularColor=[1, 1, 1])
-            bid = self._p.createMultiBody(0.0,
-                                          -1,
-                                          visual_id,
-                                          [100.0, 100.0, 100.0],
-                                          [0.0, 0.0, 0.0, 1.0])
-            self.cps_vids.append(bid)
-            # self._p.setCollisionFilterGroupMask(bid, -1, 0, 0)
-
         self.tip_ids = []
         colors = [[1.0, 1.0, 1.0, 1.0],[0.0, 0.0, 1.0, 1.0],[0.0, 1.0, 0.0, 1.0],[1.0, 0.0, 0.0, 1.0]]
-        for i in range(self.num_fingertips):
-            color = colors[i]
+        for finger in self.active_finger_tips:
+            color = colors[self.active_finger_tips_idx[finger]]
 
-            size = [0.04, 0.04, 0.01] if i == 0 else [0.02, 0.02, 0.02]       # thumb larger
+            size = [0.04, 0.04, 0.01] if finger == 0 else [0.02, 0.02, 0.02]       # thumb larger
 
             tip_id = rb.create_primitive_shape(self._p, 0.01, pybullet.GEOM_BOX, size,         # half-extend
                                                color=color, collidable=True,
-                                               init_xyz=(i+2.0, i+2.0, i+2.0),
+                                               init_xyz=(finger+2.0, finger+2.0, finger+2.0),
                                                init_quat=(0, 0, 0, 1))
             # tip_id = rb.create_primitive_shape(self._p, 0.01, 
             #                                    pybullet.GEOM_SPHERE, 
@@ -206,6 +214,7 @@ class LaptopBulletEnv(gym.Env):
         self.step_cnt = 0
         self.last_action = np.zeros(self.action_dim)
         obs = self.get_extended_observation()
+        self.initialize_deocclude_module()
         self.last_surface_norm = {
             0:None,
             1:None,
@@ -223,6 +232,7 @@ class LaptopBulletEnv(gym.Env):
 
         # offsets in object frame
         # Eric: Hard coded offset, Need to get the position of finger tip here
+        # TODO: For two contact points, we may need to remove this terms since it does not make much sense
         offsets = np.array([
             [+0.25, -0.03, 0],  # thumb
             [+0.25, +0.05, +0.1],  # ring
@@ -256,16 +266,6 @@ class LaptopBulletEnv(gym.Env):
                 fin_pos.append(list(mean - offsets[fin_ind, :]))
 
         return list(mean), fin_pos, cost
-
-    def draw_cps_ground(self, cps):
-        for j, cp in enumerate(cps):
-            self._p.resetBasePositionAndOrientation(self.cps_vids[j],
-                                                    cp[5],
-                                                    [0.0, 0.0, 0.0, 1.0])
-        for k in range(len(cps), 10):
-            self._p.resetBasePositionAndOrientation(self.cps_vids[k],
-                                                    [100.0, 100.0, 100.0],
-                                                    [0.0, 0.0, 0.0, 1.0])
 
     def step(self, a: List[float], train=True):
 
@@ -304,11 +304,11 @@ class LaptopBulletEnv(gym.Env):
 
             # ======= Notice Finger tip pose at this stage is represented as local coordinate =======
             # If a finger tip is in contact in previous step, it does not allow to change relative position
-            if previous_fins[fin_ind][1]: # Contact Flag (pos, contact_flag)
+            if previous_fins[self.active_finger_tips_idx[fin_ind]][1]: # Contact Flag (pos, contact_flag)
                 # last contact is on, not allowed to change
                 # Directly use previous position.
                 # When not in contact we can control the position of the finger
-                pos_vec = (previous_fins[fin_ind][0]).copy()
+                pos_vec = (previous_fins[self.active_finger_tips_idx[fin_ind]][0]).copy()
 
                 # This is problematic, need to access previous surface norm..
                 # if np.isclose(pos_vec[2], 0.06, 1e-5): # On the top
@@ -319,12 +319,12 @@ class LaptopBulletEnv(gym.Env):
                 #     assert np.isclose(pos_vec[2], -0.06, 1e-6)
                 #     surface_norm = np.array([0., 0., -1.])
                 assert not (self.last_surface_norm is None)
-                surface_norm = self.last_surface_norm[fin_ind]
+                surface_norm = self.last_surface_norm[fin_ind] # This is a dictionary which is OK
             else: # Currently we always use split region
                 pos_vec, surface_norm = self.contact_region.parse_sub_action(contact_state, fin_ind, sub_a[-3:-1], self.csg) # It also need to output contact norm
                 # Need to compute surface norm based on current pos_vec
                 pos_vec = get_small_block_location_local(surface_norm, pos_vec.copy())
-                self.last_surface_norm[fin_ind] = surface_norm
+                self.last_surface_norm[fin_ind] = surface_norm # This is a dictionary which is OK
 
             pos_force_vec = []
             for num_interp in range(self.num_interp_f): # Deltas self.num_interp_f = 7 # All for force
@@ -349,7 +349,8 @@ class LaptopBulletEnv(gym.Env):
             pos_force_vec += pos_vec
             
             # If previous state is in contact and current state is different then the previous on, then break contact.
-            if  (prev_contact_state != None and self.csg.getState(contact_state)[fin_ind] != self.csg.getState(prev_contact_state)[fin_ind]) and previous_fins[fin_ind][1]:
+            # TODO: Contact state graph return should be a dictionary indicating finger to region mapping
+            if  (prev_contact_state != None and self.csg.getState(contact_state)[fin_ind] != self.csg.getState(prev_contact_state)[fin_ind]) and previous_fins[self.active_finger_tips_idx[fin_ind]][1]:
                 pos_force_vec += [0.0]
             else:
                 pos_force_vec += [1.0] if sub_a[-1] > 0 else [0.0]      # last bit on / off (non-colliding finger) if next contact region is different then directly break
@@ -386,11 +387,12 @@ class LaptopBulletEnv(gym.Env):
 
             current_fins = []
             interped_fs = []
-
+            # TODO: Need to add active fingertip mechanism, not parsing every finger tips
+            # For those idle finger tips they should be removed from action space. which may affect MPPI optimizer
             for idx in range(self.num_fingertips):
                 f_vec = transform_a_to_action_single_pc(act[idx * self.single_action_dim:
                                                             (idx + 1) * self.single_action_dim],
-                                                        idx,
+                                                        self.active_finger_tips[idx],
                                                         previous_fins)
                 if f_vec[-1]==0:
                     f_vec[:-4] = [0.0] * len(f_vec[:-4]) 
@@ -405,6 +407,7 @@ class LaptopBulletEnv(gym.Env):
 
             return current_fins, interped_fs
 
+        # Should be modified to be task agnorant heuristic reward to accelerate searching
         def calc_reward_value():
             # post obj config
             cps_1 = self._p.getContactPoints(self.o_id, self.floor_id, -1, -1) # contact points between floor and object
@@ -421,12 +424,41 @@ class LaptopBulletEnv(gym.Env):
             r += 150 * rot_metric # hope the object can be rotate to a given z orientation
             return r
 
+        # TODO: Should use grasp confidence as stage value
+        def calc_reward_value_stage_one():
+            # TODO: Transform the pointcloud
+            rot_matrix = convert_q_bullet_to_matrix(quat)
+            pcd_obj = copy.deepcopy(self.pcd_obj).rotate(rot_matrix)
+            pcd_obj.translate(pos)
+            # TODO: Remove all parts in occlusion
+            pcd_obj = self.deocclusion(pcd_obj)
+            # TODO: Transform the object back to canonical cooridinate
+            pcd_obj.translate(-pos)
+            pcd_obj.rotate(rot_matrix.T)
+            # IDEA: Build a bounding box system, each bounding box must be disjoint,
+            # crop all the point outside the bounding box system, merge all the point
+            # in different bounding boxes (AABB for simplicity) need to implement clearance
+            # Mechanism
+            # TODO: Query score function for score
+            ave_score = 0
+            # Here extra_cond is expressed in object centric frame
+            extra_cond = np.zeros(3 * len(self.active_finger_tips))
+            for i,fin in enumerate(self.active_finger_tips):
+                extra_cond[i*3:(i+1)*3] = self.cur_fins[fin][0]
+            sigma_points = getSGSigmapoints(self.score_function.get_latent_size(), self.sigma)
+            self.score_function.create_kd_tree(pcd_obj)
+            for i in range(self.score_function.get_latent_size() * 2 + 1):
+                ave_score += self.score_function.pred_score(pcd_obj, sigma_points[i], extra_cond=extra_cond)
+            # TODO: Add other heuristic weights such as target reaching or maximize object exposure
+            return ave_score/self.num_samples
+
         # Apply constraints on new contact points..
         def pre_simulate(current_fins: List[Tuple[List[float], bool]]):
             # What is the purpose of this function?
             for cid in self.tip_cids:
                 self._p.removeConstraint(cid)
             self.tip_cids = []
+            # Since this does not 
             for idx in range(self.num_fingertips):
                 # Transform the finger tip toward the world frame, here current_fin is expressed in local frame?
                 f_pos_g, _ = self._p.multiplyTransforms(pos, quat, current_fins[idx][0], [0, 0, 0, 1])
@@ -519,12 +551,13 @@ class LaptopBulletEnv(gym.Env):
 
         ave_r /= self.control_skip
         ave_r -= cost_remaining * 10000.0     # 0.01 * 10000 ~ 100 10000
+        ave_r += calc_reward_value_stage_one() * 100 # Undetermined
         ave_r += final_r / 300.0 * 2.0
 
         fin_pos = []
-        for fin_ind in range(self.num_fingertips):
-            if self.cur_fins[fin_ind][1]:
-                fin_pos.append(self.cur_fins[fin_ind][0])
+        for idx in range(self.num_fingertips):
+            if self.cur_fins[idx][1]:
+                fin_pos.append(self.cur_fins[idx][0])
             else:
                 fin_pos.append(None)
         self.all_active_fins.append(fin_pos)
@@ -564,3 +597,11 @@ class LaptopBulletEnv(gym.Env):
     def seed(self, seed=None):
         self.np_random, seed = gym.utils.seeding.np_random(seed)
         return [seed]
+
+    def initialize_deocclude_module(self):
+        self.aabb = o3d.geometry.AxisAlignedBoundingBox(min_bound=np.array([-100, -100, 0.015]),
+                                                        max_bound=np.array([100, 100, 100]))
+
+    def deocclude(self, pcd):
+        return copy.deepcopy(pcd).crop(self.aabb)
+

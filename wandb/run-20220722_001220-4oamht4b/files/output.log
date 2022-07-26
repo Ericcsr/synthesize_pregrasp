@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "test_wandb.py", line 12, in <module>
+    loss = np.random(1)
+TypeError: 'module' object is not callable

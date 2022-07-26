@@ -1,0 +1,28 @@
+2022-07-20 14:18:11,232 INFO    MainThread:420234 [wandb_setup.py:_flush():76] Configure stats pid to 420234
+2022-07-20 14:18:11,232 INFO    MainThread:420234 [wandb_setup.py:_flush():76] Loading settings from /home/sirius/.config/wandb/settings
+2022-07-20 14:18:11,232 INFO    MainThread:420234 [wandb_setup.py:_flush():76] Loading settings from /home/sirius/sirui/contact_planning_dexterous_hand/wandb/settings
+2022-07-20 14:18:11,232 INFO    MainThread:420234 [wandb_setup.py:_flush():76] Loading settings from environment variables: {}
+2022-07-20 14:18:11,232 INFO    MainThread:420234 [wandb_setup.py:_flush():76] Inferring run settings from compute environment: {'program_relpath': 'neurals/scripts/train_classifier.py', 'program': 'neurals/scripts/train_classifier.py'}
+2022-07-20 14:18:11,232 INFO    MainThread:420234 [wandb_setup.py:_flush():76] Applying login settings: {'mode': 'offline'}
+2022-07-20 14:18:11,233 INFO    MainThread:420234 [wandb_init.py:_log_setup():461] Logging user logs to /home/sirius/sirui/contact_planning_dexterous_hand/wandb/offline-run-20220720_141811-22mfkb0y/logs/debug.log
+2022-07-20 14:18:11,233 INFO    MainThread:420234 [wandb_init.py:_log_setup():462] Logging internal logs to /home/sirius/sirui/contact_planning_dexterous_hand/wandb/offline-run-20220720_141811-22mfkb0y/logs/debug-internal.log
+2022-07-20 14:18:11,233 INFO    MainThread:420234 [wandb_init.py:init():495] calling init triggers
+2022-07-20 14:18:11,233 INFO    MainThread:420234 [wandb_init.py:init():498] wandb.init called with sweep_config: {}
+config: {}
+2022-07-20 14:18:11,233 INFO    MainThread:420234 [wandb_init.py:init():548] starting backend
+2022-07-20 14:18:11,233 INFO    MainThread:420234 [backend.py:_multiprocessing_setup():97] multiprocessing start_methods=fork,spawn,forkserver, using: spawn
+2022-07-20 14:18:11,245 INFO    MainThread:420234 [backend.py:ensure_launched():217] starting backend process...
+2022-07-20 14:18:11,254 INFO    MainThread:420234 [backend.py:ensure_launched():222] started backend process with pid: 420465
+2022-07-20 14:18:11,256 INFO    MainThread:420234 [wandb_init.py:init():558] backend started and connected
+2022-07-20 14:18:11,261 INFO    MainThread:420234 [wandb_init.py:init():634] updated telemetry
+2022-07-20 14:18:11,285 INFO    MainThread:420234 [wandb_init.py:init():700] starting run threads in backend
+2022-07-20 14:18:15,791 INFO    MainThread:420234 [wandb_run.py:_console_start():1893] atexit reg
+2022-07-20 14:18:15,792 INFO    MainThread:420234 [wandb_run.py:_redirect():1766] redirect: SettingsConsole.REDIRECT
+2022-07-20 14:18:15,793 INFO    MainThread:420234 [wandb_run.py:_redirect():1771] Redirecting console.
+2022-07-20 14:18:15,796 INFO    MainThread:420234 [wandb_run.py:_redirect():1827] Redirects installed.
+2022-07-20 14:18:15,797 INFO    MainThread:420234 [wandb_init.py:init():732] run started, returning control to user process
+2022-07-20 14:18:15,800 INFO    MainThread:420234 [wandb_run.py:_config_callback():1131] config_cb None None {'store_timestamp': None, 'name': 'vae_lr_0002_bs_16_scale_1_npoints_128_radius_02_latent_size_3', 'use_object_model': False, 'dataset_root_folder': '/home/jens/Documents/datasets/grasping/unified_grasp_data/', 'num_objects_per_batch': 1, 'num_grasps_per_object': 16, 'npoints': 1024, 'occlusion_nclusters': 0, 'occlusion_dropout_rate': 0, 'depth_noise': 0.0, 'num_grasp_clusters': 32, 'arch': 'vae', 'max_dataset_size': inf, 'num_threads': 3, 'gpu_ids': [0], 'checkpoints_dir': './checkpoints', 'serial_batches': False, 'seed': None, 'gripper': 'panda', 'latent_size': 3, 'gripper_pc_npoints': -1, 'merge_pcs_in_vae_encoder': 0, 'allowed_categories': '', 'blacklisted_categories': '', 'use_uniform_quaternions': 0, 'model_scale': 1, 'splits_folder_name': 'splits', 'grasps_folder_name': 'grasps', 'pointnet_radius': 0.02, 'pointnet_nclusters': 128, 'init_type': 'normal', 'init_gain': 0.02, 'grasps_ratio': 1.0, 'skip_error': False, 'balanced_data': False, 'confidence_weight': 1.0, 'num_input_pointcloud_points': 1024, 'pc_noise_variance': 0.0, 'print_freq': 100, 'save_latest_freq': 2500, 'save_epoch_freq': 10, 'run_test_freq': 5, 'continue_train': False, 'epoch_count': 1, 'phase': 'train', 'which_epoch': 'latest', 'which_timestamp': '', 'niter': 100, 'niter_decay': 2000, 'beta1': 0.9, 'lr': 0.0002, 'lr_policy': 'lambda', 'lr_decay_iters': 50, 'kl_loss_weight': 0.01, 'no_vis': False, 'verbose_plot': False, 'use_wandb': True, 'override_saved': False, 'test_ratio': 0.01, 'grasp_perturb_copies': 3, 'is_train': True, 'base_pose_weight': [1000.0, 1000.0, 1000.0, 1.0, 1.0, 1.0, 1.0], 'dataset_split': 'train', 'batch_size': 16}
+2022-07-20 14:18:15,803 INFO    MainThread:420234 [wandb_run.py:_config_callback():1131] config_cb None None {'objects': ['003_cracker_box']}
+2022-07-20 14:18:17,956 INFO    MainThread:420234 [wandb_run.py:_config_callback():1131] config_cb None None {'save_dir': './checkpoints/vae_lr_0002_bs_16_scale_1_npoints_128_radius_02_latent_size_3/1658297895.8044605'}
+2022-07-20 14:18:24,743 INFO    MainThread:420234 [wandb_run.py:_atexit_cleanup():1862] got exitcode: 1
+2022-07-20 14:18:24,746 INFO    MainThread:420234 [wandb_run.py:_restore():1834] restore

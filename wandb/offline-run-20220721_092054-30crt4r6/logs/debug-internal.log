@@ -1,0 +1,35 @@
+2022-07-21 09:20:55,046 INFO    MainThread:605142 [internal.py:wandb_internal():90] W&B internal server running at pid: 605142, started at: 2022-07-21 09:20:55.046120
+2022-07-21 09:20:55,050 DEBUG   HandlerThread:605142 [handler.py:handle_request():140] handle_request: run_start
+2022-07-21 09:20:55,050 INFO    WriterThread:605142 [datastore.py:open_for_write():75] open: /home/sirius/sirui/contact_planning_dexterous_hand/wandb/offline-run-20220721_092054-30crt4r6/run-30crt4r6.wandb
+2022-07-21 09:20:55,060 DEBUG   HandlerThread:605142 [meta.py:__init__():35] meta init
+2022-07-21 09:20:55,060 DEBUG   HandlerThread:605142 [meta.py:__init__():49] meta init done
+2022-07-21 09:20:55,060 DEBUG   HandlerThread:605142 [meta.py:probe():209] probe
+2022-07-21 09:20:55,067 DEBUG   HandlerThread:605142 [meta.py:_setup_git():199] setup git
+2022-07-21 09:20:55,089 DEBUG   HandlerThread:605142 [meta.py:_setup_git():206] setup git done
+2022-07-21 09:20:55,089 DEBUG   HandlerThread:605142 [meta.py:_save_pip():53] save pip
+2022-07-21 09:20:55,090 DEBUG   HandlerThread:605142 [meta.py:_save_pip():67] save pip done
+2022-07-21 09:20:55,090 DEBUG   HandlerThread:605142 [meta.py:_save_conda():74] save conda
+2022-07-21 09:20:58,657 DEBUG   HandlerThread:605142 [meta.py:_save_conda():84] save conda done
+2022-07-21 09:20:58,657 DEBUG   HandlerThread:605142 [meta.py:probe():247] probe done
+2022-07-21 09:21:18,043 DEBUG   HandlerThread:605142 [handler.py:handle_request():140] handle_request: partial_history
+2022-07-21 09:21:18,937 DEBUG   HandlerThread:605142 [handler.py:handle_request():140] handle_request: partial_history
+2022-07-21 09:21:19,807 DEBUG   HandlerThread:605142 [handler.py:handle_request():140] handle_request: partial_history
+2022-07-21 09:21:20,696 DEBUG   HandlerThread:605142 [handler.py:handle_request():140] handle_request: partial_history
+2022-07-21 09:21:21,618 DEBUG   HandlerThread:605142 [handler.py:handle_request():140] handle_request: partial_history
+2022-07-21 09:21:22,543 DEBUG   HandlerThread:605142 [handler.py:handle_request():140] handle_request: partial_history
+2022-07-21 09:21:23,457 DEBUG   HandlerThread:605142 [handler.py:handle_request():140] handle_request: partial_history
+2022-07-21 09:21:24,375 DEBUG   HandlerThread:605142 [handler.py:handle_request():140] handle_request: partial_history
+2022-07-21 09:21:25,279 DEBUG   HandlerThread:605142 [handler.py:handle_request():140] handle_request: partial_history
+2022-07-21 09:21:26,208 DEBUG   HandlerThread:605142 [handler.py:handle_request():140] handle_request: partial_history
+2022-07-21 09:21:27,144 DEBUG   HandlerThread:605142 [handler.py:handle_request():140] handle_request: partial_history
+2022-07-21 09:21:28,051 DEBUG   HandlerThread:605142 [handler.py:handle_request():140] handle_request: partial_history
+2022-07-21 09:21:28,968 DEBUG   HandlerThread:605142 [handler.py:handle_request():140] handle_request: partial_history
+2022-07-21 09:21:29,867 DEBUG   HandlerThread:605142 [handler.py:handle_request():140] handle_request: partial_history
+2022-07-21 09:21:30,780 DEBUG   HandlerThread:605142 [handler.py:handle_request():140] handle_request: partial_history
+2022-07-21 09:21:31,687 DEBUG   HandlerThread:605142 [handler.py:handle_request():140] handle_request: partial_history
+2022-07-21 09:21:32,681 DEBUG   HandlerThread:605142 [handler.py:handle_request():140] handle_request: partial_history
+2022-07-21 09:21:32,809 WARNING MainThread:605142 [internal.py:wandb_internal():153] Internal process interrupt: 1
+2022-07-21 09:21:33,025 WARNING MainThread:605142 [internal.py:wandb_internal():153] Internal process interrupt: 2
+2022-07-21 09:21:33,025 ERROR   MainThread:605142 [internal.py:wandb_internal():156] Internal process interrupted.
+2022-07-21 09:21:33,063 INFO    SenderThread:605142 [sender.py:finish():1114] shutting down sender
+2022-07-21 09:21:33,338 INFO    MainThread:605142 [internal.py:handle_exit():80] Internal process exited

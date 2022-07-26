@@ -1,0 +1,27 @@
+Making dataset for object 003_cracker_box
+Making dataset for object 004_sugar_box
+Dataset loaded, beginning training
+torch.Size([16, 9])
+Feature Shape: torch.Size([16, 12, 1024])
+Traceback (most recent call last):
+  File "neurals/scripts/train.py", line 135, in <module>
+    main()
+  File "neurals/scripts/train.py", line 54, in main
+    model.optimize_parameters()
+  File "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/dex_grasp_net.py", line 208, in optimize_parameters
+    out = self.forward()
+  File "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/dex_grasp_net.py", line 142, in forward
+    return self.net(self.pcs, self.targets, self.extra_cond if self.extra_cond_dim!= 0 else None)
+  File "/home/sirius/anaconda3/envs/taichi/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/network.py", line 232, in forward
+    return self.forward_train(pcs, grasps, extra_cond)
+  File "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/network.py", line 250, in forward_train
+    mu, logvar = self.bottleneck(z)
+  File "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/network.py", line 224, in bottleneck
+    return self.latent_space[0](z), self.latent_space[1](z)
+  File "/home/sirius/anaconda3/envs/taichi/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/sirius/anaconda3/envs/taichi/lib/python3.8/site-packages/torch/nn/modules/linear.py", line 114, in forward
+    return F.linear(input, self.weight, self.bias)
+RuntimeError: mat1 and mat2 shapes cannot be multiplied (16x3 and 512x3)

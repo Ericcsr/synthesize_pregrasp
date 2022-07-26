@@ -1,0 +1,27 @@
+
+Dataset loaded, beginning training
+saving the latest model (epoch 1, total_steps 16)
+End of epoch 1 / 2100 	 Time Taken: 3 sec
+Time: 0.001440972089767456 Cumulative Loss: 0.5934613943099976
+saving the latest model (epoch 2, total_steps 400)
+End of epoch 2 / 2100 	 Time Taken: 0 sec
+saving the latest model (epoch 3, total_steps 784)
+Time: 0.0013323873281478882 Cumulative Loss: 0.6623392105102539
+Traceback (most recent call last):
+  File "neurals/scripts/train_classifier.py", line 146, in <module>
+    main()
+  File "neurals/scripts/train_classifier.py", line 129, in main
+    loss = loss_fn(pred_score_sigmoid, label)
+  File "/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/torch/nn/modules/loss.py", line 613, in forward
+    return F.binary_cross_entropy(input, target, weight=self.weight, reduction=self.reduction)
+  File "/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/torch/nn/functional.py", line 3074, in binary_cross_entropy
+    raise ValueError(
+ValueError: Using a target size (torch.Size([1])) that is different to the input size (torch.Size([1, 1])) is deprecated. Please ensure they have the same size.
+End of epoch 3 / 2100 	 Time Taken: 0 sec
+saving the latest model (epoch 4, total_steps 1168)
+Time: 0.0017802119255065918 Cumulative Loss: 0.6513736844062805
+End of epoch 4 / 2100 	 Time Taken: 0 sec
+saving the latest model (epoch 5, total_steps 1552)
+Time: 0.0013936758041381836 Cumulative Loss: 0.6693093180656433

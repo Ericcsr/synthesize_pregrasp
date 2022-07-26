@@ -1,0 +1,9 @@
+Dataset loaded, beginning training
+torch.Size([16, 3, 3])
+Traceback (most recent call last):
+  File "neurals/scripts/train.py", line 136, in <module>
+    main()
+  File "neurals/scripts/train.py", line 54, in main
+    model.set_input(data)
+  File "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/dex_grasp_net.py", line 136, in set_input
+    targets = data['fingertip_pos'][:,self.finger_to_idx(self.pred_fingers)].float()

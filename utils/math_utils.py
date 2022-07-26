@@ -133,6 +133,22 @@ def compute_joint_T(joint_angle, joint_axis):
             raise AssertionError
     return H
 
+def convert_6d_rotation_to_flattened_matrix_torch(orn_6d_vec):
+    """
+    :param orn_6d_vec: 1D or 2D torch tensor whose last dimension is 6
+    :return: 
+    """
+    # Always unsqueeze to 2d
+    orn_6d_vec_2d = torch.atleast_2d(orn_6d_vec).reshape(-1,6)
+    v1 = orn_6d_vec_2d[..., :3]
+    v2 = orn_6d_vec_2d[..., 3:]
+    e1 = v1*(torch.torch.nan_to_num(1./torch.norm(v1, dim=-1)).unsqueeze(1))
+    u2 = v2-e1*(torch.sum(torch.mul(e1, v2),dim=1).unsqueeze(1))
+    # u2 = v2-torch.inner(e1, v2)*e1
+    e2 = u2 * (torch.torch.nan_to_num(1./torch.norm(u2, dim=-1)).unsqueeze(1))  # Nx3
+    base_rotation_matrix = torch.transpose(
+        torch.stack([e1, e2, torch.cross(e1, e2, dim=1)], e1.dim()-1), dim0=-2, dim1=-1)
+    return base_rotation_matrix.reshape(-1,9)
 
 def get_basis_from_3_normals(normals):
     '''

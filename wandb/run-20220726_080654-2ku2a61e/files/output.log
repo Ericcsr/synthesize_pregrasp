@@ -1,0 +1,18 @@
+Dataset loaded, beginning training
+Point cloud shape: torch.Size([16, 1024, 3])
+torch.Size([16, 3]) torch.Size([16, 6]) torch.Size([16, 1024, 3])
+Traceback (most recent call last):
+  File "neurals/scripts/train.py", line 136, in <module>
+    main()
+  File "neurals/scripts/train.py", line 55, in main
+    model.optimize_parameters()
+  File "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/dex_grasp_net.py", line 235, in optimize_parameters
+    self.backward(out)
+  File "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/dex_grasp_net.py", line 230, in backward
+    self.loss_train.backward()
+  File "/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/torch/_tensor.py", line 396, in backward
+    torch.autograd.backward(self, gradient, retain_graph, create_graph, inputs=inputs)
+  File "/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/torch/autograd/__init__.py", line 173, in backward
+    Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+RuntimeError: CUDA error: device-side assert triggered
+CUDA kernel errors might be asynchronously reported at some other API call,so the stacktrace below might be incorrect.

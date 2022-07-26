@@ -1,0 +1,14 @@
+
+Making dataset for object 003_cracker_box
+Traceback (most recent call last):
+  File "neurals/scripts/train_classifier.py", line 142, in <module>
+    main()
+  File "neurals/scripts/train_classifier.py", line 55, in main
+    full_dataset = neurals.dataset.make_dataset_from_point_clouds_score_function(
+  File "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/dataset.py", line 519, in make_dataset_from_point_clouds_score_function
+    grasps_list.extend(make_dataset_from_same_point_cloud_score_function(obj_name_list[i],
+  File "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/dataset.py", line 386, in make_dataset_from_same_point_cloud_score_function
+    grasps_list.append(DexGraspFingerOnly(pc_points_downsampled,fingertip_pos, 1.0))
+  File "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/dataset.py", line 37, in __init__
+    self.point_cloud = point_cloud.float()
+AttributeError: 'numpy.ndarray' object has no attribute 'float'

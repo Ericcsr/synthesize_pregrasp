@@ -1,0 +1,18 @@
+Making dataset for object 003_cracker_box
+Dataset loaded, beginning training
+Traceback (most recent call last):
+  File "neurals/scripts/train_classifier.py", line 142, in <module>
+    main()
+  File "neurals/scripts/train_classifier.py", line 91, in main
+    pred_sigmoid_score = score_function(latent_state)
+  File "/home/sirius/anaconda3/envs/taichi/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/network.py", line 270, in forward
+    return self.pred_score(z).sigmoid()
+  File "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/network.py", line 273, in pred_score
+    z = self.fc1(z).relu()
+  File "/home/sirius/anaconda3/envs/taichi/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/sirius/anaconda3/envs/taichi/lib/python3.8/site-packages/torch/nn/modules/linear.py", line 114, in forward
+    return F.linear(input, self.weight, self.bias)
+RuntimeError: Expected all tensors to be on the same device, but found at least two devices, cpu and cuda:0! (when checking argument for argument mat1 in method wrapper_addmm)

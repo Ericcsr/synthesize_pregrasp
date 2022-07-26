@@ -175,4 +175,17 @@ def set_finger_joints(joint_states, finger_name, target_state):
     idxs = finger_idxs[finger_name]
     j_states[idxs] = target_state
     return j_states
+
+def convert_q_bullet_to_matrix(q):
+    q_drake = torch.from_numpy(convert_quat_for_drake(q))
+    matrix = pk.quaternion_to_matrix(q_drake).numpy()
+    return matrix
+
+# Get Determinitics sampling sigma points of Standard Gaussian
+def getSGSigmapoints(dimensions, sigma):
+    pos_points = torch.eye(dimensions) * sigma
+    neg_points = -torch.eye(dimensions) * sigma
+    center = torch.zeros(1,dimensions)
+    return torch.vstack([pos_points, center, neg_points])
+
     

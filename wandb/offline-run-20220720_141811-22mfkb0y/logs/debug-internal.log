@@ -1,0 +1,20 @@
+2022-07-20 14:18:12,028 INFO    MainThread:420465 [internal.py:wandb_internal():90] W&B internal server running at pid: 420465, started at: 2022-07-20 14:18:12.028430
+2022-07-20 14:18:12,032 DEBUG   HandlerThread:420465 [handler.py:handle_request():140] handle_request: run_start
+2022-07-20 14:18:12,033 INFO    WriterThread:420465 [datastore.py:open_for_write():75] open: /home/sirius/sirui/contact_planning_dexterous_hand/wandb/offline-run-20220720_141811-22mfkb0y/run-22mfkb0y.wandb
+2022-07-20 14:18:12,042 DEBUG   HandlerThread:420465 [meta.py:__init__():35] meta init
+2022-07-20 14:18:12,042 DEBUG   HandlerThread:420465 [meta.py:__init__():49] meta init done
+2022-07-20 14:18:12,042 DEBUG   HandlerThread:420465 [meta.py:probe():209] probe
+2022-07-20 14:18:12,049 DEBUG   HandlerThread:420465 [meta.py:_setup_git():199] setup git
+2022-07-20 14:18:12,070 DEBUG   HandlerThread:420465 [meta.py:_setup_git():206] setup git done
+2022-07-20 14:18:12,070 DEBUG   HandlerThread:420465 [meta.py:_save_pip():53] save pip
+2022-07-20 14:18:12,071 DEBUG   HandlerThread:420465 [meta.py:_save_pip():67] save pip done
+2022-07-20 14:18:12,071 DEBUG   HandlerThread:420465 [meta.py:_save_conda():74] save conda
+2022-07-20 14:18:15,747 DEBUG   HandlerThread:420465 [meta.py:_save_conda():84] save conda done
+2022-07-20 14:18:15,747 DEBUG   HandlerThread:420465 [meta.py:probe():247] probe done
+2022-07-20 14:18:25,277 WARNING MainThread:420465 [internal.py:wandb_internal():153] Internal process interrupt: 1
+2022-07-20 14:18:29,281 WARNING MainThread:420465 [internal.py:is_dead():387] Internal process exiting, parent pid 420234 disappeared
+2022-07-20 14:18:29,282 ERROR   MainThread:420465 [internal.py:wandb_internal():149] Internal process shutdown.
+2022-07-20 14:18:29,749 INFO    WriterThread:420465 [datastore.py:close():279] close: /home/sirius/sirui/contact_planning_dexterous_hand/wandb/offline-run-20220720_141811-22mfkb0y/run-22mfkb0y.wandb
+2022-07-20 14:18:29,753 INFO    HandlerThread:420465 [handler.py:finish():806] shutting down handler
+2022-07-20 14:18:30,041 INFO    SenderThread:420465 [sender.py:finish():1114] shutting down sender
+2022-07-20 14:18:30,042 INFO    MainThread:420465 [internal.py:handle_exit():80] Internal process exited

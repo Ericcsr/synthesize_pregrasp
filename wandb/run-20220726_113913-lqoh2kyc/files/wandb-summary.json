@@ -1,0 +1,1 @@
+{"epoch": 20, "epoch_iter": 384, "t": 0.0011807531118392944, "t_data": 0.0005614757537841797, "test_total_loss": 0.44045349955558777, "_timestamp": 1658806772, "_runtime": 19, "_step": 3, "_wandb": {"runtime": 18}}

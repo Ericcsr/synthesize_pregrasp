@@ -27,6 +27,18 @@ MAX_FORCE=80
 CONTROL_SKIP=50
 ALLOWANCE=0.05
 
+min_normal_force = 1500. # 1500.
+fingertip_radius = 0.012
+
+tabletop_dim = (100.,100.,0.1)
+tabletop_mu_static = 0.5
+tabletop_mu_dynamic = 0.4
+
+# Used for training and running GraspCVAE
+initial_num_points_in_input_point_cloud = 2048
+final_num_points_in_input_point_cloud = 1024
+point_cloud_tabletop_occlusion_height=0.002
+
 USE_SOFT_BOUNDING=False
 
 # For checking collisions
@@ -46,7 +58,7 @@ collision_points_dict = {-1:(2.04e-2, 0., -0.095),
                          17: (9.8e-3,0.,2.57e-2),
                          18:(9.8e-3,0.,2.115e-2)}
 
-friction_coefficient = 0.6
+friction_coefficient = 0.3
 
 drake_ycb_path = "drake/manipulation/models/ycb/sdf"
 drake_ycb_objects = {
@@ -55,17 +67,9 @@ drake_ycb_objects = {
     "005_tomato_soup_can": "base_link_soup",
     "006_mustard_bottle": "base_link_mustard",
     "009_gelatin_box": "base_link_gelatin",
-    "010_potted_meat_can": "base_link_meat"
+    "010_potted_meat_can": "base_link_meat",
+    "naive_box":"manipulated_object"
 }
-
-# drake_ycb_object_pose = {
-#     "003_cracker_box": ((-np.pi/2., 0., -np.pi/2.), (0.,0.,0.)),
-#     "004_sugar_box": NotImplementedError,
-#     "005_tomato_soup_can": ((np.pi / 2., 0, 0), (0.,0.,0.)),
-#     "006_mustard_bottle": ((0., 0, 0), (0.,0.,0.)),
-#     "009_gelatin_box": NotImplementedError,
-#     "010_potted_meat_can": NotImplementedError
-# }
 
 drake_mesh_sdf_pose = {
     "003_cracker_box": (-0.014, 0.103, 0.013, 1.57, -1.57, 0),

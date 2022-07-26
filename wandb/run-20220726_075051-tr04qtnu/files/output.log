@@ -1,0 +1,34 @@
+Dataset loaded, beginning training
+Point cloud shape: torch.Size([16, 1024, 3])
+torch.Size([16, 6]) torch.Size([16, 3]) torch.Size([16, 1024, 3])
+Traceback (most recent call last):
+  File "neurals/scripts/train.py", line 136, in <module>
+    main()
+  File "neurals/scripts/train.py", line 55, in main
+    model.optimize_parameters()
+  File "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/dex_grasp_net.py", line 234, in optimize_parameters
+    out = self.forward()
+  File "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/dex_grasp_net.py", line 167, in forward
+    return self.net(self.pcs, self.targets, self.extra_cond if self.extra_cond_dim!= 0 else None)
+  File "/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/network.py", line 242, in forward
+    return self.forward_train(pcs, grasps, extra_cond)
+  File "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/network.py", line 262, in forward_train
+    predicted_grasp, confidence = self.decode(pcs, z)
+  File "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/network.py", line 161, in decode
+    xyz, xyz_features = module(xyz, xyz_features)
+  File "/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/pointnet2_ops/pointnet2_modules.py", line 66, in forward
+    new_features = self.mlps[i](new_features)  # (B, mlp[-1], npoint, nsample)
+  File "/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/torch/nn/modules/container.py", line 139, in forward
+    input = module(input)
+  File "/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/torch/nn/modules/conv.py", line 457, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/sirius/anaconda3/envs/nimble_dev/lib/python3.8/site-packages/torch/nn/modules/conv.py", line 453, in _conv_forward
+    return F.conv2d(input, weight, bias, self.stride,

@@ -1,0 +1,14 @@
+Making dataset for object 003_cracker_box
+Dataset loaded, beginning training
+Traceback (most recent call last):
+  File "neurals/scripts/train_classifier.py", line 142, in <module>
+    main()
+  File "neurals/scripts/train_classifier.py", line 92, in main
+    loss = loss_fn(pred_sigmoid_score, label)
+  File "/home/sirius/anaconda3/envs/taichi/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/sirius/anaconda3/envs/taichi/lib/python3.8/site-packages/torch/nn/modules/loss.py", line 613, in forward
+    return F.binary_cross_entropy(input, target, weight=self.weight, reduction=self.reduction)
+  File "/home/sirius/anaconda3/envs/taichi/lib/python3.8/site-packages/torch/nn/functional.py", line 3074, in binary_cross_entropy
+    raise ValueError(
+ValueError: Using a target size (torch.Size([16])) that is different to the input size (torch.Size([16, 1])) is deprecated. Please ensure they have the same size.

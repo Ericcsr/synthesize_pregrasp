@@ -1,0 +1,11 @@
+Making dataset for object 003_cracker_box
+Making dataset for object 004_sugar_box
+Dataset loaded, beginning training
+Traceback (most recent call last):
+  File "neurals/scripts/train.py", line 135, in <module>
+    main()
+  File "neurals/scripts/train.py", line 53, in main
+    model.set_input(data)
+  File "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/dex_grasp_net.py", line 112, in set_input
+    self.extra_cond = extra_cond.to(self.device).require_grad_(self.is_train)
+AttributeError: 'Tensor' object has no attribute 'require_grad_'
