@@ -186,6 +186,6 @@ def getSGSigmapoints(dimensions, sigma):
     pos_points = torch.eye(dimensions) * sigma
     neg_points = -torch.eye(dimensions) * sigma
     center = torch.zeros(1,dimensions)
-    return torch.vstack([pos_points, center, neg_points])
+    return torch.vstack([center, pos_points, neg_points])
 
     

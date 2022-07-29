@@ -1,4 +1,5 @@
 # Adapted from pytorch_6dof-graspnet (https://github.com/jsll/pytorch_6dof-graspnet)
+from tokenize import group
 from neurals import losses
 import utils.math_utils as math_utils
 
@@ -9,6 +10,7 @@ from torch.optim import lr_scheduler
 import torch.nn.functional as F
 from torch.nn import Sequential as Seq, Linear as Lin, ReLU, BatchNorm1d as BN
 import pointnet2_ops.pointnet2_modules as pointnet2
+from neurals.pointnet2 import SAModule
 
 
 def get_scheduler(optimizer, opt):
@@ -65,18 +67,14 @@ def init_weights(net, init_type, init_gain):
     net.apply(init_func)
 
 
-def init_net(net, init_type, init_gain=0.02, gpu_ids=None):
-    if len(gpu_ids) > 0:
-        assert (torch.cuda.is_available())
-        net.cuda(gpu_ids[0])
-        net = net.cuda()
-        #net = torch.nn.DataParallel(net, gpu_ids)
+def init_net(net, init_type, init_gain=0.02, gpu_id=1):
+    net = net.cuda(device=gpu_id)
     if init_type != 'none':
         init_weights(net, init_type, init_gain)
     return net
 
 
-def define_graspgen(opt, gpu_ids, arch, init_type, init_gain, pred_base, num_in_feats, extra_cond_dim, num_pred_fingers, device):
+def define_graspgen(opt, arch, init_type, init_gain, pred_base, num_in_feats, extra_cond_dim, num_pred_fingers, gpu_id):
     net = None
     if arch == 'vae':
         # net = GraspSamplerVAE(opt.model_scale, opt.pointnet_radius,
@@ -85,11 +83,11 @@ def define_graspgen(opt, gpu_ids, arch, init_type, init_gain, pred_base, num_in_
         #                       extra_cond_dim=extra_cond_dim, num_pred_fingers=num_pred_fingers)
         net = GraspSamplerVAE(opt["model_scale"], opt["pointnet_radius"],
                               opt["pointnet_nclusters"], opt["latent_size"],
-                              device, num_in_feats=num_in_feats,pred_base=pred_base,
+                              gpu_id, num_in_feats=num_in_feats,pred_base=pred_base,
                               extra_cond_dim=extra_cond_dim, num_pred_fingers=num_pred_fingers)
     else:
         raise NotImplementedError('model name [%s] is not recognized' % arch)
-    return init_net(net, init_type, init_gain, gpu_ids)
+    return init_net(net, init_type, init_gain, gpu_id)
 
 
 def define_loss(opt,pred_base=True):
@@ -114,10 +112,10 @@ def define_loss(opt,pred_base=True):
         raise NotImplementedError("Loss not found")
 
 class GraspSampler(nn.Module):
-    def __init__(self, latent_size, device):
+    def __init__(self, latent_size, gpu_id):
         super(GraspSampler, self).__init__()
         self.latent_size = latent_size
-        self.device = device
+        self.gpu_id = gpu_id
 
     def create_decoder(self, model_scale, pointnet_radius, pointnet_nclusters,
                        num_input_features, pred_base=True, num_pred_fingers=3):
@@ -134,15 +132,15 @@ class GraspSampler(nn.Module):
         # represents the x, y, z position of the point-cloud
 
         self.decoder = base_network(pointnet_radius, pointnet_nclusters,
-                                    model_scale, num_input_features)
+                                    model_scale, num_input_features).cuda(device=self.gpu_id)
         # Features to predict
         if pred_base:
-            self.base_pos_layer = nn.Linear(model_scale * 512, 3)
-            self.base_orn_layer = nn.Linear(model_scale * 512, 6)
+            self.base_pos_layer = nn.Linear(model_scale * 512, 3).cuda(device=self.gpu_id)
+            self.base_orn_layer = nn.Linear(model_scale * 512, 6).cuda(device=self.gpu_id)
             self.pred_base = True
         else:
             self.pred_base = False
-        self.fingertip_locations_layer = nn.Linear(model_scale * 512, 3 * num_pred_fingers) # 3x3D pose #
+        self.fingertip_locations_layer = nn.Linear(model_scale * 512, 3 * num_pred_fingers).cuda(device=self.gpu_id) # 3x3D pose #
         # self.confidence = nn.Linear(model_scale * 512, 1)
 
     def decode(self, xyz, z, extra_cond=None):
@@ -163,6 +161,7 @@ class GraspSampler(nn.Module):
             xyz_features = self.concatenate_z_with_pc(xyz,
                                                   z).transpose(-1,
                                                                1).contiguous()
+        assert(xyz.device == xyz_features.device)
         for module in self.decoder[0]:
             xyz, xyz_features = module(xyz, xyz_features)
         x = self.decoder[1](xyz_features.squeeze(-1))
@@ -194,14 +193,14 @@ class GraspSamplerVAE(GraspSampler):
                  pointnet_radius=0.02,
                  pointnet_nclusters=128,
                  latent_size=3,
-                 device="cuda",
+                 gpu_id=0,
                  num_in_feats=24,
                  pred_base=True,
                  extra_cond_dim=0,
                  num_pred_fingers=3):
-        self.device = device
+        self.gpu_id = gpu_id
         self.pred_base = pred_base
-        super(GraspSamplerVAE, self).__init__(latent_size, device)
+        super(GraspSamplerVAE, self).__init__(latent_size, gpu_id)
         self.create_encoder(model_scale, pointnet_radius, pointnet_nclusters, n_input_feats=num_in_feats+extra_cond_dim)
 
         self.create_decoder(model_scale, pointnet_radius, pointnet_nclusters,
@@ -221,12 +220,12 @@ class GraspSamplerVAE(GraspSampler):
         # Recall the signature is
         # base_network(pointnet_radius, pointnet_nclusters, scale, in_features)
         self.encoder = base_network(pointnet_radius, pointnet_nclusters,
-                                    model_scale, n_input_feats)
+                                    model_scale, n_input_feats).cuda(device=self.gpu_id)
 
     # Map real latent state to mean and variance
     def create_bottleneck(self, input_size, latent_size):
-        mu = nn.Linear(input_size, latent_size)
-        logvar = nn.Linear(input_size, latent_size)
+        mu = nn.Linear(input_size, latent_size).cuda(device=self.gpu_id)
+        logvar = nn.Linear(input_size, latent_size).cuda(device=self.gpu_id)
         self.latent_space = nn.ModuleList([mu, logvar])
 
     # Here XYZ means pointclouds, which is also the condition, should be more than pointcloud
@@ -276,10 +275,10 @@ class GraspSamplerVAE(GraspSampler):
         if z is None:
             # Sample from latent space
             z = self.sample_latent(pc.shape[0])
-        z = z.to(self.device).float()
+        z = z.cuda(device=self.gpu_id).float()
         if not (extra_cond is None):
-            extra_cond.to(self.device).float()
-        predicted_grasp, confidence = self.decode(pc.to(self.device).float(), z, extra_cond)
+            extra_cond.cuda(device=self.gpu_id).float()
+        predicted_grasp, confidence = self.decode(pc.cuda(device=self.gpu_id).float(), z, extra_cond)
         return predicted_grasp, confidence, z.squeeze()
 
     def generate_dense_latents(self, resolution):
@@ -378,8 +377,28 @@ def base_network(pointnet_radius, pointnet_nclusters, scale, in_features):
         mlp=[128 * scale, 128 * scale, 128 * scale, 256 * scale])
 
     sa_modules = nn.ModuleList([sa1_module, sa2_module, sa3_module])
-    fc_layer = nn.Sequential(nn.Linear(256 * scale, 512 * scale),
+    fc_layer =  nn.Sequential(nn.Linear(256 * scale, 512 * scale),
                              nn.BatchNorm1d(512 * scale), nn.ReLU(True),
                              nn.Linear(512 * scale, 512 * scale),
                              nn.BatchNorm1d(512 * scale), nn.ReLU(True))
     return nn.ModuleList([sa_modules, fc_layer])
+
+def base_network_dgl(pointnet_radius, pointnet_nclusters, scale, in_features):
+    sa1_module = SAModule(npoints=pointnet_nclusters,
+                         radius=pointnet_radius,
+                         n_neighbor=64,
+                         mlp_sizes=[in_features+3, 32 * scale, 32 * scale, 64 * scale])
+    sa2_module = SAModule(npoints=32,
+                          radius=0.04,
+                          n_neighbor=128,
+                          mlp_sizes=[64 * scale+3, 64 * scale, 64 * scale, 128 * scale])
+    sa3_module = SAModule(npoints=None,
+                          radius=None,
+                          mlp_sizes=[128 * scale+3, 128 * scale, 128 * scale, 256 * scale],
+                          group_all=True)
+    sa_modules = nn.ModuleList([sa1_module, sa2_module, sa3_module])
+    fc_layers =  nn.Sequential(nn.Linear(256 * scale, 512 * scale),
+                             nn.BatchNorm1d(512 * scale), nn.ReLU(True),
+                             nn.Linear(512 * scale, 512 * scale),
+                             nn.BatchNorm1d(512 * scale), nn.ReLU(True))
+    return nn.ModuleList([sa_modules, fc_layers])

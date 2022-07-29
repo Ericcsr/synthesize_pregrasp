@@ -62,19 +62,23 @@ class LaptopBulletEnv(gym.Env):
                  dex_path=None,
                  sc_path=None,
                  opt_dict=None,
-                 use_large_model=True,
-                 sigma=0.5):
+                 mode="decoder",
+                 sigma=0.5,
+                 device='cpu',
+                 showImage=False):
         self.train = train
+        self.device = device
         self.observe_last_action=observe_last_action
-        self.use_large_model = use_large_model
+        self.mode = mode
         self.max_forces = model_param.MAX_FORCE
         self.init_obj_pose=init_obj_pose
         self.render = render
+        self.showImage = showImage
         self.sigma = sigma
         self.init_noise = init_noise
         self.control_skip = int(control_skip)
         self._ts = 1. / 250. # A constant
-        self.num_fingertips = len(active_finger_tips)
+        self.num_fingertips = len(active_finger_tips) # TODO: Hard coded change this
         self.active_finger_tips = active_finger_tips
         self.active_finger_tips_idx = dict()
         for i,finger in enumerate(self.active_finger_tips):
@@ -98,7 +102,7 @@ class LaptopBulletEnv(gym.Env):
 
         if self.render:
             self._p = bullet_client.BulletClient(connection_mode=pybullet.DIRECT)
-            self.renderer = r.PyBulletRenderer()
+            self.renderer = r.PyBulletRenderer(showImage=showImage)
         else:
             self._p = bullet_client.BulletClient()
 
@@ -135,9 +139,11 @@ class LaptopBulletEnv(gym.Env):
         for finger in self.active_finger_tips:
             pred_fingers.remove(finger)
         # Here all active controlled finger are considered as conditions
-        self.score_function = NPGraspNet(opt_dict, pred_fingers=pred_fingers, extra_cond_fingers=self.active_finger_tips, use_large_model=self.use_large_model, device="cuda:0")
-        self.score_function.load_dex_grasp_net(dex_path)
-        self.score_function.load_score_function(sc_path)
+        if self.train:
+            print("Using CUDA Device:", self.device, f"Using {self.mode}")
+            self.score_function = NPGraspNet(opt_dict, pred_fingers=pred_fingers, extra_cond_fingers=self.active_finger_tips, mode=self.mode, device=self.device)
+            #self.score_function.load_dex_grasp_net(dex_path)
+            #self.score_function.load_score_function(sc_path)
 
         obs = self.reset()  # and update init obs
 
@@ -429,14 +435,25 @@ class LaptopBulletEnv(gym.Env):
         # TODO: Should use grasp confidence as stage value
         def calc_reward_value_stage_one():
             # TODO: Transform the pointcloud
+            pos_1, quat_1 = rb.get_link_com_xyz_orn(self._p, self.o_id, -1) # Object pose and orn
+            pos = np.array(pos_1)
+            quat = np.array(quat_1)
+            extra_cond = np.zeros((1,3 * len(self.active_finger_tips)))
+            for i,fin in enumerate(self.active_finger_tips):
+                extra_cond[0,i*3:(i+1)*3] = self.cur_fins[fin][0]
             rot_matrix = convert_q_bullet_to_matrix(quat)
+            
             pcd_obj = copy.deepcopy(self.pcd_obj).rotate(rot_matrix)
             pcd_obj.translate(pos)
+            
             # TODO: Remove all parts in occlusion
-            pcd_obj = self.deocclusion(pcd_obj)
+            pcd_obj = self.deocclude(pcd_obj)
             # TODO: Transform the object back to canonical cooridinate
             pcd_obj.translate(-pos)
             pcd_obj.rotate(rot_matrix.T)
+            # Number of points in pointcloud barely have any effect
+            #pcd_obj = pcd_obj.random_down_sample(0.2)
+            
             # IDEA: Build a bounding box system, each bounding box must be disjoint,
             # crop all the point outside the bounding box system, merge all the point
             # in different bounding boxes (AABB for simplicity) need to implement clearance
@@ -444,15 +461,19 @@ class LaptopBulletEnv(gym.Env):
             # TODO: Query score function for score
             ave_score = 0
             # Here extra_cond is expressed in object centric frame
-            extra_cond = np.zeros(3 * len(self.active_finger_tips))
-            for i,fin in enumerate(self.active_finger_tips):
-                extra_cond[i*3:(i+1)*3] = self.cur_fins[fin][0]
-            sigma_points = getSGSigmapoints(self.score_function.get_latent_size(), self.sigma)
-            self.score_function.create_kd_tree(pcd_obj)
-            for i in range(self.score_function.get_latent_size() * 2 + 1):
-                ave_score += self.score_function.pred_score(pcd_obj, sigma_points[i], extra_cond=extra_cond)
+            if self.mode == "only_score":
+                score, _ = self.score_function.pred_score(pcd_obj, extra_cond=extra_cond)
+                ave_score += score
+            else:
+                sigma_points = getSGSigmapoints(self.score_function.get_latent_size(), self.sigma)
+                self.score_function.create_kd_tree(pcd_obj)
+                #for i in range(self.score_function.get_latent_size() * 2 + 1): # TODO: Here is performance bottleneck
+                for i in range(1):
+                    score, _ = self.score_function.pred_score(pcd_obj, sigma_points[i], extra_cond=extra_cond)
+                    #score = 0
+                    ave_score += score
             # TODO: Add other heuristic weights such as target reaching or maximize object exposure
-            return ave_score/self.num_samples
+            return ave_score
 
         # Apply constraints on new contact points..
         def pre_simulate(current_fins: List[Tuple[List[float], bool]]):
@@ -527,10 +548,11 @@ class LaptopBulletEnv(gym.Env):
 
             self._p.stepSimulation()
 
-            ave_r += calc_reward_value()
+            ave_r += 0 #calc_reward_value()
 
             if self.render:
-                time.sleep(self._ts * 20.0)
+                if self.showImage:
+                    time.sleep(self._ts * 20.0)
                 image = self.renderer.render()
                 images.append(image)
             self.timer += 1
@@ -541,19 +563,21 @@ class LaptopBulletEnv(gym.Env):
         # Let the system evolve naturally Then stabilize the system for final eval
         # Only avaiable in final epoch
         if self.c_step_timer == self.n_steps:
-            for _ in range(300):
+            for _ in range(100):
                 self._p.stepSimulation()
-                final_r += calc_reward_value()
+                final_r += 0 #calc_reward_value()
 
                 if self.render:
-                    time.sleep(self._ts * 4.0)
+                    if self.showImage:
+                        time.sleep(self._ts * 4.0)
                     self.renderer.render()
 
         obs = self.get_extended_observation()
 
         ave_r /= self.control_skip
         ave_r -= cost_remaining * 10000.0     # 0.01 * 10000 ~ 100 10000
-        ave_r += calc_reward_value_stage_one() * 100 # Undetermined
+        if self.train:
+            ave_r += calc_reward_value_stage_one() * 100 # Undetermined
         ave_r += final_r / 300.0 * 2.0
 
         fin_pos = []

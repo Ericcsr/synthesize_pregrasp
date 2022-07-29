@@ -8,27 +8,30 @@ import numpy as np
 import utils.rigidBodySento as rb
 
 class PyBulletRenderer:
-    def __init__(self, width=640, height=440):
+    def __init__(self, width=640, height=440, showImage=True):
         self.windowName = "image"
         self.width = width
         self.height = height
-        null_image = np.zeros((self.width, self.height))
-        cv.imshow(self.windowName, null_image)
-        self.yaw = 0
-        self.pitch = 45
-        self.distance = 6
+        self.showImage = showImage
+        if self.showImage:
+            null_image = np.zeros((self.width, self.height))
+            cv.imshow(self.windowName, null_image)
+        self.yaw = 20
+        self.pitch = 10
+        self.distance = 8
         self.view_height = 0
         self.upAxisIndex=2
         self.projection_matrix = [
             1.0825318098068237, 0.0, 0.0, 0.0, 0.0, 1.732050895690918, 0.0, 0.0, 0.0, 0.0,
             -1.0002000331878662, -1.0, 0.0, 0.0, -0.020002000033855438, 0.0]
-        cv.createTrackbar("yaw", self.windowName, 0, 360, self.changeYaw)
-        cv.createTrackbar("pitch", self.windowName, 0, 90, self.changePitch)
-        cv.createTrackbar("Distance", self.windowName, 1, 20, self.changeDistance)
-        cv.createTrackbar("Height", self.windowName,0, 10, self.changeHeight)
-        cv.setTrackbarPos("yaw",self.windowName, 20)
-        cv.setTrackbarPos("pitch",self.windowName, 10)
-        cv.setTrackbarPos("Distance",self.windowName, 6)
+        if self.showImage:
+            cv.createTrackbar("yaw", self.windowName, 0, 360, self.changeYaw)
+            cv.createTrackbar("pitch", self.windowName, 0, 90, self.changePitch)
+            cv.createTrackbar("Distance", self.windowName, 1, 20, self.changeDistance)
+            cv.createTrackbar("Height", self.windowName,0, 10, self.changeHeight)
+            cv.setTrackbarPos("yaw",self.windowName, 20)
+            cv.setTrackbarPos("pitch",self.windowName, 10)
+            cv.setTrackbarPos("Distance",self.windowName, 8)
         
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
 
@@ -66,9 +69,12 @@ class PyBulletRenderer:
                                     projectionMatrix=self.projection_matrix,
                                     shadow=1, 
                                     lightDirection=[1,1,1])[2]
-            cv.imshow(self.windowName, image)
-            key = cv.waitKey(1)
-            if not blocking or key == ord('q'):
+            if self.showImage:
+                cv.imshow(self.windowName, image)
+                key = cv.waitKey(1)
+                if not blocking or key == ord('q'):
+                    break
+            else:
                 break
         return image
     

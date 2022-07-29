@@ -1,0 +1,1 @@
+Sigma: 0 mean rewards: tensor([-3104.4670]), best rewards:tensor([-2933.3232])

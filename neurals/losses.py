@@ -58,10 +58,16 @@ def control_point_l1_loss(pred_control_points,
     if confidence is not None:
         assert (confidence_weight is not None)
         error *= confidence
-        confidence_term = torch.mean(
-            torch.log(torch.max(
-                confidence,
-                torch.tensor(1e-10).to(device)))) * confidence_weight
+        if isinstance(device, str):
+            confidence_term = torch.mean(
+                torch.log(torch.max(
+                    confidence,
+                    torch.tensor(1e-10).to(device)))) * confidence_weight
+        else:
+            confidence_term = torch.mean(
+                torch.log(torch.max(
+                    confidence,
+                    torch.tensor(1e-10).cuda(device=device)))) * confidence_weight
         #print('confidence_term = ', confidence_term.shape)
 
     # print(f'l1_error = {error}'.format(error.shape))
@@ -89,10 +95,16 @@ def control_point_l1_loss(pred_control_points,
     if confidence is not None:
         assert (confidence_weight is not None)
         error *= confidence
-        confidence_term = torch.mean(
-            torch.log(torch.max(
-                confidence,
-                torch.tensor(1e-10).to(device)))) * confidence_weight
+        if isinstance(device, str):
+            confidence_term = torch.mean(
+                torch.log(torch.max(
+                    confidence,
+                    torch.tensor(1e-10).to(device)))) * confidence_weight
+        else:
+            confidence_term = torch.mean(
+                torch.log(torch.max(
+                    confidence,
+                    torch.tensor(1e-10).cuda(device=device)))) * confidence_weight
         #print('confidence_term = ', confidence_term.shape)
 
     # print(f'l1_error = {error}'.format(error.shape))
@@ -143,10 +155,16 @@ def classification_with_confidence_loss(pred_logit,
     """
     classification_loss = torch.nn.functional.binary_cross_entropy_with_logits(
         pred_logit, gt)
-    confidence_term = torch.mean(
-        torch.log(torch.max(
-            confidence,
-            torch.tensor(1e-10).to(device)))) * confidence_weight
+    if isinstance(device, str):
+        confidence_term = torch.mean(
+            torch.log(torch.max(
+                confidence,
+                torch.tensor(1e-10).to(device)))) * confidence_weight
+    else:
+        confidence_term = torch.mean(
+            torch.log(torch.max(
+                confidence,
+                torch.tensor(1e-10).cuda(device=device)))) * confidence_weight
 
     return classification_loss, -confidence_term
 
@@ -202,10 +220,16 @@ def min_distance_loss(pred_control_points,
         selected_confidence = torch.sum(selected_confidence, -1)  # N_gt
         #print('selected_confidence', selected_confidence)
         min_distance_error *= selected_confidence
-        confidence_term = torch.mean(
-            torch.log(torch.max(
-                confidence,
-                torch.tensor(1e-4).to(device)))) * confidence_weight
+        if isinstance(device, str):
+            confidence_term = torch.mean(
+                torch.log(torch.max(
+                    confidence,
+                    torch.tensor(1e-4).to(device)))) * confidence_weight
+        else:
+            confidence_term = torch.mean(
+                torch.log(torch.max(
+                    confidence,
+                    torch.tensor(1e-4).cuda(device=device)))) * confidence_weight
     else:
         confidence_term = 0.
 
@@ -239,7 +263,14 @@ def kl_divergence(mu, log_sigma, device="cpu"):
 
 
 def confidence_loss(confidence, confidence_weight, device="cpu"):
-    return torch.mean(
-        torch.log(torch.max(
-            confidence,
-            torch.tensor(1e-10).to(device)))) * confidence_weight
+    if isinstance(device, str):
+        loss = torch.mean(
+            torch.log(torch.max(
+                confidence,
+                torch.tensor(1e-10).to(device)))) * confidence_weight
+    else:
+        loss = torch.mean(
+            torch.log(torch.max(
+                confidence,
+                torch.tensor(1e-10).cuda(device=device)))) * confidence_weight
+    return loss

@@ -26,6 +26,7 @@ if __name__ == '__main__':
     parser.add_argument("--env", type=str, default="laptop")
     parser.add_argument("--init_data", type=str, default="")
     parser.add_argument("--playback",action="store_true", default=False)
+    parser.add_argument("--showImage", action="store_true", default=False)
     args = parser.parse_args()
 
     uopt = np.load(f"data/traj/{args.exp_name}.npy")
@@ -40,17 +41,18 @@ if __name__ == '__main__':
         init_obj_pose = None
 
     # Define paths
-    path = np.array([2,0,0])
+    path = np.array([2,2,0])
 
     env = envs_dict[args.env]
     world = env(render=True, 
-                num_fingertips=4, 
+                active_finger_tips=[0,1,2,3], 
                 num_interp_f=7, 
                 last_fins=last_fin,
                 init_obj_pose=init_obj_pose,
                 train=False,
                 steps = steps,
-                path=path)
+                path=path,
+                showImage=args.showImage)
 
     seed = 0
     np.random.seed(seed)
@@ -75,8 +77,8 @@ if __name__ == '__main__':
         if not args.playback:
             np.save(f"data/tip_data/{args.exp_name}_tip_poses.npy", finger_poses)
             np.save(f"data/object_poses/{args.exp_name}_object_poses.npy", object_poses)
-            fin_data = parse_fin_data(last_fins)
-            np.save(f"data/fin_data/{args.exp_name}_fin_data.npy", fin_data)
+            #fin_data = parse_fin_data(last_fins)
+            #np.save(f"data/fin_data/{args.exp_name}_fin_data.npy", fin_data)
             print(len(images))
             print(images[-1])
             with imageio.get_writer(f"data/video/{args.exp_name}_test.gif",mode="I") as writer:

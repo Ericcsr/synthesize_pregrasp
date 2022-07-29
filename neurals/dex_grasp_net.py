@@ -13,13 +13,13 @@ class DexGraspNetModel:
     e.g.,
     --dataset_mode -> sampling / evaluation)
     """
-    def __init__(self, opt, pred_base=True, pred_fingers=[0, 1, 2], extra_cond_fingers=[]):
+    def __init__(self, opt, pred_base=True, pred_fingers=[0, 1, 2], extra_cond_fingers=[], gpu_id=1):
         if isinstance(opt, dict):
             self.opt = opt
         else:
             opt = opt.__dict__
             self.opt = opt
-        self.gpu_ids = opt['gpu_ids'] #opt.gpu_ids
+        self.gpu_id = gpu_id
         self.is_train = opt['is_train'] #opt.is_train
         self.pred_base = pred_base
         self.num_in_feats = 3 * len(pred_fingers) + 3 # feature numner + 3
@@ -29,11 +29,6 @@ class DexGraspNetModel:
         self.extra_cond_fingers = extra_cond_fingers
         self.pred_fingers = pred_fingers
         self.num_pred_fingers = len(pred_fingers)
-        assert torch.cuda.device_count()>=1
-        if self.gpu_ids and self.gpu_ids[0] >= torch.cuda.device_count():
-            self.gpu_ids[0] = torch.cuda.device_count() - 1
-        self.device = torch.device('cuda:{}'.format(
-            self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu')
         if self.opt['is_train']: # self.opt.is_train:
             if self.opt["override_saved"]:
                 #self.save_dir = join(opt.checkpoints_dir, opt.name)
@@ -69,13 +64,13 @@ class DexGraspNetModel:
         #                                       extra_cond_dim = self.extra_cond_dim, 
         #                                       num_pred_fingers=self.num_pred_fingers,
         #                                       device=self.device)
-        self.net = network.define_graspgen(opt, self.gpu_ids, opt["arch"],
+        self.net = network.define_graspgen(opt, opt["arch"],
                                             opt["init_type"], opt["init_gain"],
                                             self.pred_base,
                                             num_in_feats=self.num_in_feats,
                                             extra_cond_dim=self.extra_cond_dim,
                                             num_pred_fingers=self.num_pred_fingers,
-                                            device=self.device)
+                                            gpu_id=self.gpu_id)
 
         self.criterion = network.define_loss(opt, pred_base)
 
@@ -108,13 +103,13 @@ class DexGraspNetModel:
         3D [base_position_weight, orientation_weight, fingertip_position_weight]
         '''
         if self.pred_base:
-            self.distance_weight = torch.ones(3, device=self.device, dtype=torch.float32)
+            self.distance_weight = torch.ones(3, dtype=torch.float32).cuda(device=self.gpu_id)
             # position weights scaled by 100
             self.distance_weight[0] *= 2.
             self.distance_weight[1] *= 0.2
             self.distance_weight[2] *= 10.
         else:
-            self.distance_weight = torch.ones(1,device=self.device, dtype=torch.float32)
+            self.distance_weight = torch.ones(1, dtype=torch.float32).cuda(device=self.gpu_id)
             self.distance_weight[0] *= 10
 
     def eval(self):
@@ -134,9 +129,9 @@ class DexGraspNetModel:
         else:
             targets = data['fingertip_pos'][:,self.finger_to_idx(self.pred_fingers)].float()
             extra_cond = data['fingertip_pos'][:,self.finger_to_idx(self.extra_cond_fingers)].float()
-            self.extra_cond = extra_cond.to(self.device).requires_grad_(self.is_train)
-        self.pcs = input_pcs.to(self.device).requires_grad_(self.is_train)
-        self.targets = targets.to(self.device).requires_grad_(self.is_train)
+            self.extra_cond = extra_cond.cuda(device=self.gpu_id).requires_grad_(self.is_train)
+        self.pcs = input_pcs.cuda(device=self.gpu_id).requires_grad_(self.is_train)
+        self.targets = targets.cuda(device=self.gpu_id).requires_grad_(self.is_train)
 
     def set_input_test(self, data):
         # The default collate_fn already converts np arrays to tensors
@@ -149,9 +144,9 @@ class DexGraspNetModel:
         else:
             targets = data['fingertip_pos'][:,self.finger_to_idx(self.pred_fingers)].float()
             extra_cond = data['fingertip_pos'][:,self.finger_to_idx(self.extra_cond_fingers)].float()
-            self.extra_cond_test = extra_cond.to(self.device).requires_grad_(False)
-        self.pcs_test = input_pcs.to(self.device).requires_grad_(False)
-        self.targets_test = targets.to(self.device).requires_grad_(False)
+            self.extra_cond_test = extra_cond.cuda(device=self.gpu_id).requires_grad_(False)
+        self.pcs_test = input_pcs.cuda(device=self.gpu_id).requires_grad_(False)
+        self.targets_test = targets.cuda(device=self.gpu_id).requires_grad_(False)
 
     def generate_grasps(self, pcs, z=None, extra_cond=None, return_raw_q = True):
         with torch.no_grad():
@@ -168,6 +163,7 @@ class DexGraspNetModel:
     def encode(self, pcs, grasp_pts, extra_cond=None):
         # Append the feature at the end of each points
         if extra_cond is None:
+            print(pcs.shape, grasp_pts.shape)
             input_features = torch.cat(
                 (pcs, grasp_pts.unsqueeze(1).expand(-1,pcs.shape[1], -1)),
                 -1).transpose(-1, 1).contiguous()
@@ -189,7 +185,7 @@ class DexGraspNetModel:
                 targets,
                 confidence=confidence,
                 confidence_weight=self.opt["confidence_weight"],
-                device=self.device,
+                device=self.gpu_id,
                 distance_weight=self.distance_weight)
         else:
             fingertip_pos_loss_train = self.criterion[1](
@@ -197,7 +193,7 @@ class DexGraspNetModel:
                 targets,
                 distance_weight=self.distance_weight)
         kl_loss = self.opt["kl_loss_weight"] * self.criterion[0](
-                    mu, logvar, device=self.device)
+                    mu, logvar, device=self.gpu_id)
         if self.pred_base:
             total_loss = kl_loss + base_pos_loss_train + base_orn_loss_train + fingertip_pos_loss_train
             return total_loss, kl_loss, base_pos_loss_train, base_orn_loss_train, fingertip_pos_loss_train
@@ -257,7 +253,7 @@ class DexGraspNetModel:
         if isinstance(net, torch.nn.DataParallel):
             net = net.module
         print('loading the model from %s' % load_path)
-        checkpoint = torch.load(load_path, map_location=self.device)
+        checkpoint = torch.load(load_path, map_location=torch.cuda.device(self.gpu_id))
         if hasattr(checkpoint['model_state_dict'], '_metadata'):
             del checkpoint['model_state_dict']._metadata
         net.load_state_dict(checkpoint['model_state_dict'])
@@ -285,9 +281,7 @@ class DexGraspNetModel:
                 'optimizer_state_dict': self.optimizer.state_dict(),
                 'scheduler_state_dict': self.scheduler.state_dict(),
             }, save_path)
-
-        if len(self.gpu_ids) > 0 and torch.cuda.is_available():
-            self.net.cuda(self.gpu_ids[0])
+        self.net.cuda(device=self.gpu_id)
 
     def update_learning_rate(self):
         """update learning rate (called once every epoch)"""

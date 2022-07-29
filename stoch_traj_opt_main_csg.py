@@ -20,10 +20,10 @@ if __name__ == '__main__':
     parser.add_argument("--env", type=str, default="laptop")
     parser.add_argument("--render", action="store_true",default=False)
     parser.add_argument("--iters",type=int, default=100)
-    parser.add_argument("--steps", type=int, default=3)
+    parser.add_argument("--steps", type=int, default=2)
     parser.add_argument("--runs", type=int, default=3)
     parser.add_argument("--init_data",type=str, default="")
-    parser.add_argument("--use_large_model", action="store_true", default=False)
+    parser.add_argument("--mode", type=str, default="decoder")
     parser.add_argument("--name_score", type=str, default="")
     args = original_parser.parse()
 
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     # paths = filter_paths(paths_raw, ref_env.csg, ref_env.contact_region)
     # Need to check final state dynamical feasibility here
     
-    paths = np.array([[2,0,0]])
+    paths = np.array([[2,2,0]])
     weight = np.array([0.5])
 
     #idx = np.argsort(weight)[:-11:-1]
@@ -60,8 +60,8 @@ if __name__ == '__main__':
         opt_dict["force_skip_load"] = True
         for i, path in enumerate(paths): # Search for all the paths.
             optimizer = StochTrajOptimizer(env=envs_dict[args.env], sigma=0.8, initial_guess=None,
-                                    TimeSteps=args.steps, seed=12367134, render=False, Iterations=args.iters, active_finger_tips=[0,2], num_interp_f=7,
-                                    Num_processes=8, Traj_per_process=80, opt_time=False, verbose=1, 
+                                    TimeSteps=args.steps, seed=12367134, render=False, Iterations=args.iters, active_finger_tips=[0,1], num_interp_f=7,
+                                    Num_processes=12, Traj_per_process=30, opt_time=False, verbose=1,mode=args.mode,
                                     last_fins=fin_data, init_obj_pose=init_obj_pose, steps=args.steps, path=path,
                                     sc_path=f"neurals/pretrained_score_function/{args.name_score}.pth",
                                     dex_path=f"checkpoints/{args.name}/latest_net.pth", opt_dict=opt_dict)

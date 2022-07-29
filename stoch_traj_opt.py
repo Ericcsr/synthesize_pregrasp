@@ -5,6 +5,7 @@ Created on Tue Feb 18 14:50:12 2020
 """
 
 #from multiprocessing import Process, Pipe
+import torch
 import torch.multiprocessing as mp
 from torch.multiprocessing import Process, Pipe
 import os
@@ -13,8 +14,17 @@ import time
 import random
 
 # from pdb import set_trace as bp
-
-
+def cuda_scheduler(num_process, num_gpus=4):
+    num_process_per_gpu = num_process//num_gpus
+    residual = num_process % num_gpus
+    device_list = []
+    for gpu in range(num_gpus):
+        device_list += [f"cuda:{gpu}"] * num_process_per_gpu
+    device_list += [f"cuda:{gpu}"] * residual
+    print(device_list, num_process)
+    assert(len(device_list) == num_process)
+    return device_list
+    
 class StochTrajOptimizer:
     def __init__(self,
                  env,
@@ -30,12 +40,14 @@ class StochTrajOptimizer:
                  initial_guess=None,
                  verbose=0,
                  patience=10,
+                 num_gpus = 4,
                  **kwargs):
 
         self.sigma = sigma  # noise intensity
         self.kappa = kappa  # transformation "temperature"
         self.alpha = alpha  # learning rate
         self.num_process = Num_processes  # number of processes for parallel computation
+        self.num_gpus = num_gpus
         self.Traj_per_process = Traj_per_process  # number of trajectories simulated by each process
         self.N = TimeSteps  # trajectory time horizon
         self.ITER = Iterations  # number of optimization iterations
@@ -47,6 +59,7 @@ class StochTrajOptimizer:
         self.verbose = verbose
         self.patience = patience
         self.current_patience = patience
+        self.device_list = cuda_scheduler(self.num_process, 1)
         self.kwargs = kwargs  # environment arguments
         mp.set_start_method("spawn")
         if self.verbose==2:
@@ -64,9 +77,9 @@ class StochTrajOptimizer:
             # Start the process
             p.start()
             # Send the initial arguments for initialization
-            parent_conn.send([self.N, self.sigma, self.Traj_per_process, self.seed, self.env, self.kwargs])
+            parent_conn.send([self.N, self.sigma, self.Traj_per_process, self.seed, self.env, self.kwargs, self.device_list[i]])
 
-        self.world = self.env(render=self.render,
+        self.world = self.env(render=self.render, device="cuda:0",
                               **self.kwargs)  # it is assumed that rendering is controlled by "render" argument
         self.ctrl_dim = self.world.action_space.shape[0]
 
@@ -86,13 +99,14 @@ class StochTrajOptimizer:
             print('simulation process id:', os.getpid())
 
         timer = 0
-
         # Receive the initialization data
         initialization_data = conn.recv()
         if verbose==2:
             print('Initialization data: ', initialization_data)
-        N, sigma, n_traj, seed, env_fn, kwargs = initialization_data  # number of trajectories simulated by each process
-        sim = env_fn(render=False, **kwargs)  # it is assumed that rendering is controlled by "render" argument
+        N, sigma, n_traj, seed, env_fn, kwargs, device = initialization_data  # number of trajectories simulated by each process
+        #torch.cuda.set_device(int(device[-1]))
+        # TODO: Need to incorporate distributed training over multi-gpu or build a centered query based model (Which may be slower)
+        sim = env_fn(render=False, device=device, **kwargs)  # it is assumed that rendering is controlled by "render" argument
         if seed is not None:
             sim.seed(seed)  # it is assumed that the seed is controlled by a method called "seed" in the environment
         sim.reset()
