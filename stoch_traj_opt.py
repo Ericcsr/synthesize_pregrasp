@@ -79,7 +79,7 @@ class StochTrajOptimizer:
             # Send the initial arguments for initialization
             parent_conn.send([self.N, self.sigma, self.Traj_per_process, self.seed, self.env, self.kwargs, self.device_list[i]])
 
-        self.world = self.env(render=self.render, device="cuda:0",
+        self.world = self.env(render=self.render, device="cpu",
                               **self.kwargs)  # it is assumed that rendering is controlled by "render" argument
         self.ctrl_dim = self.world.action_space.shape[0]
 

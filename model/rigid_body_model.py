@@ -16,17 +16,13 @@ from qpth.qp import QPFunction, QPSolvers
 
 ########## Drake stuff ##########
 import pydrake
-from pydrake.all import eq
-from pydrake.autodiffutils import ExtractValue, ExtractGradient, InitializeAutoDiff, AutoDiffXd
-from pydrake.symbolic import Variable
 from pydrake.common import FindResourceOrThrow
 from pydrake.systems.framework import DiagramBuilder
-from pydrake.geometry import DrakeVisualizer, Sphere, Box, CollisionFilterManager, CollisionFilterDeclaration, GeometrySet
-from pydrake.math import RigidTransform, RollPitchYaw, RotationMatrix
-from pydrake.multibody.inverse_kinematics import InverseKinematics, MinimumDistanceConstraint, PositionConstraint
+from pydrake.geometry import Sphere, Box, CollisionFilterDeclaration, GeometrySet
+from pydrake.math import RigidTransform
+from pydrake.multibody.inverse_kinematics import InverseKinematics
 from pydrake.multibody.plant import AddMultibodyPlantSceneGraph, MultibodyPlant
 from pydrake.multibody.parsing import Parser
-from pydrake.multibody.tree import JacobianWrtVariable
 import pydrake.solvers.mathematicalprogram as mp
 from pydrake.systems.analysis import Simulator
 from pydrake.common import eigen_geometry

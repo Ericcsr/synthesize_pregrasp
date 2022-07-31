@@ -3,7 +3,6 @@ import numpy as np
 import open3d as o3d
 import torch
 import torch.nn as nn
-from pytorch_memlab import LineProfiler, profile
 from neurals.dex_grasp_net import DexGraspNetModel
 from neurals.network import ScoreFunction, LargeScoreFunction
 
@@ -21,7 +20,7 @@ class NPGraspNet(nn.Module):
         self.num_pred_fingers = len(pred_fingers)
         self.num_extra_fingers = len(extra_cond_fingers)
         self.device = torch.device(device)
-        self.gpu_id = int(device[-1])
+        self.gpu_id = int(device[-1]) if device != "cpu" else -1
         self.mode = mode
         assert(self.mode in ["only_score", "decoder", "full"])
         
@@ -37,7 +36,10 @@ class NPGraspNet(nn.Module):
         elif self.mode == "decoder":
             self.score_function = LargeScoreFunction(self.num_extra_fingers + self.num_pred_fingers).cuda(device=self.gpu_id)
         else:
-            self.score_function = LargeScoreFunction(self.num_extra_fingers).cuda(device=self.gpu_id)
+            if self.gpu_id == -1:
+                self.score_function = LargeScoreFunction(self.num_extra_fingers).cpu()
+            else:
+                self.score_function = LargeScoreFunction(self.num_extra_fingers).cuda(device=self.gpu_id)
         self.score_function.eval()
 
     def pred_score(self,pcd, extra_cond, latent=None):
@@ -45,10 +47,16 @@ class NPGraspNet(nn.Module):
         pcd: [1, N_points, 3]
         extra_cond: Assume flatten vector
         """
-        pcd_np = torch.from_numpy(np.asarray(pcd.points)).view(1, -1, 3).cuda(device=self.gpu_id).float()
+        if self.gpu_id != -1:
+            pcd_np = torch.from_numpy(np.asarray(pcd.points)).view(1, -1, 3).cuda(device=self.gpu_id).float()
+        else:
+            pcd_np = torch.from_numpy(np.asarray(pcd.points)).view(1, -1, 3).float()
         if self.mode != "only_score":
             latent = latent.cuda(device=self.gpu_id).view(1,-1).float()
-        extra_cond_th = torch.from_numpy(extra_cond).cuda(device=self.gpu_id).float()
+        if self.gpu_id != -1:
+            extra_cond_th = torch.from_numpy(extra_cond).cuda(device=self.gpu_id).float()
+        else:
+            extra_cond_th = torch.from_numpy(extra_cond).float()
         if self.mode == "only_score":
             score = self.score_function.pred_score(pcd_np, extra_cond_th)[0].cpu()
             return score, None
