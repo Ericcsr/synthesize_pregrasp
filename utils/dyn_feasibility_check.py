@@ -2,6 +2,7 @@ import open3d as o3d # FIXME: this breaks the code if it's not at the top
 import argparse
 import multiprocessing as mp
 import numpy as np
+import random
 import itertools
 import open3d as o3d
 import os
@@ -9,18 +10,33 @@ import cvxpy as cp
 from tqdm import tqdm
 
 MIN_NORMAL_FORCE = {
-    3:1500.0,
+    3:1.0,
     4:1000.0}
 MIN_DISTANCE_BETWEEN_FINGER = 0.03 # Should differ task from task
-DEFAULT_FRICTION_COEFF = 0.4
+DEFAULT_FRICTION_COEFF = 20.0
+
+def get_screw_symmetric(v):
+    return np.array([[0, -v[2], v[1]],
+                     [v[2], 0, -v[0]],
+                     [-v[1], v[0], 0]])
+
+def is_psd(x):
+    return (np.linalg.eigvals(x) >= 0).all()
 
 def get_min_external_wrench_qp_matrices(p_WF, C_WF, mu=DEFAULT_FRICTION_COEFF, 
-                                        psd_offset=1e-7, n_fingers=3):
+                                        psd_offset=1e-4, n_fingers=3):
+    # For force closure
     C_123_T = np.vstack([C_WF[i,:,:].T for i in range(n_fingers)]) # 12x3
-    Q = C_123_T @ (C_123_T.T)
-    p_WF_cross_C = np.hstack([np.cross(np.atleast_2d(p_WF[i,:]),
-                                                C_WF[i,:,:].T).T for i in range(n_fingers)])
-    Q += p_WF_cross_C.T @ (p_WF_cross_C)
+    Q1 = C_123_T @ (C_123_T.T)
+    #assert(is_psd(Q1))
+    # For torque closure
+    p_WF_cross_C = np.vstack([(get_screw_symmetric(p_WF[i,:])@
+                                                C_WF[i,:,:]).T for i in range(n_fingers)])
+    Q2 = p_WF_cross_C @ (p_WF_cross_C.T)
+    #assert(is_psd(Q2))
+    Q = Q1 + Q2
+    #assert(is_psd(Q))
+    #print("Q:",np.linalg.eigvals(Q))
     P = np.zeros((1,3 * n_fingers))
     Gf = np.zeros((4 * n_fingers,3 * n_fingers))
     Ga = np.zeros((n_fingers, 3 * n_fingers))
@@ -31,59 +47,73 @@ def get_min_external_wrench_qp_matrices(p_WF, C_WF, mu=DEFAULT_FRICTION_COEFF,
                                             [mu, 0., 1.]]) # 16x12
         Ga[i, 3*i] = 1.
     G = np.vstack([Gf, Ga])
-    h = np.hstack([np.zeros(4 * n_fingers),-np.ones(n_fingers)]) * MIN_NORMAL_FORCE[n_fingers]
+    if n_fingers in MIN_NORMAL_FORCE.keys():
+        min_normal_force = MIN_NORMAL_FORCE[n_fingers]
+    else:
+        min_normal_force = 10
+    h = np.hstack([np.zeros(4 * n_fingers),-np.ones(n_fingers)]) * min_normal_force
     A = np.zeros((1,3 * n_fingers))
     b = np.zeros(1)
-    Q += np.eye(Q.shape[0])*psd_offset
+    #Q += np.eye(Q.shape[0])*psd_offset
     return Q, P, G, h, A, b
 
 def construct_and_solve_wrench_closure_qp(p_WF, C_WF, mu=DEFAULT_FRICTION_COEFF,num_contact_points=3):
     Q, P, G, h, A, b = get_min_external_wrench_qp_matrices(p_WF, C_WF, mu, n_fingers=num_contact_points)
     try:
         z_cp = cp.Variable(Q.shape[0])
+        z_cp.value = np.random.random(size=Q.shape[0]) * 1000
         prob = cp.Problem(cp.Minimize((1 / 2) * cp.quad_form(z_cp, Q)),
                         [G @ z_cp <= h])
         prob.solve()
         z_hat = z_cp.value
         obj = prob.value
+        #print("Value:",0.5 * z_hat.T @ Q @ z_hat)
+        #print(z_hat)
     except cp.SolverError:
         return None, np.inf
     return z_hat, obj 
 
 # Should be able to use outside of this file in the main pipeline
 def check_dyn_feasible(contact_points, contact_normals, tol=1e-4):
-    n_contacts = len(contact_points)
-    normals = np.copy(np.hstack([contact_points, contact_normals]))
+    np.random.seed(os.getpid())
+    random.seed(os.getpid())
+    mask = contact_points[:,0] < 50
+    normals = np.copy(np.hstack([contact_points[mask], contact_normals[mask]]))
 
     # Check whether there are two point that are too close
-    for test_i in list(itertools.combinations(range(n_contacts),2)):
-        i1, i2 = test_i
-        p1 = normals[i1, :3]
-        p2 = normals[i2, :3]
-        if np.linalg.norm(p1-p2)<MIN_DISTANCE_BETWEEN_FINGER:
-            return None
-
-    p_WF = np.hstack([contact_points]).copy()
-    C_WF = np.zeros((n_contacts,3,3))
-
-    for finger_i in range(n_contacts):
-        C_WF[finger_i,:,0] = contact_normals[finger_i, :].copy()
-        n = C_WF[finger_i,:,0]
-        t0 = np.zeros(3)
-        t0[0] = n[1]
-        t0[1] = -n[0]
-        t1 = np.cross(n, t0)
-        C_WF[finger_i,:,1] = t0.copy()
-        C_WF[finger_i,:,2] = t1.copy()
-    try:
+    n_contacts = len(normals)
+    combs = itertools.combinations(range(n_contacts), 3)
+    for comb in combs:
+        comb = np.asarray(comb)
+        normal = normals[comb]
+        p_WF = normal[:,:3].copy()
+        C_WF = np.zeros((n_contacts,3,3))
+        for finger_i in range(len(normal)):
+            C_WF[finger_i,:,0] = normal[finger_i, 3:].copy()/np.linalg.norm(normal[finger_i, 3:])
+            n = C_WF[finger_i,:,0]
+            t0 = np.zeros(3)
+            t0[0] = n[1]
+            t0[1] = -n[0]
+            t1 = np.cross(n, t0)
+            C_WF[finger_i,:,1] = t0.copy()
+            C_WF[finger_i,:,2] = t1.copy()
+    
         _, obj= construct_and_solve_wrench_closure_qp(
-        p_WF.copy(), C_WF.copy(), mu= DEFAULT_FRICTION_COEFF, num_contact_points=n_contacts)
-    except Exception as e:
-        print(e)
-        return None
-    if obj<=tol:
-        return normals
+        p_WF.copy(), C_WF.copy(), mu= DEFAULT_FRICTION_COEFF, num_contact_points=3)
+        #print("Objective:", obj)
+        if obj<=tol:
+            return normal
     return None
+
+
+def check_dyn_feasible_parallel(contact_points, contact_normals, tol=1e-4, num_process=10):
+    args_lists = [[contact_points, contact_normals, tol]] * num_process
+    with mp.Pool(num_process) as proc:
+        results = proc.starmap(check_dyn_feasible, args_lists)
+
+    for result in results:
+        if not (result is None):
+            return result
 
 def find_dynamically_feasible_contacts(point_cloud, tol=1e-4, num_procs=10, n_contacts=3):
     '''
@@ -101,6 +131,7 @@ def find_dynamically_feasible_contacts(point_cloud, tol=1e-4, num_procs=10, n_co
     global check_if_feasible
 
     def check_if_feasible(indices):
+        
         indices = np.asarray(indices)
         normals = np.copy(np.hstack([surface_points[indices, :],
                                           surface_normals[indices, :]]))

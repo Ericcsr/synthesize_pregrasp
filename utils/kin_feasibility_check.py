@@ -1,6 +1,8 @@
+import os
+import copy
+from multiprocessing import Pool
 import model.param as model_param
 import model.rigid_body_model_for_kin_feasible as rbm
-import model.manipulation.scenario as scenario
 import neurals.data_generation_config as dgc
 import numpy as np
 from pydrake.solvers.snopt import SnoptSolver
@@ -34,6 +36,7 @@ def check_kin_feasible(contact_points, contact_normals, object_path=None, base_l
                                            object_base_link_name=base_link_name,
                                            object_world_pose=object_world_pose,
                                            threshold_distance=0.1)
+    
 
     if bounding_box is None:
         ik, constraints_on_finger, collision_constr, desired_positions = hand_plant.construct_ik_given_fingertip_normals(
@@ -79,8 +82,22 @@ def check_kin_feasible(contact_points, contact_normals, object_path=None, base_l
         base_condition = True
         if not (bounding_box is None):
             base_condition = base_constr.evaluator().CheckSatisfied(q_sol, tol=1e-2)
-        # Debug
-        print(f"Collision: {no_collision} Target: {match_fingertip} Base: {base_condition}")
         if no_collision and match_fingertip and base_condition:
             return True, hand_plant.get_bullet_hand_config_from_drake_q(q_sol)
     return False, hand_plant.get_bullet_hand_config_from_drake_q(q_sol)
+
+def check_kin_feasible_parallel(contact_points, contact_normals, object_path=None, base_link_name="manipulated_object", bounding_box=None, num_process=10):
+    arg_lists = []
+    for _ in range(num_process):
+        arg_lists.append([copy.deepcopy(contact_points),
+                                      copy.deepcopy(contact_normals),
+                                      copy.deepcopy(object_path),
+                                      copy.deepcopy(base_link_name),
+                                      copy.deepcopy(bounding_box)])
+    with Pool(num_process) as proc:
+        results = proc.starmap(check_kin_feasible, arg_lists)
+    
+    for result in results:
+        if result[0]:
+            return result[0], result[1]
+    return result[0], result[1] # Last result, should be false at this time

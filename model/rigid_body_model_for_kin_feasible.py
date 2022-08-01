@@ -1,39 +1,19 @@
-from cv2 import destroyAllWindows, threshold
+import os
+import numpy as np
 import model.param as model_param
 from model.param import *
 import model.manipulation.scenario as scenario
-import utils.math_utils as math_utils
-
-import cvxpy as cp
-from functools import partial
-import numpy as np
-import torch
-import os
-from scipy.spatial.transform import Rotation as R
-from qpth.qp import QPFunction, QPSolvers
 import copy
-
 import open3d as o3d
 
 ########## Drake stuff ##########
 import pydrake 
-from pydrake.all import Solve
-from pydrake.autodiffutils import ExtractValue, ExtractGradient, InitializeAutoDiff, AutoDiffXd
 from pydrake.common import FindResourceOrThrow
-from pydrake.common.value import AbstractValue
 from pydrake.systems.framework import DiagramBuilder
-from pydrake.geometry import Sphere, Box, Cylinder, CollisionFilterDeclaration, GeometrySet
-from pydrake.math import RigidTransform, RollPitchYaw, RotationMatrix
+from pydrake.geometry import Sphere, Box, CollisionFilterDeclaration, GeometrySet
 from pydrake.multibody.inverse_kinematics import InverseKinematics
-from pydrake.multibody.plant import AddMultibodyPlantSceneGraph, MultibodyPlant, CoulombFriction
+from pydrake.multibody.plant import AddMultibodyPlantSceneGraph, MultibodyPlant
 from pydrake.multibody.parsing import Parser
-from pydrake.multibody.tree import JacobianWrtVariable, SpatialInertia, UnitInertia
-import pydrake.solvers.mathematicalprogram as mp
-import pydrake.perception as drake_perception
-from pydrake.common.eigen_geometry import AngleAxis
-
-# from pydrake.systems.analysis import Simulator
-from pydrake.systems.meshcat_visualizer import ConnectMeshcatVisualizer, MeshcatPointCloudVisualizer
 
 def norm_cost(q):
     return q.dot(q)
@@ -50,7 +30,7 @@ class AllegroHandPlantDrake:
         builder = DiagramBuilder()
         self.plant, self.scene_graph = AddMultibodyPlantSceneGraph(
             builder, MultibodyPlant(time_step=0.01))
-
+        
         #drake_allegro_path = FindResourceOrThrow(model_param.drake_allegro_path)
         drake_allegro_path = model_param.allegro_hand_urdf_path
         parser = Parser(self.plant)
@@ -67,18 +47,6 @@ class AllegroHandPlantDrake:
                 self.plant.world_frame(),
                 # FIXME(wualbert): cleaner
                 self.object_frame, object_world_pose)
-            # Setup o3d stuff
-            split_path = drake_object_path.split("/")
-            drake_obj_name = split_path[-1].split(".")[0]
-            drake_mesh_path = "/"+os.path.join(*split_path[:-1])+"/../meshes/"+drake_obj_name+"_textured.obj"
-            o3d_mesh = o3d.io.read_triangle_mesh(drake_mesh_path)
-            self.o3d_mesh = copy.deepcopy(o3d_mesh).transform(object_world_pose.GetAsMatrix4())
-            self.o3d_mesh.compute_triangle_normals()
-            self.o3d_mesh.compute_vertex_normals()
-            assert self.o3d_mesh.has_triangle_normals() and self.o3d_mesh.has_vertex_normals()
-            # assert self.o3d_mesh.is_watertight()
-            self.o3d_scene = o3d.t.geometry.RaycastingScene()
-            self.o3d_scene.add_triangles(o3d.t.geometry.TriangleMesh.from_legacy(self.o3d_mesh))
         else:
             scenario.AddShape(
                 self.plant, 
@@ -93,13 +61,6 @@ class AllegroHandPlantDrake:
             self.plant.WeldFrames(
                 self.plant.world_frame(),
                 self.object_frame, object_world_pose)
-            o3d_mesh = o3d.geometry.TriangleMesh.create_box(0.4, 0.4, 0.1)
-            o3d_mesh.translate([-0.2, -0.2, -0.05])
-            o3d_mesh.compute_triangle_normals()
-            o3d_mesh.compute_vertex_normals()
-            self.o3d_mesh = copy.deepcopy(o3d_mesh).transform(object_world_pose.GetAsMatrix4())
-            self.o3d_scene = o3d.t.geometry.RaycastingScene()
-            self.o3d_scene.add_triangles(o3d.t.geometry.TriangleMesh.from_legacy(self.o3d_mesh))
 
         self.hand_body = self.plant.GetBodyByName("hand_root")
         self.hand_drake_frame = self.hand_body.body_frame()
