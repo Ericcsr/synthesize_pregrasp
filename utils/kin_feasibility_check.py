@@ -42,15 +42,15 @@ def check_kin_feasible(contact_points, contact_normals, object_path=None, base_l
         ik, constraints_on_finger, collision_constr, desired_positions = hand_plant.construct_ik_given_fingertip_normals(
                         np.hstack([contact_points, contact_normals]),
                         padding=model_param.object_padding,
-                        collision_distance=1e-4,
-                        allowed_deviation=np.ones(3)*0.01,
+                        collision_distance=1e-5,
+                        allowed_deviation=np.ones(3)*0.02,
                         bounding_box=bounding_box)
     else:
         ik, constraints_on_finger, collision_constr, base_constr, desired_positions = hand_plant.construct_ik_given_fingertip_normals(
                         np.hstack([contact_points, contact_normals]),
                         padding=model_param.object_padding,
-                        collision_distance=1e-4,
-                        allowed_deviation=np.ones(3)*0.01,
+                        collision_distance=1e-5,
+                        allowed_deviation=np.ones(3)*0.02,
                         bounding_box=bounding_box)
     # Try multiple solve to the problem
     for i, quat_init in enumerate(quat_inits):
@@ -86,7 +86,7 @@ def check_kin_feasible(contact_points, contact_normals, object_path=None, base_l
             return True, hand_plant.get_bullet_hand_config_from_drake_q(q_sol)
     return False, hand_plant.get_bullet_hand_config_from_drake_q(q_sol)
 
-def check_kin_feasible_parallel(contact_points, contact_normals, object_path=None, base_link_name="manipulated_object", bounding_box=None, num_process=10):
+def check_kin_feasible_parallel(contact_points, contact_normals, object_path=None, base_link_name="manipulated_object", bounding_box=None, num_process=16):
     arg_lists = []
     for _ in range(num_process):
         arg_lists.append([copy.deepcopy(contact_points),

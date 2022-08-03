@@ -10,20 +10,17 @@ def main():
         return
     use_wandb = opt.use_wandb
     # tuple(model_param.drake_ycb_objects.keys())
-    objects = ("003_cracker_box","004_sugar_box")
-    print('objects', objects)
 
     if use_wandb:
         import wandb
         wandb.init()
         wandb.config.update(opt)
-        wandb.config.update({'objects': objects})
-    model = dgn.DexGraspNetModel(opt, pred_base=False,pred_fingers=[2], extra_cond_fingers=[0,1])
+    model = dgn.DexGraspNetModel(opt, pred_base=False,pred_fingers=[2], extra_cond_fingers=[0,1], gpu_id=0)
     # full_dataset = neurals.dataset.make_dataset_from_point_clouds_score_function(
     #     objects, copies=opt.grasp_perturb_copies, 
     #     pc_noise_variance=opt.pc_noise_variance,
     #     include_negative=False)
-    full_dataset = neurals.dataset.SmallDataset()
+    full_dataset = neurals.dataset.SmallDataset(positive_grasp_folder="seeds/grasps")
 
     # Split the dataset
     dataset_size = len(full_dataset)

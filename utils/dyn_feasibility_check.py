@@ -97,9 +97,11 @@ def check_dyn_feasible(contact_points, contact_normals, tol=1e-4):
             t1 = np.cross(n, t0)
             C_WF[finger_i,:,1] = t0.copy()
             C_WF[finger_i,:,2] = t1.copy()
-    
-        _, obj= construct_and_solve_wrench_closure_qp(
-        p_WF.copy(), C_WF.copy(), mu= DEFAULT_FRICTION_COEFF, num_contact_points=3)
+        try:
+            _, obj= construct_and_solve_wrench_closure_qp(
+            p_WF.copy(), C_WF.copy(), mu= DEFAULT_FRICTION_COEFF, num_contact_points=3)
+        except:
+            return None
         #print("Objective:", obj)
         if obj<=tol:
             return normal

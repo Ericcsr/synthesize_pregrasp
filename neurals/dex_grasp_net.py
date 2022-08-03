@@ -46,8 +46,8 @@ class DexGraspNetModel:
         #         self.save_dir = join(opt.checkpoints_dir, opt.name)
         #     else:
         #         self.save_dir = join(opt.checkpoints_dir, opt.name, opt.store_timestamp)
-        # self.save_dir_no_time = join(opt.checkpoints_dir, opt.name)
         else:
+            self.save_dir_no_time = join(opt["checkpoints_dir"], opt["name"])
             if not(opt["store_timestamp"] is None):
                 self.save_dir = join(opt["checkpoints_dir"], opt["name"], opt["store_timestamp"])
             else:
@@ -253,7 +253,7 @@ class DexGraspNetModel:
         if isinstance(net, torch.nn.DataParallel):
             net = net.module
         print('loading the model from %s' % load_path)
-        checkpoint = torch.load(load_path, map_location=torch.cuda.device(self.gpu_id))
+        checkpoint = torch.load(load_path, map_location=torch.device(f"cuda:{self.gpu_id}"))
         if hasattr(checkpoint['model_state_dict'], '_metadata'):
             del checkpoint['model_state_dict']._metadata
         net.load_state_dict(checkpoint['model_state_dict'])

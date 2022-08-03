@@ -8,12 +8,15 @@ import torch.utils.data
 import torch
 import torch.nn as nn
 
+
+
 current_dir = "/home/ericcsr/sirui/contact_planning_dexterous_hand/neurals/pretrained_score_function"
 
 def parse_input(data):
     return data['point_cloud'].cuda().float(), data['fingertip_pos'].cuda().float(), data['label'].cuda().float()
 
 def main():
+    raise DeprecationWarning("This method is currently depreciated, please refers to training score function")
     parser = TrainOptions()
     # Add loading model related issue
     parser.parser.add_argument(
@@ -60,7 +63,6 @@ def main():
     optimizer = torch.optim.Adam(score_function.parameters(), lr=1e-3)
 
     # TODO: Make kin_feasibility and dyn_feasibility working
-    #full_dataset = neurals.dataset.ScoreFunctionDataset(positive_filepaths=["positive"], negative_filepaths=["negative"])
     full_dataset = neurals.dataset.SmallDataset(positive_grasp_files=["pose_0","pose_1","pose_2","pose_3","pose_4"],
                                                 negative_grasp_files=["pose_0","pose_1","pose_2","pose_3","pose_4", "pose_5", "pose_6", "pose_7"],
                                                 point_clouds=["pose_0_pcd","pose_1_pcd","pose_2_pcd","pose_3_pcd","pose_4_pcd", "pose_5_pcd", "pose_6_pcd", "pose_7_pcd"])
