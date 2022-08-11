@@ -1,4 +1,3 @@
-from re import M
 import model.param as model_param
 import model.manipulation.scenario as scenario
 from pydrake.geometry import Box, Sphere

@@ -401,23 +401,3 @@ def base_network(pointnet_radius, pointnet_nclusters, scale, in_features):
                              nn.Linear(512 * scale, 512 * scale),
                              nn.BatchNorm1d(512 * scale), nn.ReLU(True))
     return nn.ModuleList([sa_modules, fc_layer])
-
-# def base_network_dgl(pointnet_radius, pointnet_nclusters, scale, in_features):
-#     sa1_module = SAModule(npoints=pointnet_nclusters,
-#                          radius=pointnet_radius,
-#                          n_neighbor=64,
-#                          mlp_sizes=[in_features+3, 32 * scale, 32 * scale, 64 * scale])
-#     sa2_module = SAModule(npoints=32,
-#                           radius=0.04,
-#                           n_neighbor=128,
-#                           mlp_sizes=[64 * scale+3, 64 * scale, 64 * scale, 128 * scale])
-#     sa3_module = SAModule(npoints=None,
-#                           radius=None,
-#                           mlp_sizes=[128 * scale+3, 128 * scale, 128 * scale, 256 * scale],
-#                           group_all=True)
-#     sa_modules = nn.ModuleList([sa1_module, sa2_module, sa3_module])
-#     fc_layers =  nn.Sequential(nn.Linear(256 * scale, 512 * scale),
-#                              nn.BatchNorm1d(512 * scale), nn.ReLU(True),
-#                              nn.Linear(512 * scale, 512 * scale),
-#                              nn.BatchNorm1d(512 * scale), nn.ReLU(True))
-#     return nn.ModuleList([sa_modules, fc_layers])
