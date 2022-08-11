@@ -24,7 +24,7 @@ def is_psd(x):
     return (np.linalg.eigvals(x) >= 0).all()
 
 def get_min_external_wrench_qp_matrices(p_WF, C_WF, mu=DEFAULT_FRICTION_COEFF, 
-                                        psd_offset=1e-4, n_fingers=3):
+                                        psd_offset=1e-8, n_fingers=3):
     # For force closure
     C_123_T = np.vstack([C_WF[i,:,:].T for i in range(n_fingers)]) # 12x3
     Q1 = C_123_T @ (C_123_T.T)
@@ -74,7 +74,7 @@ def construct_and_solve_wrench_closure_qp(p_WF, C_WF, mu=DEFAULT_FRICTION_COEFF,
     return z_hat, obj 
 
 # Should be able to use outside of this file in the main pipeline
-def check_dyn_feasible(contact_points, contact_normals, tol=1e-4):
+def check_dyn_feasible(contact_points, contact_normals, tol=1e-3):
     np.random.seed(os.getpid())
     random.seed(os.getpid())
     mask = contact_points[:,0] < 50
@@ -102,7 +102,9 @@ def check_dyn_feasible(contact_points, contact_normals, tol=1e-4):
             p_WF.copy(), C_WF.copy(), mu= DEFAULT_FRICTION_COEFF, num_contact_points=3)
         except:
             return None
-        #print("Objective:", obj)
+        if obj < 0:
+            #print("Warning: QP is unbounded, result is inaccurate!!")
+            return None
         if obj<=tol:
             return normal
     return None

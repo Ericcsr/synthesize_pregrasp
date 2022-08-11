@@ -27,6 +27,8 @@ MAX_FORCE=80
 CONTROL_SKIP=50
 ALLOWANCE=0.05
 
+HAS_FLOOR=False
+
 min_normal_force = 1500. # 1500.
 fingertip_radius = 0.012
 

@@ -8,11 +8,11 @@ import utils.rigidBodySento as rb
 from multiprocessing import Pool
 import pytorch_kinematics as pk
 import pybullet as p
-from model.rigid_body_model import AllegroHandPlantDrake
+from model.allegro_arm_rigid_body_model import AllegroArmPlantDrake
 from model.param import POINT_NUM, SCALE, AllAllegroHandFingers, AllegroHandFinger, NameToFingerIndex, NameToArmFingerIndex
 import model.param as model_param
 import copy
-import helper
+import utils.helper as helper
 from pydrake.math import RigidTransform
 from pydrake.common import eigen_geometry
 from pydrake.solvers.snopt import SnoptSolver
@@ -124,7 +124,7 @@ class AllegroHandDrake:
                                         p=self.obj_pose)
 
         # Create Drake IK agent based on new object pose
-        self.hand_plant = AllegroHandPlantDrake(object_world_pose=self.object_world_pose, 
+        self.hand_plant = AllegroArmPlantDrake(object_world_pose=self.object_world_pose, 
                                                 meshcat_open_brower=False, 
                                                 num_finger_tips=4,
                                                 object_collidable=self.object_collidable,
@@ -323,7 +323,7 @@ class AllegroHandDrake:
                     useFixedBase=True):
         
         # Create a new Drake agent for solving IK
-        hand_plant = AllegroHandPlantDrake(object_world_pose=obj_world_pose, 
+        hand_plant = AllegroArmPlantDrake(object_world_pose=obj_world_pose, 
                                            meshcat_open_brower=False, 
                                            num_finger_tips=4,
                                            object_collidable=object_collidable,
@@ -376,8 +376,6 @@ class AllegroHandDrake:
 
 def target_norm_cost(q,q_target):
     return 10 * (q-q_target).dot(q-q_target)
-
-
 
 def getRelativePose(tip_pose, obj_pose, obj_orn):
     r = tip_pose - obj_pose

@@ -60,9 +60,10 @@ class SmallDataset(torch.utils.data.dataset.Dataset):
         ans["label"] = self.labels[idx]
         return ans
 
-# TODO: (Eric) Create score dataset, for training score function
+# Dataset for score function, add noise tensor in order to prevent overfitting
 class ScoreDataset(torch.utils.data.dataset.Dataset):
-    def __init__(self, score_file="score_data"):
+    def __init__(self, score_file="score_data", noise_scale = 0.0):
+        self.noise_scale = noise_scale
         data = np.load(f"data/score_function_data/{score_file}.npz")
         self.scores = data["scores"]
         self.point_clouds = data["point_clouds"]
@@ -73,7 +74,8 @@ class ScoreDataset(torch.utils.data.dataset.Dataset):
 
     def __getitem__(self, idx):
         ans = {}
-        ans["point_cloud"] = self.point_clouds[idx]
+        ans["point_cloud"] = self.point_clouds[idx] + np.random.normal(size=self.point_clouds[idx].shape, 
+                                                                       scale=self.noise_scale)
         ans["condition"] = self.conditions[idx]
         ans["score"] = self.scores[idx]
         return ans

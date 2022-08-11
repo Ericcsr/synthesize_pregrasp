@@ -42,7 +42,6 @@ def get_scheduler(optimizer, opt):
             "learning rate policy [%s] is not implemented", opt["lr_policy"])
     return scheduler
 
-
 def init_weights(net, init_type, init_gain):
     def init_func(m):
         classname = m.__class__.__name__
@@ -66,13 +65,11 @@ def init_weights(net, init_type, init_gain):
 
     net.apply(init_func)
 
-
 def init_net(net, init_type, init_gain=0.02, gpu_id=1):
     net = net.cuda(device=gpu_id)
     if init_type != 'none':
         init_weights(net, init_type, init_gain)
     return net
-
 
 def define_graspgen(opt, arch, init_type, init_gain, pred_base, num_in_feats, extra_cond_dim, num_pred_fingers, gpu_id):
     net = None
@@ -88,7 +85,6 @@ def define_graspgen(opt, arch, init_type, init_gain, pred_base, num_in_feats, ex
     else:
         raise NotImplementedError('model name [%s] is not recognized' % arch)
     return init_net(net, init_type, init_gain, gpu_id)
-
 
 def define_loss(opt,pred_base=True):
     #if opt.arch == 'vae' and pred_base:
@@ -313,8 +309,8 @@ class PCN(nn.Module):
         self.latent_dim = latent_dim
         self.conv1 = nn.Conv1d(state_dim, 32, 1)
         self.conv2 = nn.Conv1d(32,64,1)
-        self.conv3 = nn.Conv1d(128,128,1)
-        self.conv4 = nn.Conv1d(128,latent_dim,1)
+        self.conv3 = nn.Conv1d(128,256,1)
+        self.conv4 = nn.Conv1d(256,latent_dim,1)
 
     def get_latent_dim(self):
         return self.latent_dim
@@ -335,19 +331,42 @@ class PCN(nn.Module):
         ret = global_feature.view(batch_size,-1)
         return ret
 
+class PointNet2(nn.Module):
+    def __init__(self, state_dim=3, feat_dim=6, latent_dim=512):
+        super(PointNet2, self).__init__()
+        self.latent_dim = latent_dim
+        self.base_net = base_network(0.02, 128, 1, feat_dim+state_dim)
+
+    def get_outdim(self):
+        return 512
+
+    def forward(self, pcd, feature=None):
+        # Create feature points bundle
+        if feature is None:
+            input_features = pcd.transpose(1,-1).contiguous()
+        else:
+            input_features = torch.cat((pcd, feature.unsqueeze(1).expand(-1, pcd.shape[1], -1)),
+        -1).transpose(-1, 1).contiguous()
+        for module in self.base_net[0]:
+            pcd, input_features = module(pcd, input_features)
+        return self.base_net[1](input_features.squeeze(-1))
+
+
 class LargeScoreFunction(nn.Module):
-    def __init__(self, num_fingers=3):
+    def __init__(self, num_fingers=3, latent_dim=128):
         super(LargeScoreFunction, self).__init__()
-        self.pcn = PCN()
-        self.fc1 = nn.Linear(self.pcn.get_latent_dim()+3 * num_fingers, 256)
-        self.fc2 = nn.Linear(256, 128)
-        self.out = nn.Linear(128,1)
+        self.pcn = PCN(latent_dim=latent_dim)
+        self.fc1 = nn.Linear(self.pcn.get_latent_dim()+3 * num_fingers, 512)
+        self.fc2 = nn.Linear(512, 512)
+        self.fc3 = nn.Linear(512, 256)
+        self.out = nn.Linear(256,1)
 
     def pred_score(self, pcs, grasp_pts):
         pcs_latent = self.pcn(pcs)
         latent = torch.hstack([pcs_latent, grasp_pts])
         latent = self.fc1(latent).relu()
         latent = self.fc2(latent).relu()
+        latent = self.fc3(latent).relu()
         return self.out(latent)
 
     def forward(self, pcs, grasp_pts):

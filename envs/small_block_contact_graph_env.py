@@ -12,6 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+from threading import local
 from pybullet_utils import bullet_client
 import open3d as o3d
 import pybullet
@@ -40,7 +41,7 @@ from utils.contact_state_embedding import ContactStateEmbedding
 from neurals.NPGraspNet import NPGraspNet
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-CLEARANCE_H = 0.05
+CLEARANCE_H = 0.005
 
 class LaptopBulletEnv(gym.Env):
     metadata = {'render.modes': ['human', 'rgb_array'], 'video.frames_per_second': 50}
@@ -84,7 +85,7 @@ class LaptopBulletEnv(gym.Env):
         for i,finger in enumerate(self.active_finger_tips):
             self.active_finger_tips_idx[finger] = i
         self.num_interp_f = num_interp_f
-        self.csg = ContactStateGraph(np.load("data/contact_states/laptop_env/dummy_states_2.npy"))
+        self.csg = ContactStateGraph(np.load("data/contact_states/laptop_env/dummy_states_3.npy"))
         self.contact_region = SmallBlockRegionDummy()
         #self.contact_region.create_geodesic_agent()
         #self.distance_matrix = self.contact_region.construct_distance_matrix()
@@ -142,8 +143,9 @@ class LaptopBulletEnv(gym.Env):
         if self.train:
             print("Using CUDA Device:", self.device, f"Using {self.mode}")
             self.score_function = NPGraspNet(opt_dict, pred_fingers=pred_fingers, extra_cond_fingers=self.active_finger_tips, mode=self.mode, device=self.device)
-            #self.score_function.load_dex_grasp_net(dex_path)
-            #self.score_function.load_score_function(sc_path)
+            if self.mode != "only_score":
+                self.score_function.load_dex_grasp_net(dex_path)
+            self.score_function.load_score_function(sc_path)
 
         obs = self.reset()  # and update init obs
 
@@ -178,8 +180,13 @@ class LaptopBulletEnv(gym.Env):
                                               init_quat=init_orn)
         # Need to create corresponding pointcloud
         self.mesh_obj = o3d.geometry.TriangleMesh.create_box(0.4, 0.4, 0.1) # Not half extend
-        self.mesh_obj.translate([-0.2, -0.2, 0])
-        self.pcd_obj = self.mesh_obj.sample_points_poisson_disk(2048)
+        self.mesh_obj.compute_vertex_normals()
+        self.mesh_obj.compute_triangle_normals()
+        self.mesh_obj.translate([-0.2, -0.2, -0.05]) # Here we need to minus 0.05 or there will be distributional issue..
+        self.pcd_obj = self.mesh_obj.sample_points_poisson_disk(2048, use_triangle_normal=True)
+        self.points = np.asarray(self.pcd_obj.points)
+        self.normals = np.asarray(self.pcd_obj.normals)
+        self.pcd_kd_tree = o3d.geometry.KDTreeFlann(self.pcd_obj)
 
         self._p.changeDynamics(self.floor_id, -1,
                                lateralFriction=70.0, restitution=0.0)            # TODO
@@ -191,7 +198,7 @@ class LaptopBulletEnv(gym.Env):
         for finger in self.active_finger_tips:
             color = colors[self.active_finger_tips_idx[finger]]
 
-            size = [0.04, 0.04, 0.01] if finger == 0 else [0.02, 0.02, 0.02]       # thumb larger
+            size = [0.02, 0.02, 0.01] if finger == 0 else [0.01, 0.01, 0.01]       # thumb larger
 
             tip_id = rb.create_primitive_shape(self._p, 0.01, pybullet.GEOM_BOX, size,         # half-extend
                                                color=color, collidable=True,
@@ -275,7 +282,7 @@ class LaptopBulletEnv(gym.Env):
 
         return list(mean), fin_pos, cost
 
-    def step(self, a: List[float], train=True):
+    def step(self, a: List[float], rollout_verify=False):
 
         #  a new small-blocks contac env:
         #  1. Collidable when turned on & clearance; non-collidable otherwise
@@ -431,28 +438,25 @@ class LaptopBulletEnv(gym.Env):
             r += - 300 * np.linalg.norm([pos_1[0], pos_1[1], pos_1[2] - 0.3]) # COM should be 0.3 meter off the ground. While x and y coordinate remain the same.
             r += 150 * rot_metric # hope the object can be rotate to a given z orientation
             return r
-
-        # TODO: Should use grasp confidence as stage value
+        
         def calc_reward_value_stage_one():
             # TODO: Transform the pointcloud
             pos_1, quat_1 = rb.get_link_com_xyz_orn(self._p, self.o_id, -1) # Object pose and orn
             pos = np.array(pos_1)
             quat = np.array(quat_1)
             extra_cond = np.zeros((1,3 * len(self.active_finger_tips)))
+            # Should be projected to point_cloud
             for i,fin in enumerate(self.active_finger_tips):
-                extra_cond[0,i*3:(i+1)*3] = self.cur_fins[fin][0]
+                extra_cond[0,i*3:(i+1)*3] = self.project_to_pcd(self.cur_fins[fin][0])
             rot_matrix = convert_q_bullet_to_matrix(quat)
             
             pcd_obj = copy.deepcopy(self.pcd_obj).rotate(rot_matrix)
             pcd_obj.translate(pos)
             
-            # TODO: Remove all parts in occlusion
+            # Remove all parts in occlusion
             pcd_obj = self.deocclude(pcd_obj)
-            # TODO: Transform the object back to canonical cooridinate
             pcd_obj.translate(-pos)
             pcd_obj.rotate(rot_matrix.T)
-            # Number of points in pointcloud barely have any effect
-            #pcd_obj = pcd_obj.random_down_sample(0.2)
             
             # IDEA: Build a bounding box system, each bounding box must be disjoint,
             # crop all the point outside the bounding box system, merge all the point
@@ -475,6 +479,20 @@ class LaptopBulletEnv(gym.Env):
             # TODO: Add other heuristic weights such as target reaching or maximize object exposure
             return ave_score
 
+        def get_canonical_point_cloud():
+            pos_1, quat_1 = rb.get_link_com_xyz_orn(self._p, self.o_id, -1)
+            pos = np.array(pos_1)
+            quat = np.array(quat_1)
+            rot_matrix = convert_q_bullet_to_matrix(quat)
+            pcd_obj = copy.deepcopy(self.pcd_obj).rotate(rot_matrix)
+            pcd_obj.translate(pos)
+            
+            # Remove all parts in occlusion
+            pcd_obj = self.deocclude(pcd_obj)
+            pcd_obj.translate(-pos)
+            pcd_obj.rotate(rot_matrix.T)
+            return pcd_obj
+
         # Apply constraints on new contact points..
         def pre_simulate(current_fins: List[Tuple[List[float], bool]]):
             # What is the purpose of this function?
@@ -486,6 +504,7 @@ class LaptopBulletEnv(gym.Env):
                 # Transform the finger tip toward the world frame, here current_fin is expressed in local frame?
                 f_pos_g, _ = self._p.multiplyTransforms(pos, quat, current_fins[idx][0], [0, 0, 0, 1])
                 if f_pos_g[2] < CLEARANCE_H:
+                    #print("Clearance Triggered:", f_pos_g[2])
                     f_pos_g = [100.0, 100.0, 100.0]
                 self._p.setCollisionFilterPair(self.tip_ids[idx], self.o_id, -1, -1, 0)
                 self._p.resetBasePositionAndOrientation(self.tip_ids[idx],
@@ -497,6 +516,7 @@ class LaptopBulletEnv(gym.Env):
                                                childFramePosition=f_pos_g,
                                                childFrameOrientation=quat)
                 self.tip_cids.append(cid)
+
 
             self._p.stepSimulation()
 
@@ -530,8 +550,11 @@ class LaptopBulletEnv(gym.Env):
             if not self.train:
                 tip_pose = []
                 for idx in range(self.num_fingertips):
-                    tip_pose.append(list(self._p.multiplyTransforms(pos, quat, self.cur_fins[idx][0], [0, 0, 0, 1])[0]))
-                tip_poses.append(tip_pose) # position only
+                    tip_pose_candidate = list(self._p.multiplyTransforms(pos, quat, self.cur_fins[idx][0], [0, 0, 0, 1])[0])
+                    local_normals = self.compute_tip_normals(self.cur_fins[idx][0])
+                    tip_pose_candidate += list(self._p.multiplyTransforms([0,0,0], quat, local_normals, [0, 0, 0, 1])[0])
+                    tip_pose.append(tip_pose_candidate)
+                tip_poses.append(tip_pose) # position + tip_normals 
                 object_poses.append(pos+quat) # 7
             vel = rb.get_link_com_linear_velocity(self._p, self.o_id, -1)
 
@@ -540,7 +563,7 @@ class LaptopBulletEnv(gym.Env):
                 v_g_s, _ = self._p.multiplyTransforms([0., 0., 0.], quat, f_tuple[:, t], [0, 0, 0, 1])
                 v_g = np.array(v_g_s) + np.array(vel) * self._ts # Follow the rigid body movement
                 tar_pos_g, _ = self._p.multiplyTransforms(pos, quat, self.cur_fins[i][0], [0, 0, 0, 1])
-                # if tar_pos_g[2] < CLEARANCE_H: # Not allow the finger tip to penetrate the ground, this means that the break of the finger tip may happen in the middle
+                #if tar_pos_g[2] < CLEARANCE_H: # Not allow the finger tip to penetrate the ground, this means that the break of the finger tip may happen in the middle
                 #    tar_pos_g = [100.0, 100.0, 100.0]    # WARN: This may be problematic
                 tar_pos_g = np.array(tar_pos_g)
                 tar_pos_g = list(tar_pos_g + v_g)
@@ -559,10 +582,16 @@ class LaptopBulletEnv(gym.Env):
 
         self.c_step_timer += 1
 
+
+        com_h = 0
         final_r = 0
+
+        pcd_output = None
         # Let the system evolve naturally Then stabilize the system for final eval
         # Only avaiable in final epoch
         if self.c_step_timer == self.n_steps:
+            pcd_output = get_canonical_point_cloud()
+            com_h = rb.get_link_com_xyz_orn(self._p, self.o_id, -1)[0][2] * 0.5
             for _ in range(100):
                 self._p.stepSimulation()
                 final_r += 0 #calc_reward_value()
@@ -571,13 +600,18 @@ class LaptopBulletEnv(gym.Env):
                     if self.showImage:
                         time.sleep(self._ts * 4.0)
                     self.renderer.render()
-
+            com_h += rb.get_link_com_xyz_orn(self._p, self.o_id, -1)[0][2] * 0.5
         obs = self.get_extended_observation()
 
         ave_r /= self.control_skip
-        ave_r -= cost_remaining * 10000.0     # 0.01 * 10000 ~ 100 10000
+        #ave_r -= cost_remaining * 10000.0     # 0.01 * 10000 ~ 100 10000
         if self.train:
-            ave_r += calc_reward_value_stage_one() * 100 # Undetermined
+            #com_r = 1000 * (com_h if com_h < 0.1 else 0.1)
+            com_r = 0
+            stage_one_reward = calc_reward_value_stage_one()
+            ave_r += stage_one_reward * 100 + com_r # Undetermined
+        if rollout_verify:
+            print("Finger tip pose:", self.cur_fins)
         ave_r += final_r / 300.0 * 2.0
 
         fin_pos = []
@@ -593,9 +627,9 @@ class LaptopBulletEnv(gym.Env):
         if self.c_step_timer == self.n_steps:
             done = True
         if self.train==False:
-            return obs, ave_r, done, {"finger_pos":tip_poses,"object_pose":object_poses, "last_fins":self.last_fins, "images":images}
+            return obs, ave_r, done, {"finger_pos":tip_poses,"object_pose":object_poses, "last_fins":self.last_fins, "images":images, "metric":com_h, "pcd": pcd_output}
         else:
-            return obs, ave_r, done, {}
+            return obs, ave_r, done, {"metric": com_h}
 
     def get_extended_observation(self) -> List[float]:
         # It is essentially position of all corners of the object
@@ -625,9 +659,25 @@ class LaptopBulletEnv(gym.Env):
         return [seed]
 
     def initialize_deocclude_module(self):
-        self.aabb = o3d.geometry.AxisAlignedBoundingBox(min_bound=np.array([-100, -100, 0.015]),
+        self.aabb = o3d.geometry.AxisAlignedBoundingBox(min_bound=np.array([-100, -100, 0.005]),
                                                         max_bound=np.array([100, 100, 100]))
 
     def deocclude(self, pcd):
         return copy.deepcopy(pcd).crop(self.aabb)
+
+    # Also discourage the finger tip to be overbounded.
+    def project_to_pcd(self, point):
+        if point[2] > CLEARANCE_H:
+            p = point.copy()
+            idx = self.pcd_kd_tree.search_knn_vector_3d(p, 1)[1]
+            return self.points[idx].copy()
+        else:
+            return np.array([100., 100., 100.])
+
+    def compute_tip_normals(self, point):
+        p = point.copy()
+        idx = self.pcd_kd_tree.search_knn_vector_3d(p,1)[1]
+        return self.normals[idx].flatten().copy()
+
+        
 

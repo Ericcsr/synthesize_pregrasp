@@ -18,7 +18,7 @@ NUM_NEIGHBORS = 3
 
 # Here finger tips should include condition + result hence it is fine
 def parse_input(data):
-    return data['point_cloud'].cuda().float(), data["point_normals"].cuda().float(), data['fingertip_pos'].cuda().float()
+    return data['point_cloud'].cuda().float(), data["point_normals"].cuda().float(), data['fingertip_pos'].cuda().float(), float(data["label"])
 
 def parse_extra_cond(fingertip_poses, extra_cond_finger):
     """
@@ -54,7 +54,8 @@ def project_to_pcd(kd_tree, pcd_torch, normals_torch, grasp, extra_cond, num_nei
 
 def main():
     parser = TestOptions()
-    parser.parser.add_argument("--num_samples", type=int, default=10)
+    parser.parser.add_argument("--num_samples", type=int, default=20)
+    parser.parser.add_argument("--exp_name", type=str, default="")
     opt = parser.parse()
     opt = opt.__dict__
     opt["force_skip_load"] = False
@@ -78,9 +79,10 @@ def main():
     point_clouds = []
     conditions = []
     # Each time draw a fixed batch of random normal sample as latent states
+    torch.manual_seed(2020)
     randomized_z = torch.randn((opt['num_samples'], opt['latent_size']))
     for data in train_loader:
-        pcd, normal, tip_pos = parse_input(data)
+        pcd, normal, tip_pos, intrinsic_score = parse_input(data)
         kd_tree = create_kd_tree(pcd)
         pcds = pcd.expand(opt['num_samples'], -1, 3).contiguous() # [batch_size, num_points, 3]
         extra_cond = parse_extra_cond(tip_pos, [0,1])
@@ -94,18 +96,19 @@ def main():
             projected_grasps.append(project_to_pcd(kd_tree, pcd, normal, grasp, extra_conds[0]))
 
         # check dyn_feasibility and kin_feasibility of each grasps (no need for permutation)
-        score = 0
+        score = intrinsic_score
         for projected_grasp in projected_grasps:
-            if not (check_dyn_feasible_parallel(projected_grasp[0], projected_grasp[1]) is None) \
+            if not (check_dyn_feasible_parallel(projected_grasp[0], projected_grasp[1], num_process=24) is None) \
                 and check_kin_feasible_parallel(np.vstack([projected_grasp[2], np.array([100,100,100])]), 
-                                                np.vstack([projected_grasp[3], np.array([0., 0., 0.])]))[0]:
+                                                np.vstack([projected_grasp[3], np.array([0., 0., 0.])]), num_process=24)[0]:
                 score += 1
         print("Current score: ", score)
         scores.append(float(score)/opt['num_samples'])
         point_clouds.append(pcd.cpu().numpy())
         conditions.append(extra_cond.cpu().numpy())
     # Each grasp need to be paired with a pointcloud
-    np.savez("data/score_function_data/score_data.npz",
+    exp_name = opt["exp_name"]
+    np.savez(f"data/score_function_data/{exp_name}_score_data.npz",
              scores=np.asarray(scores),
              point_clouds=np.vstack(point_clouds),
              conditions=np.vstack(conditions))

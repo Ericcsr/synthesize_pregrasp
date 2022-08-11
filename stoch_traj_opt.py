@@ -126,8 +126,8 @@ class StochTrajOptimizer:
                     # print(u + E[:, :, i])
                     for j in range(N):
                         v = u[j, :] + E[j, :, i]
-                        state, c, done, _ = sim.step(v)
-                        c = -c  # reverse sign to make it a cost instead of a reward
+                        state, c, done, info = sim.step(v)
+                        c = -float(c)  # reverse sign to make it a cost instead of a reward
                         cost += c
                     J[i] = cost
                     # print(J[i])
@@ -164,6 +164,7 @@ class StochTrajOptimizer:
         # Optimization loop
         self.uopt = u.copy()  # uopt keeps track of the optimal control sequence
         self.Jopt = np.inf  # initialization of optimal cost
+        self.metric_opt = -np.inf
         if self.verbose==2:
             print('Starting optimization...')
         start_time = time.time()
@@ -200,16 +201,19 @@ class StochTrajOptimizer:
             end_time = time.time()
 
             # print('executing control...')
-            Jcur = self.replay_traj(u)  # execute trajectory to evaluate control and get current cost
+            Jcur, metric = self.replay_traj(u)  # execute trajectory to evaluate control and get current cost
 
             if Jcur <= self.Jopt:  # compare current cost with optimal
                 self.uopt = u.copy()
                 # Xopt[:,:] = Xnew[:,:]
                 self.Jopt = Jcur
+            if metric >= self.metric_opt:
+                self.metric_opt = metric
             if self.verbose == 1:
                 print(
-                    "Iteration %.0f took %.2f seconds (mean sampled reward: %.2f). Current reward after update: %.2f, Optimal reward %.2f" % (
-                    iter_id + 1, (end_time - start_time), -Jmean, -Jcur, -self.Jopt))
+                    f"Iter {iter_id + 1} took {round(end_time - start_time,2)} sec (mean R: {round(-Jmean,2)}).",
+                    f"Cur R: {round(float(-Jcur),2)}, Opt R {round(float(-self.Jopt),2)}",
+                    f"Cur M: {round(metric,2)} Opt M: {round(self.metric_opt,2)}")
             Jopt_log.append(-self.Jopt)
             r_log.append(-Jcur)
             start_time = time.time()
@@ -228,13 +232,15 @@ class StochTrajOptimizer:
                 self.seed)  # it is assumed that the seed is controlled by a method called "seed" in the environment
         self.world.reset()
         J = 0
+        metric = 0
         for j in range(self.N):
-            state, c, done, _ = self.world.step(u[j, :])
-            c = -c  # reverse sign to make it a cost instead of a reward
+            state, c, done, info = self.world.step(u[j, :], rollout_verify=True)
+            c = -float(c)  # reverse sign to make it a cost instead of a reward
             J += c
+            metric += info["metric"]
             if self.render:
                 time.sleep(1.0 / 240.0)
-        return J
+        return J, metric
 
     def render_traj(self, u, replay_times=10):
         # create a new GUI window for testing traj

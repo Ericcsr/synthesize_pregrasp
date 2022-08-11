@@ -37,9 +37,9 @@ class NPGraspNet(nn.Module):
             self.score_function = LargeScoreFunction(self.num_extra_fingers + self.num_pred_fingers).cuda(device=self.gpu_id)
         else:
             if self.gpu_id == -1:
-                self.score_function = LargeScoreFunction(self.num_extra_fingers).cpu()
+                self.score_function = LargeScoreFunction(self.num_extra_fingers, latent_dim=20).cpu()
             else:
-                self.score_function = LargeScoreFunction(self.num_extra_fingers).cuda(device=self.gpu_id)
+                self.score_function = LargeScoreFunction(self.num_extra_fingers, latent_dim=20).cuda(device=self.gpu_id)
         self.score_function.eval()
 
     def pred_score(self,pcd, extra_cond, latent=None):
@@ -75,6 +75,26 @@ class NPGraspNet(nn.Module):
                     score = self.score_function.pred_score(pcd_np, full_grasp)[0].cpu()
             return score, self._parse_ans(ans, extra_cond)
 
+    def pred_grasp(self, pcd_points, extra_cond, num_grasps=10):
+        """
+        pcd: Assume pcd is open3d pcd file
+        extra_cond: assume it is a [2,3] np.array contains position of thumb and index finger
+        num_grasps: number of samples that we use
+        """
+        # Down sample pointcloud if needed
+        assert(len(pcd_points) > 1024)
+        downsample_idx = np.random.choice(len(pcd_points), 1024, replace=False)
+        pcd_points = pcd_points[downsample_idx]
+        pcd_th = torch.from_numpy(pcd_points).view(1, -1, 3).cuda(device=self.gpu_id).float()
+        extra_cond_th = torch.from_numpy(extra_cond).view(1,-1).cuda(device=self.gpu_id).float()
+        grasps = []
+        for _ in range(num_grasps):
+            latent = self.sample_latent(1)
+            ans, _, _ = self.dex_grasp_net.generate_grasps(pcd_th, z=latent, extra_cond=extra_cond_th)
+            full_grasp = torch.vstack([extra_cond_th.view(self.num_extra_fingers,3), ans.view(self.num_pred_fingers,3)])
+            grasps.append(full_grasp.cpu().numpy())
+        return grasps
+
     def _parse_ans(self, ans, extra_cond=None):
         """
         Here assume ans is 
@@ -94,7 +114,10 @@ class NPGraspNet(nn.Module):
         self.dex_grasp_net.net.load_state_dict(state_dict["model_state_dict"])
 
     def load_score_function(self, model_path):
-        self.score_function.load_state_dict(torch.load(model_path, map_location=torch.device(f"cuda:{self.gpu_id}")))
+        if self.gpu_id != -1:
+            self.score_function.load_state_dict(torch.load(model_path, map_location=torch.device(f"cuda:{self.gpu_id}")))
+        else:
+            self.score_function.load_state_dict(torch.load(model_path, map_location=torch.device("cpu")))
 
     def sample_latent(self, batch_size):
         return self.dex_grasp_net.sample_latent(batch_size)

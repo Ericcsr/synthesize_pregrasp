@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.spatial.transform as tf
 import pybullet as p
 import torch
 import pytorch_kinematics as pk
@@ -66,28 +67,32 @@ def animate_keyframe(o_id,
                      object_orns_keyframe, 
                      joint_states, 
                      base_states=None,
-                     hand_drake=None,
+                     tip_ids=None,
                      desired_positions=None,
                      hand_weights=None,
-                     renderer=None,
-                     point_cloud=None):
+                     renderer=None):
     for i in range(len(joint_states)):
         p.resetBasePositionAndOrientation(o_id, 
                                           object_poses_keyframe[i],
                                           object_orns_keyframe[i])
         setStates(hand_id, joint_states[i])
-        if not base_states == None:
+        if not (base_states is None):
             p.resetBasePositionAndOrientation(hand_id,
-                                              base_states[i][0],
-                                              base_states[i][1])
+                                              base_states[i,:3],
+                                              base_states[i,3:])
         # Create Visual features # need to change this
-        if not (point_cloud is None):
-            print("Reach here")
-            hand_drake.draw_point_cloud(point_cloud[i])
-        if not desired_positions == None:
-            hand_drake.draw_desired_positions(desired_positions[i],hand_weights[i])
+        if not (desired_positions is None):
+            default_orn = [0, 0, 0, 1]
+            obsolete_pos = [100, 100, 100]
+            
+            for j, desired_position in enumerate(desired_positions[i]):
+                #print(desired_position)
+                if desired_position[0] < 50:
+                    p.resetBasePositionAndOrientation(tip_ids[j], desired_position[:3], default_orn)
+                else:
+                    p.resetBasePositionAndOrientation(tip_ids[j], obsolete_pos, default_orn)
         
-        if not renderer == None:
+        if not (renderer is None):
             print("Press q to continue")
             renderer.render(blocking=True)
         else:
@@ -122,16 +127,25 @@ def animate_keyframe_states(o_id,
 
 def animate(o_id, hand_id, object_poses, object_orns, joint_states, base_states=None, renderer=None, gif_name="default"):
     # Should be full joint states
-    with imageio.get_writer(f"data/video/{gif_name}.gif", mode="I") as writer:
+    if renderer is None:
         for i in range(len(joint_states)):
             p.resetBasePositionAndOrientation(o_id, object_poses[i], object_orns[i])
             setStates(hand_id, joint_states[i])
-            if not base_states==None:
+            if not (base_states is None):
                 p.resetBasePositionAndOrientation(hand_id, 
-                                                base_states[0][i], 
-                                                base_states[1][i])
-            time.sleep(10 * TS)
-            if not renderer == None:
+                                                  base_states[i,:3],
+                                                  base_states[i,3:])
+            time.sleep(30 * TS)
+    else:
+        with imageio.get_writer(f"data/video/{gif_name}.gif", mode="I") as writer:
+            for i in range(len(joint_states)):
+                p.resetBasePositionAndOrientation(o_id, object_poses[i], object_orns[i])
+                setStates(hand_id, joint_states[i])
+                if not base_states==None:
+                    p.resetBasePositionAndOrientation(hand_id, 
+                                                    base_states[i,:3], 
+                                                    base_states[i,3:])
+                time.sleep(30 * TS)
                 image = renderer.render()
                 writer.append_data(image)
 
@@ -180,6 +194,37 @@ def convert_q_bullet_to_matrix(q):
     q_drake = torch.from_numpy(convert_quat_for_drake(q))
     matrix = pk.quaternion_to_matrix(q_drake).numpy()
     return matrix
+
+def apply_drake_q_rotation(q, vec, invert=False):
+    vec = torch.from_numpy(vec)
+    if invert:
+        q = pk.quaternion_invert(torch.from_numpy(q))
+    else:
+        q = torch.from_numpy(q)
+    rot_vec = pk.quaternion_apply(q, vec).numpy()
+    return rot_vec
+
+def express_tips_world_frame(tip_poses, tip_normals, obj_pose):
+    new_tip_poses = np.zeros_like(tip_poses)
+    new_tip_normals = np.zeros_like(tip_normals)
+    obj_pos = obj_pose[:3]
+    obj_orn = np.array([obj_pose[6], obj_pose[3], obj_pose[4], obj_pose[5]])
+    for i, (normal, tip_pose) in enumerate(zip(tip_normals, tip_poses)):
+        new_tip_normals[i] = apply_drake_q_rotation(obj_orn, normal)
+        new_tip_poses[i] = apply_drake_q_rotation(obj_orn, tip_pose) + obj_pos
+    return new_tip_poses, new_tip_normals
+
+def interp_pybullet_quaternion(q1, q2, num_interp):
+    """
+    Using Scipy to interpolate quaternions, Scipy uses [x,y,z,w] convention, same as pybullet.
+    Interpolating the quaternion using Slerp Method:
+    https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.transform.Slerp.html
+    """
+    R = tf.Rotation.from_quat([q1,q2])
+    slerp = tf.Slerp([0,1], R)
+    times = np.linspace(0,1, num_interp)
+    interp_rots = slerp(times).as_quat()
+    return interp_rots
 
 # Get Determinitics sampling sigma points of Standard Gaussian
 def getSGSigmapoints(dimensions, sigma):

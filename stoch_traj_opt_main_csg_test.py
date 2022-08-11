@@ -2,11 +2,13 @@ from envs.small_block_contact_graph_env import LaptopBulletEnv
 from envs.bookshelf_env import BookShelfBulletEnv
 
 from stoch_traj_opt import StochTrajOptimizer
+import open3d as o3d
 import numpy as np
 import random
 import imageio
 from argparse import ArgumentParser
 
+# TODO: Check whether there are some problem induced by changing the number of fingers
 def parse_fin_data(fin_data):
     post_data = np.zeros((len(fin_data), 4, 4))
     for i in range(len(fin_data)):
@@ -41,11 +43,11 @@ if __name__ == '__main__':
         init_obj_pose = None
 
     # Define paths
-    path = np.array([2,2,0])
+    path = np.array([5,5,0])
 
     env = envs_dict[args.env]
     world = env(render=True, 
-                active_finger_tips=[0,1,2,3], 
+                active_finger_tips=[0,1], 
                 num_interp_f=7, 
                 last_fins=last_fin,
                 init_obj_pose=init_obj_pose,
@@ -66,19 +68,23 @@ if __name__ == '__main__':
         object_poses = []
         last_fins = []
         images = []
+        pcd = None
         for j in range(steps):
             state, c, done, info = world.step(uopt[j, :])
             finger_poses += info["finger_pos"]
             object_poses += info["object_pose"]
             images += info['images']
+            pcd = info["pcd"]
             last_fins.append(info["last_fins"])
             c = -c
             J += c
         if not args.playback:
             np.save(f"data/tip_data/{args.exp_name}_tip_poses.npy", finger_poses)
             np.save(f"data/object_poses/{args.exp_name}_object_poses.npy", object_poses)
-            #fin_data = parse_fin_data(last_fins)
-            #np.save(f"data/fin_data/{args.exp_name}_fin_data.npy", fin_data)
+            # fin_data = parse_fin_data(last_fins)
+            # np.save(f"data/fin_data/{args.exp_name}_fin_data.npy", fin_data)
+            if not (pcd is None):
+                o3d.io.write_point_cloud(f"data/output_pcds/{args.exp_name}_pcd.ply", pcd)
             print(len(images))
             print(images[-1])
             with imageio.get_writer(f"data/video/{args.exp_name}_test.gif",mode="I") as writer:
