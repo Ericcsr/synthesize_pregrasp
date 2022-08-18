@@ -9,18 +9,14 @@ def main():
     if opt == None:
         return
     use_wandb = opt.use_wandb
-    # tuple(model_param.drake_ycb_objects.keys())
 
     if use_wandb:
         import wandb
         wandb.init()
         wandb.config.update(opt)
     model = dgn.DexGraspNetModel(opt, pred_base=False,pred_fingers=[2], extra_cond_fingers=[0,1], gpu_id=0)
-    # full_dataset = neurals.dataset.make_dataset_from_point_clouds_score_function(
-    #     objects, copies=opt.grasp_perturb_copies, 
-    #     pc_noise_variance=opt.pc_noise_variance,
-    #     include_negative=False)
-    full_dataset = neurals.dataset.SmallDataset(positive_grasp_folder="seeds/grasps")
+    full_dataset = neurals.dataset.SmallDataset(positive_grasp_folder="seeds/grasps",
+                                                point_clouds=["pose_0_pcd","pose_1_pcd","pose_2_pcd","pose_3_pcd","pose_4_pcd","pose_5_pcd"])
 
     # Split the dataset
     dataset_size = len(full_dataset)

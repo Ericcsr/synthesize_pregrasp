@@ -351,17 +351,22 @@ class PointNet2(nn.Module):
             pcd, input_features = module(pcd, input_features)
         return self.base_net[1](input_features.squeeze(-1))
 
-
 class LargeScoreFunction(nn.Module):
-    def __init__(self, num_fingers=3, latent_dim=128):
+    def __init__(self, num_fingers=3, latent_dim=128, has_distance_field=False):
         super(LargeScoreFunction, self).__init__()
-        self.pcn = PCN(latent_dim=latent_dim)
+        self.pcn = PCN(state_dim = 4 if has_distance_field else 3,latent_dim=latent_dim)
         self.fc1 = nn.Linear(self.pcn.get_latent_dim()+3 * num_fingers, 512)
         self.fc2 = nn.Linear(512, 512)
         self.fc3 = nn.Linear(512, 256)
         self.out = nn.Linear(256,1)
 
-    def pred_score(self, pcs, grasp_pts):
+    def pred_score(self, pcs, grasp_pts, dist_field=None):
+        """
+        Assume pcs is in shape of [Batch size, N_points, 3]
+        Assume dist_field in shape of [batch_size, N_points, 1]
+        """
+        if dist_field is not None:
+            pcs = torch.cat([pcs, dist_field], dim=2)
         pcs_latent = self.pcn(pcs)
         latent = torch.hstack([pcs_latent, grasp_pts])
         latent = self.fc1(latent).relu()
@@ -369,8 +374,8 @@ class LargeScoreFunction(nn.Module):
         latent = self.fc3(latent).relu()
         return self.out(latent)
 
-    def forward(self, pcs, grasp_pts):
-        return self.pred_score(pcs, grasp_pts).sigmoid()
+    def forward(self, pcs, grasp_pts, dist_field=None):
+        return self.pred_score(pcs, grasp_pts, dist_field).sigmoid()
 
 def base_network(pointnet_radius, pointnet_nclusters, scale, in_features):
     """

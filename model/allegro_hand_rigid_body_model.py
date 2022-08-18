@@ -242,8 +242,6 @@ class AllegroHandPlantDrake:
         prog.AddCost(norm_cost, vars = q)
         if straight_unused_fingers:
             for finger in unused_fingers:
-                # keep unused fingers straight
-                # FIXME(wualbert): why is this never satisfied?
                 if finger != AllegroHandFinger.THUMB:
                     constraints_on_finger[finger] = prog.AddBoundingBoxConstraint(
                         0., 0., q[self.finger_joints_idx[finger]])

@@ -1,4 +1,5 @@
 import os
+from functools import partial
 import copy
 from multiprocessing import Pool
 from re import M
@@ -104,9 +105,8 @@ def check_kin_feasible_parallel(contact_points, contact_normals, object_path=Non
         "base_link_name":base_link_name,
         "bounding_box":bounding_box
     }
-    arg_lists = [kwargs] * num_process
     with Pool(num_process) as proc:
-        results = proc.starmap(check_kin_feasible, arg_lists)
+        results = proc.starmap(partial(check_kin_feasible, **kwargs), [() for _ in range(num_process)])
     
     for result in results:
         if result[0]:
@@ -221,9 +221,9 @@ def solve_ik_parallel(contact_points, contact_normals, object_path=None, object_
         "q_init_guess":q_init_guess,
         "ref_q":ref_q
     }
-    arg_lists = [kwargs] * num_process
+    arg_lists = [()] * num_process
     with Pool(num_process) as proc:
-        results = proc.starmap(solve_ik, arg_lists)
+        results = proc.starmap(partial(solve_ik, **kwargs), arg_lists)
     return results
 
 def solve_ik_keypoints(targets, obj_poses, obj_orns, object_path=None, object_creator=None):

@@ -13,7 +13,30 @@ TEST_RATIO = 0.1
 current_dir = "neurals/pretrained_score_function"
 
 def parse_input(data):
-    return data['point_cloud'].cuda().float(), data['condition'].cuda().float(), data['score'].cuda().float()
+    pcd = data['point_cloud'].cuda().float()
+    cond = data['condition'].cuda().float()
+    score = data['score'].cuda().float()
+    pcd_df = None
+    if "point_cloud_df" in data.keys():
+        pcd_df = data['point_cloud_df'].cuda().float()
+        pcd_df = pcd_df.view(pcd_df.shape[0], pcd_df.shape[1], 1)
+    return pcd, cond, score, pcd_df
+
+def load_dataset(opt):
+    full_dataset = neurals.dataset.ScoreDataset(score_file=opt.dataset_file, noise_scale=0.005, has_distance_field=opt.has_distance_field)
+    # Split the dataset
+    dataset_size = len(full_dataset)
+    test_size = int(dataset_size*TEST_RATIO)
+    train_size = dataset_size - test_size
+    #print(f"Total size: {dataset_size} Training size: {train_size} Test size: {test_size}")
+    (training_dataset, test_dataset) = \
+        torch.utils.data.random_split(
+            full_dataset, (train_size, test_size))
+    train_loader = torch.utils.data.DataLoader(
+        training_dataset, batch_size=32, shuffle=True)
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1)
+    return train_loader, test_loader, train_size, test_size
+    
 
 def main():
     parser = ArgumentParser()
@@ -21,6 +44,8 @@ def main():
     parser.add_argument("--exp_name", type=str, default=None, required=True)
     parser.add_argument("--use_wandb", action="store_true", default=False)
     parser.add_argument("--pretrain_pcn", type=str, default=None)
+    parser.add_argument("--latent_dim", type=int, default=20)
+    parser.add_argument("--has_distance_field", action="store_true", default=False)
     parser.add_argument("--dataset_file", type=str, default="new_score_data")
     opt = parser.parse_args()
 
@@ -33,7 +58,7 @@ def main():
         import wandb
         wandb.init()
         wandb.config.update(opt)
-    score_function = LargeScoreFunction(num_fingers=2, latent_dim=10)
+    score_function = LargeScoreFunction(num_fingers=2, latent_dim=opt.latent_dim, has_distance_field=opt.has_distance_field)
     if not (opt.pretrain_pcn is None):
         score_function.pcn.load_state_dict(torch.load(f"neurals/pcn_model/{opt.pretrain_pcn}.pth"))
     score_function.cuda()
@@ -42,27 +67,16 @@ def main():
                                   {"params":score_function.fc2.parameters(), "lr":5e-4},
                                   {"params":score_function.out.parameters(), "lr":5e-4}])
     #optimizer = torch.optim.Adam(score_function.parameters(), lr=1e-3)
-    # TODO: Make kin_feasibility and dyn_feasibility working
-    full_dataset = neurals.dataset.ScoreDataset(score_file=opt.dataset_file, noise_scale=0.005)
-
-    # Split the dataset
-    dataset_size = len(full_dataset)
-    test_size = int(dataset_size*TEST_RATIO)
-    train_size = dataset_size - test_size
-    print(f"Total size: {dataset_size} Training size: {train_size} Test size: {test_size}")
-    (training_dataset, test_dataset) = \
-        torch.utils.data.random_split(
-            full_dataset, (train_size, test_size))
-    train_loader = torch.utils.data.DataLoader(
-        training_dataset, batch_size=32, shuffle=True)
-    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1)
-    
     total_steps = 0
     print('Dataset loaded, beginning training')
     # Prepare the score saving directory
     os.makedirs(current_dir+f"/only_score_model_{opt.exp_name}", exist_ok=True)
 
     for epoch in range(3000):
+        # Need to reset dataset periteration to prevent overfit
+        train_loader, test_loader, train_size, test_size = load_dataset(opt)
+        # dataset preparation end
+
         epoch_start_time = time.time()
         iter_data_time = time.time()
         epoch_iter = 0
@@ -75,8 +89,8 @@ def main():
                 t_data = iter_start_time - iter_data_time
             total_steps += 16
             epoch_iter += 16
-            pcd, condition, score = parse_input(data)
-            pred_score = score_function(pcd, condition)
+            pcd, condition, score, dist_field = parse_input(data)
+            pred_score = score_function(pcd, condition, dist_field)
             loss = loss_fn(pred_score, score.view(-1,1))
             loss.backward()
             optimizer.step()
@@ -103,8 +117,8 @@ def main():
             with torch.no_grad():
                 loss_test_all = 0.
                 for i, test_data in enumerate(test_loader):
-                    pcd, fingertip_pos, label = parse_input(test_data)
-                    pred_score = score_function(pcd, fingertip_pos)
+                    pcd, fingertip_pos, label, df = parse_input(test_data)
+                    pred_score = score_function(pcd, fingertip_pos, df)
                     loss = loss_fn(pred_score, label.view(1,-1))
                     loss_test_all += loss
                 loss_test_all /= test_size

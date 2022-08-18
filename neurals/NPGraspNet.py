@@ -1,4 +1,5 @@
 import copy
+from unittest.mock import NonCallableMagicMock
 import numpy as np
 import open3d as o3d
 import torch
@@ -7,7 +8,7 @@ from neurals.dex_grasp_net import DexGraspNetModel
 from neurals.network import ScoreFunction, LargeScoreFunction
 
 class NPGraspNet(nn.Module):
-    def __init__(self, opt=None, pred_fingers=[2], extra_cond_fingers=[0,1], mode="only_score", device="cuda:1"):
+    def __init__(self, opt=None, pred_fingers=[2], extra_cond_fingers=[0,1], mode="only_score", has_distance_field=False, device="cuda:1"):
         """
         mode: 
         "only_score": only use score function, no encoder or decoder
@@ -34,23 +35,28 @@ class NPGraspNet(nn.Module):
         if self.mode == "full":
             self.score_function = ScoreFunction(self.dex_grasp_net.get_latent_size()).cuda(device=self.gpu_id)
         elif self.mode == "decoder":
-            self.score_function = LargeScoreFunction(self.num_extra_fingers + self.num_pred_fingers).cuda(device=self.gpu_id)
+            self.score_function = LargeScoreFunction(self.num_extra_fingers + self.num_pred_fingers, has_distance_field=has_distance_field).cuda(device=self.gpu_id)
         else:
             if self.gpu_id == -1:
-                self.score_function = LargeScoreFunction(self.num_extra_fingers, latent_dim=20).cpu()
+                self.score_function = LargeScoreFunction(self.num_extra_fingers, latent_dim=20, has_distance_field=has_distance_field).cpu()
             else:
-                self.score_function = LargeScoreFunction(self.num_extra_fingers, latent_dim=20).cuda(device=self.gpu_id)
+                self.score_function = LargeScoreFunction(self.num_extra_fingers, latent_dim=20, has_distance_field=has_distance_field).cuda(device=self.gpu_id)
         self.score_function.eval()
 
-    def pred_score(self,pcd, extra_cond, latent=None):
+    def pred_score(self,pcd, extra_cond, latent=None, distance_field=None):
         """
         pcd: [1, N_points, 3]
         extra_cond: Assume flatten vector
         """
+        df_th = None
         if self.gpu_id != -1:
             pcd_np = torch.from_numpy(np.asarray(pcd.points)).view(1, -1, 3).cuda(device=self.gpu_id).float()
+            if distance_field is not None:
+                df_th = distance_field.view(1,-1,1).cuda(device = self.gpu_id).float()
         else:
             pcd_np = torch.from_numpy(np.asarray(pcd.points)).view(1, -1, 3).float()
+            if distance_field is not None:
+                df_th = distance_field.view(1, -1, 1).view(1,-1,1).float()
         if self.mode != "only_score":
             latent = latent.cuda(device=self.gpu_id).view(1,-1).float()
         if self.gpu_id != -1:
@@ -58,7 +64,7 @@ class NPGraspNet(nn.Module):
         else:
             extra_cond_th = torch.from_numpy(extra_cond).float()
         if self.mode == "only_score":
-            score = self.score_function.pred_score(pcd_np, extra_cond_th)[0].cpu()
+            score = self.score_function.pred_score(pcd_np, extra_cond_th, dist_field=df_th)[0].cpu()
             return score, None
         else:
             ans, _, _ = self.dex_grasp_net.generate_grasps(pcd_np, z=latent, extra_cond=extra_cond_th) # Should be [1,9]
@@ -72,7 +78,7 @@ class NPGraspNet(nn.Module):
                     score = self.score_function.pred_score(latent2)[0].cpu()
             else:
                 with torch.no_grad():
-                    score = self.score_function.pred_score(pcd_np, full_grasp)[0].cpu()
+                    score = self.score_function.pred_score(pcd_np, full_grasp, distance_field=df_th)[0].cpu()
             return score, self._parse_ans(ans, extra_cond)
 
     def pred_grasp(self, pcd_points, extra_cond, num_grasps=10):

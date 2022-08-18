@@ -29,13 +29,12 @@ from typing import List, Tuple
 
 import utils.rigidBodySento as rb
 
-from scipy.optimize import minimize
 import  model.param as model_param 
 from utils.math_utils import rotation_matrix_from_vectors
 from utils.helper import convert_q_bullet_to_matrix, getSGSigmapoints
 from utils.small_block_region import SmallBlockRegionDummy
 from utils.contact_state_graph import ContactStateGraph
-from utils.contact_state_embedding import ContactStateEmbedding
+from neurals.distancefield_utils import create_laptop_df
 
 # Import neural network related information
 from neurals.NPGraspNet import NPGraspNet
@@ -66,12 +65,15 @@ class LaptopBulletEnv(gym.Env):
                  mode="decoder",
                  sigma=0.5,
                  device='cpu',
-                 showImage=False):
+                 showImage=False,
+                 has_distance_field = False,
+                 max_forces = model_param.MAX_FORCE):
         self.train = train
+        self.has_distance_field = has_distance_field
         self.device = device
         self.observe_last_action=observe_last_action
         self.mode = mode
-        self.max_forces = model_param.MAX_FORCE
+        self.max_forces = max_forces
         self.init_obj_pose=init_obj_pose
         self.render = render
         self.showImage = showImage
@@ -142,10 +144,14 @@ class LaptopBulletEnv(gym.Env):
         # Here all active controlled finger are considered as conditions
         if self.train:
             print("Using CUDA Device:", self.device, f"Using {self.mode}")
-            self.score_function = NPGraspNet(opt_dict, pred_fingers=pred_fingers, extra_cond_fingers=self.active_finger_tips, mode=self.mode, device=self.device)
+            self.score_function = NPGraspNet(opt_dict, pred_fingers=pred_fingers, 
+                                             extra_cond_fingers=self.active_finger_tips, 
+                                             mode=self.mode, device=self.device,
+                                             has_distance_field=self.has_distance_field)
             if self.mode != "only_score":
                 self.score_function.load_dex_grasp_net(dex_path)
             self.score_function.load_score_function(sc_path)
+            self.dist_field_env = create_laptop_df()
 
         obs = self.reset()  # and update init obs
 
@@ -204,12 +210,6 @@ class LaptopBulletEnv(gym.Env):
                                                color=color, collidable=True,
                                                init_xyz=(finger+2.0, finger+2.0, finger+2.0),
                                                init_quat=(0, 0, 0, 1))
-            # tip_id = rb.create_primitive_shape(self._p, 0.01, 
-            #                                    pybullet.GEOM_SPHERE, 
-            #                                    [size[0]], 
-            #                                    color=color,
-            #                                    init_xyz=(i+2.0, i+2.0, i+2.0),
-            #                                    init_quat = (0, 0, 0, 1))
             self.tip_ids.append(tip_id)
             self._p.changeDynamics(tip_id, -1,
                                    lateralFriction=30.0, restitution=0.0)                       # TODO
@@ -455,6 +455,12 @@ class LaptopBulletEnv(gym.Env):
             
             # Remove all parts in occlusion
             pcd_obj = self.deocclude(pcd_obj)
+            # TODO: Need to compute distance field here
+            if self.has_distance_field:
+                df = self.compute_distance_field(pcd_obj)
+            else:
+                df = None
+
             pcd_obj.translate(-pos)
             pcd_obj.rotate(rot_matrix.T)
             
@@ -466,7 +472,7 @@ class LaptopBulletEnv(gym.Env):
             ave_score = 0
             # Here extra_cond is expressed in object centric frame
             if self.mode == "only_score":
-                score, _ = self.score_function.pred_score(pcd_obj, extra_cond=extra_cond)
+                score, _ = self.score_function.pred_score(pcd_obj, extra_cond=extra_cond, distance_field=df)
                 ave_score += score
             else:
                 sigma_points = getSGSigmapoints(self.score_function.get_latent_size(), self.sigma)
@@ -538,7 +544,7 @@ class LaptopBulletEnv(gym.Env):
 
         ave_r = 0.0
         
-        _,_, cost_remaining = self.get_hand_pose(self.cur_fins, self.last_fins)
+        #_,_, cost_remaining = self.get_hand_pose(self.cur_fins, self.last_fins)
 
         if not self.train:
             object_poses = []
@@ -563,8 +569,6 @@ class LaptopBulletEnv(gym.Env):
                 v_g_s, _ = self._p.multiplyTransforms([0., 0., 0.], quat, f_tuple[:, t], [0, 0, 0, 1])
                 v_g = np.array(v_g_s) + np.array(vel) * self._ts # Follow the rigid body movement
                 tar_pos_g, _ = self._p.multiplyTransforms(pos, quat, self.cur_fins[i][0], [0, 0, 0, 1])
-                #if tar_pos_g[2] < CLEARANCE_H: # Not allow the finger tip to penetrate the ground, this means that the break of the finger tip may happen in the middle
-                #    tar_pos_g = [100.0, 100.0, 100.0]    # WARN: This may be problematic
                 tar_pos_g = np.array(tar_pos_g)
                 tar_pos_g = list(tar_pos_g + v_g)
                 self._p.changeConstraint(self.tip_cids[i], tar_pos_g, quat, maxForce=self.max_forces, erp=0.9)
@@ -665,7 +669,6 @@ class LaptopBulletEnv(gym.Env):
     def deocclude(self, pcd):
         return copy.deepcopy(pcd).crop(self.aabb)
 
-    # Also discourage the finger tip to be overbounded.
     def project_to_pcd(self, point):
         if point[2] > CLEARANCE_H:
             p = point.copy()
@@ -678,6 +681,11 @@ class LaptopBulletEnv(gym.Env):
         p = point.copy()
         idx = self.pcd_kd_tree.search_knn_vector_3d(p,1)[1]
         return self.normals[idx].flatten().copy()
+
+    def compute_distance_field(self, pcd):
+        points = np.asarray(pcd.points)
+        df = self.dist_field_env.get_points_distance(points)
+        return df
 
         
 

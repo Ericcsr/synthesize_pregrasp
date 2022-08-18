@@ -13,7 +13,6 @@ import torch.nn as nn
 from utils.dyn_feasibility_check import check_dyn_feasible_parallel
 from utils.kin_feasibility_check import check_kin_feasible_parallel
 
-current_dir = "/home/sirius/sirui/contact_planning_dexterous_hand/neurals/pretrained_score_function"
 NUM_NEIGHBORS = 3
 
 # Here finger tips should include condition + result hence it is fine
@@ -61,13 +60,11 @@ def main():
     opt["force_skip_load"] = False
     if opt == None:
         return
-    # TODO: Can we handle customized object now?
-    objects = ("003_cracker_box",)
-    print('objects', objects)
 
     model = dgn.DexGraspNetModel(opt, pred_base=False, pred_fingers=[2], extra_cond_fingers=[0,1], gpu_id=0)
     # Prepare dataset, should consist of both negative dataset and positive ones
     full_dataset = neurals.dataset.SmallDataset(positive_grasp_folder="seeds/grasps",
+                                                point_clouds = ["pose_0_pcd","pose_1_pcd","pose_2_pcd","pose_3_pcd","pose_4_pcd"],
                                                 negative_grasp_folder="seeds/bad_grasps")
     train_loader = torch.utils.data.DataLoader(
         full_dataset, batch_size=1)

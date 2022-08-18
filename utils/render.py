@@ -5,6 +5,7 @@ egl = pkgutil.get_loader('eglRenderer')
 import pybullet_data
 import cv2 as cv
 import numpy as np
+import json
 import utils.rigidBodySento as rb
 
 class PyBulletRenderer:
@@ -19,7 +20,7 @@ class PyBulletRenderer:
         self.yaw = 20
         self.pitch = 10
         self.distance = 8
-        self.view_height = 0
+        self.view_height = 3
         self.upAxisIndex=2
         self.projection_matrix = [
             1.0825318098068237, 0.0, 0.0, 0.0, 0.0, 1.732050895690918, 0.0, 0.0, 0.0, 0.0,
@@ -41,6 +42,12 @@ class PyBulletRenderer:
         p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
         self.reset()
 
+    def read_config(self, conf_json):
+        self.yaw = conf_json["yaw"]
+        self.pitch = conf_json["pitch"]
+        self.distance = conf_json["distance"]
+        self.view_height = conf_json["view_height"]
+        
     def reset(self):
         self.x_ind = rb.create_primitive_shape(p, 0, p.GEOM_CYLINDER, (0.005, 1.0), (0,0,0.6,0.8),False,(0.5,0,0), (0, 0.7071068, 0, 0.7071068))
         self.y_ind = rb.create_primitive_shape(p, 0, p.GEOM_CYLINDER, (0.005, 1.0), (0,0.6,0,0.8),False,(0,0.5,0), (0.7071068, 0, 0, 0.7071068))

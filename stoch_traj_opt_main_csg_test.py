@@ -1,11 +1,11 @@
 from envs.small_block_contact_graph_env import LaptopBulletEnv
-from envs.bookshelf_env import BookShelfBulletEnv
+from envs.bookshelf_graph_env import BookShelfBulletEnv
 
-from stoch_traj_opt import StochTrajOptimizer
 import open3d as o3d
 import numpy as np
 import random
 import imageio
+import json
 from argparse import ArgumentParser
 
 # TODO: Check whether there are some problem induced by changing the number of fingers
@@ -29,9 +29,13 @@ if __name__ == '__main__':
     parser.add_argument("--init_data", type=str, default="")
     parser.add_argument("--playback",action="store_true", default=False)
     parser.add_argument("--showImage", action="store_true", default=False)
+    parser.add_argument("--camera_conf", type=str, default="camera_1")
     args = parser.parse_args()
 
     uopt = np.load(f"data/traj/{args.exp_name}.npy")
+    # Directly read max force information from experiment name.
+    max_force = float(args.exp_name.split("_")[-1])
+    print("Using Max Force:", max_force)
 
     steps = uopt.shape[0]
 
@@ -41,6 +45,10 @@ if __name__ == '__main__':
     else:
         last_fin = None
         init_obj_pose = None
+    # Load camera configuration
+    with open(f"data/camera_params/{args.camera_conf}.json", 'r') as json_file:
+        data=json_file.read()
+    camera_config = json.loads(data)
 
     # Define paths
     path = np.array([5,5,0])
@@ -54,7 +62,9 @@ if __name__ == '__main__':
                 train=False,
                 steps = steps,
                 path=path,
-                showImage=args.showImage)
+                showImage=args.showImage,
+                max_forces = max_force)
+    world.renderer.read_config(camera_config)
 
     seed = 0
     np.random.seed(seed)
@@ -85,8 +95,6 @@ if __name__ == '__main__':
             # np.save(f"data/fin_data/{args.exp_name}_fin_data.npy", fin_data)
             if not (pcd is None):
                 o3d.io.write_point_cloud(f"data/output_pcds/{args.exp_name}_pcd.ply", pcd)
-            print(len(images))
-            print(images[-1])
             with imageio.get_writer(f"data/video/{args.exp_name}_test.gif",mode="I") as writer:
                 for i in range(len(images)):
                     writer.append_data(images[i])
