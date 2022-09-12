@@ -84,7 +84,7 @@ def check_kin_feasible(contact_points, contact_normals, object_path=None, object
         match_fingertip = True
         # Check all fingertips are close to the target
         for finger in rbm.ActiveAllegroHandFingers:
-            if not constraints_on_finger[finger][0].evaluator().CheckSatisfied(q_sol, tol=1e-4):
+            if not constraints_on_finger[finger][0].evaluator().CheckSatisfied(q_sol, tol=1e-2):
                 match_fingertip = False
                 break
         no_collision = collision_constr.evaluator().CheckSatisfied(q_sol, tol=1e-2)

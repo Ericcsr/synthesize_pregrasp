@@ -74,7 +74,7 @@ def construct_and_solve_wrench_closure_qp(p_WF, C_WF, mu=DEFAULT_FRICTION_COEFF,
     return z_hat, obj 
 
 # Should be able to use outside of this file in the main pipeline
-def check_dyn_feasible(contact_points, contact_normals, tol=1e-3):
+def check_dyn_feasible(contact_points, contact_normals, tol=2e-3):
     np.random.seed(os.getpid())
     random.seed(os.getpid())
     mask = contact_points[:,0] < 50

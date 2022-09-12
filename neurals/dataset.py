@@ -60,8 +60,8 @@ class SmallDataset(torch.utils.data.dataset.Dataset):
         ans["point_cloud"] = self.point_clouds[self.pcd_mapping[idx]]
         ans["point_normals"] = self.point_normals[self.pcd_mapping[idx]]
         ans["fingertip_pos"] = self.grasps[idx]
-        ans["label"] = self.labels[idx]
-        ans["index"] = self.pcd_mapping[idx]
+        ans["intrinsic_score"] = self.labels[idx] # Good or bad pointclouds
+        ans["label"] = self.pcd_mapping[idx]
         return ans
 
 # Dataset for score function, add noise tensor in order to prevent overfitting
@@ -119,7 +119,7 @@ class ScoreDataset(torch.utils.data.dataset.Dataset):
 
     def __getitem__(self, idx):
         ans = {}
-        ans["point_cloud"] = self.point_clouds[idx] #+ np.random.normal(size=self.point_clouds[idx].shape, scale=self.noise_scale)
+        ans["point_cloud"] = self.point_clouds[idx] # np.random.normal(size=self.point_clouds[idx].shape, scale=self.noise_scale)
         ans["condition"] = self.conditions[idx]
         ans["score"] = self.scores[idx]
         if self.has_distance_field:

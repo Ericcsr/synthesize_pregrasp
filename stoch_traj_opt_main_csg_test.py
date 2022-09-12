@@ -1,5 +1,7 @@
 from envs.small_block_contact_graph_env import LaptopBulletEnv
 from envs.bookshelf_graph_env import BookShelfBulletEnv
+from envs.wall_box_graph_env import WallBoxBulletEnv
+from envs.table_box_graph_env import TableBoxBulletEnv
 
 import open3d as o3d
 import numpy as np
@@ -19,7 +21,9 @@ def parse_fin_data(fin_data):
 
 envs_dict = {
     "bookshelf":BookShelfBulletEnv,
-    "laptop":LaptopBulletEnv
+    "laptop":LaptopBulletEnv,
+    "wallbox":WallBoxBulletEnv,
+    "tablebox":TableBoxBulletEnv
 }
 
 if __name__ == '__main__':

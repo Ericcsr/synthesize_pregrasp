@@ -3,7 +3,6 @@ import time
 import open3d as o3d
 import neurals.dataset
 import neurals.dex_grasp_net as dgn
-from neurals.network import ScoreFunction 
 from neurals.test_options import TestOptions
 import torch.utils.data
 import numpy as np
@@ -17,7 +16,7 @@ NUM_NEIGHBORS = 3
 
 # Here finger tips should include condition + result hence it is fine
 def parse_input(data):
-    return data['point_cloud'].cuda().float(), data["point_normals"].cuda().float(), data['fingertip_pos'].cuda().float(), float(data["label"])
+    return data['point_cloud'].cuda().float(), data["point_normals"].cuda().float(), data['fingertip_pos'].cuda().float(), float(data["intrinsic_score"]),  int(data["label"]), 
 
 def parse_extra_cond(fingertip_poses, extra_cond_finger):
     """
@@ -64,7 +63,8 @@ def main():
     model = dgn.DexGraspNetModel(opt, pred_base=False, pred_fingers=[2], extra_cond_fingers=[0,1], gpu_id=0)
     # Prepare dataset, should consist of both negative dataset and positive ones
     full_dataset = neurals.dataset.SmallDataset(positive_grasp_folder="seeds/grasps",
-                                                point_clouds = ["pose_0_pcd","pose_1_pcd","pose_2_pcd","pose_3_pcd","pose_4_pcd"],
+                                                point_clouds = ["pose_0_pcd","pose_1_pcd","pose_2_pcd","pose_3_pcd",
+                                                                "pose_4_pcd","pose_5_pcd","pose_6_pcd","pose_7_pcd"],
                                                 negative_grasp_folder="seeds/bad_grasps")
     train_loader = torch.utils.data.DataLoader(
         full_dataset, batch_size=1)
@@ -75,11 +75,12 @@ def main():
     scores = []
     point_clouds = []
     conditions = []
+    point_cloud_labels = []
     # Each time draw a fixed batch of random normal sample as latent states
     torch.manual_seed(2020)
     randomized_z = torch.randn((opt['num_samples'], opt['latent_size']))
     for data in train_loader:
-        pcd, normal, tip_pos, intrinsic_score = parse_input(data)
+        pcd, normal, tip_pos, intrinsic_score, label = parse_input(data)
         kd_tree = create_kd_tree(pcd)
         pcds = pcd.expand(opt['num_samples'], -1, 3).contiguous() # [batch_size, num_points, 3]
         extra_cond = parse_extra_cond(tip_pos, [0,1])
@@ -103,12 +104,14 @@ def main():
         scores.append(float(score)/opt['num_samples'])
         point_clouds.append(pcd.cpu().numpy())
         conditions.append(extra_cond.cpu().numpy())
+        point_cloud_labels.append(int(label))
     # Each grasp need to be paired with a pointcloud
     exp_name = opt["exp_name"]
     np.savez(f"data/score_function_data/{exp_name}_score_data.npz",
              scores=np.asarray(scores),
              point_clouds=np.vstack(point_clouds),
-             conditions=np.vstack(conditions))
+             conditions=np.vstack(conditions),
+             point_cloud_labels = point_cloud_labels)
 
 if __name__ == '__main__':
     main()
