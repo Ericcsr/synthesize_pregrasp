@@ -2,42 +2,6 @@
 <robot name="shadow_hand">
 
     <!-- Forearm-Wrist-Palm Links -->
-    <link name="forearm">
-        <visual>
-            <geometry name="forearm_visual">
-                <mesh filename="shadow_hand/meshes/visual/forearm.dae"/>
-            </geometry>
-        </visual>
-        <collision>
-            <geometry name="forearm_collision">
-                <mesh filename="shadow_hand/meshes/collision/forearm.stl"/>
-            </geometry>
-        </collision>
-        <inertial>
-            <origin rpy="0 0 0" xyz="0 0 0.0"/>
-            <mass value="0.4154"/>
-            <inertia ixx="1e-4" ixy="0.0" ixz="0.0" iyy="1e-4" iyz="0.0" izz="1e-4"/>
-        </inertial>
-    </link>
-
-    <link name="wrist">
-        <visual>
-            <geometry name="wrist_visual">
-                <mesh filename="shadow_hand/meshes/visual/wrist.dae"/>
-            </geometry>
-        </visual>
-        <collision>
-            <geometry name="wrist_collision">
-                <mesh filename="shadow_hand/meshes/collision/wrist.stl"/>
-            </geometry>
-        </collision>
-        <inertial>
-            <origin rpy="0 0 0" xyz="0 0 0.0"/>
-            <mass value="0.4154"/>
-            <inertia ixx="1e-4" ixy="0.0" ixz="0.0" iyy="1e-4" iyz="0.0" izz="1e-4"/>
-        </inertial>
-    </link>
-
     <link name="palm">
         <visual>
             <geometry name="palm_visual">
@@ -45,8 +9,9 @@
             </geometry>
         </visual>
         <collision>
+            <origin rpy="0 0 0" xyz="0.0 0.0 0.05"/>
             <geometry name="palm_collision">
-                <mesh filename="shadow_hand/meshes/collision/palm.stl"/>
+                <box size="0.08 0.03 0.08"/>
             </geometry>
         </collision>
         <inertial>
@@ -55,25 +20,6 @@
             <inertia ixx="1e-4" ixy="0.0" ixz="0.0" iyy="1e-4" iyz="0.0" izz="1e-4"/>
         </inertial>
     </link>
-
-
-    <!-- Forearm-Wrist Joints -->
-    <joint name="forearm_joint" type="revolute">
-        <parent link="forearm"/>
-        <child link="wrist"/>
-        <origin rpy="0 0 0" xyz="0 -0.010 0.213"/>
-        <axis xyz="0 1 0"/>
-        <limit effort="10.0" lower="-0.523598775598" upper="0.174532925199" velocity="2.0"/>
-    </joint>
-
-    <joint name="wrist_joint" type="revolute">
-        <parent link="wrist"/>
-        <child link="palm"/>
-        <origin rpy="0 0 0" xyz="0 0 0.034"/>
-        <axis xyz="1 0 0"/>
-        <limit effort="5.0" lower="-0.698131700798" upper="0.488692190558" velocity="2.0"/>
-    </joint>
-
 
     <!-- Thumb Links -->
     <link name="thumb_base">
@@ -91,8 +37,12 @@
             </geometry>
         </visual>
         <collision>
-            <geometry name="thumb_proximal_collision">
+            <!-- <geometry name="thumb_proximal_collision">
                 <mesh filename="shadow_hand/meshes/collision/thumb_proximal.stl"/>
+            </geometry> -->
+            <origin rpy="0 0 0" xyz="0 0 0.01"/>
+            <geometry name="thumb_proximal_collision">
+                <capsule length="0.015" radius="0.012"/>
             </geometry>
         </collision>
         <inertial>
@@ -117,8 +67,12 @@
             </geometry>
         </visual>
         <collision>
-            <geometry name="thumb_middle_collision">
+            <!-- <geometry name="thumb_middle_collision">
                 <mesh filename="shadow_hand/meshes/collision/thumb_middle.stl"/>
+            </geometry> -->
+            <origin rpy="0 0 0" xyz="0 0 0.015"/>
+            <geometry name="thumb_middle_collision">
+                <capsule length="0.02" radius="0.01"/>
             </geometry>
         </collision>
         <inertial>
@@ -135,8 +89,12 @@
             </geometry>
         </visual>
         <collision>
-            <geometry name="thumb_distal_collision">
+            <!-- <geometry name="thumb_distal_collision">
                 <mesh filename="shadow_hand/meshes/collision/thumb_distal.stl"/>
+            </geometry> -->
+            <origin rpy="0 0 0" xyz="0 0 0.02"/>
+            <geometry name="thumb_distal_collision">
+                <capsule length="0.012" radius="0.009"/>
             </geometry>
         </collision>
         <inertial>
@@ -195,12 +153,12 @@
                 <mesh filename="shadow_hand/meshes/visual/knuckle.dae"/>
             </geometry>
         </visual>
-        <collision>
+        <!-- <collision>
             <origin rpy="0 0 0" xyz="0 0 0.0005"/>
             <geometry name="index_finger_knuckle_collision">
                 <mesh filename="shadow_hand/meshes/collision/knuckle.stl"/>
             </geometry>
-        </collision>
+        </collision> -->
         <inertial>
             <origin rpy="0 0 0" xyz="0 0 0.0"/>
             <mass value="0.4154"/>
@@ -215,8 +173,12 @@
             </geometry>
         </visual>
         <collision>
-            <geometry name="index_finger_proximal_collision">
+            <!-- <geometry name="index_finger_proximal_collision">
                 <mesh filename="shadow_hand/meshes/collision/finger_proximal.stl"/>
+            </geometry> -->
+            <origin rpy="0 0 0" xyz="0 0 0.015"/>
+            <geometry name="index_finger_proximal_collision">
+                <capsule length="0.02" radius="0.009"/>
             </geometry>
         </collision>
         <inertial>
@@ -233,8 +195,12 @@
             </geometry>
         </visual>
         <collision>
-            <geometry name="index_finger_middle_collision">
+            <!-- <geometry name="index_finger_middle_collision">
                 <mesh filename="shadow_hand/meshes/collision/finger_middle.stl"/>
+            </geometry> -->
+            <origin rpy="0 0 0" xyz="0 0 0.011"/>
+            <geometry name="index_finger_middle_collision">
+                <capsule length="0.016" radius="0.008"/>
             </geometry>
         </collision>
         <inertial>
@@ -251,8 +217,11 @@
             </geometry>
         </visual>
         <collision>
-            <geometry name="index_finger_distal_collision">
+            <!-- <geometry name="index_finger_distal_collision">
                 <mesh filename="shadow_hand/meshes/collision/finger_distal.stl"/>
+            </geometry> -->
+            <geometry name="index_finger_distal_collision">
+                <capsule length="0.009" radius="0.008"/>
             </geometry>
         </collision>
         <inertial>
@@ -304,12 +273,12 @@
                 <mesh filename="shadow_hand/meshes/visual/knuckle.dae"/>
             </geometry>
         </visual>
-        <collision>
+        <!-- <collision>
             <origin rpy="0 0 0" xyz="0 0 0.0005"/>
             <geometry name="middle_finger_knuckle_collision">
                 <mesh filename="shadow_hand/meshes/collision/knuckle.stl"/>
             </geometry>
-        </collision>
+        </collision> -->
         <inertial>
             <origin rpy="0 0 0" xyz="0 0 0.0"/>
             <mass value="0.4154"/>
@@ -324,8 +293,12 @@
             </geometry>
         </visual>
         <collision>
-            <geometry name="middle_finger_proximal_collision">
+            <!-- <geometry name="middle_finger_proximal_collision">
                 <mesh filename="shadow_hand/meshes/collision/finger_proximal.stl"/>
+            </geometry> -->
+            <origin rpy="0 0 0" xyz="0 0 0.016"/>
+            <geometry name="middle_finger_proximal_collision">
+                <capsule length="0.021" radius="0.009"/>
             </geometry>
         </collision>
         <inertial>
@@ -342,8 +315,12 @@
             </geometry>
         </visual>
         <collision>
-            <geometry name="middle_finger_middle_collision">
+            <!-- <geometry name="middle_finger_middle_collision">
                 <mesh filename="shadow_hand/meshes/collision/finger_middle.stl"/>
+            </geometry> -->
+            <origin rpy="0 0 0" xyz="0 0 0.012"/>
+            <geometry name="middle_finger_middle_collision">
+                <capsule length="0.017" radius="0.008"/>
             </geometry>
         </collision>
         <inertial>
@@ -360,8 +337,12 @@
             </geometry>
         </visual>
         <collision>
-            <geometry name="middle_finger_distal_collision">
+            <!-- <geometry name="middle_finger_distal_collision">
                 <mesh filename="shadow_hand/meshes/collision/finger_distal.stl"/>
+            </geometry> -->
+            <origin rpy="0 0 0" xyz="0 0 0.017"/>
+            <geometry name="middle_finger_distal_collision">
+                <capsule length="0.009" radius="0.008"/>
             </geometry>
         </collision>
         <inertial>
@@ -413,12 +394,12 @@
                 <mesh filename="shadow_hand/meshes/visual/knuckle.dae"/>
             </geometry>
         </visual>
-        <collision>
+        <!-- <collision>
             <origin rpy="0 0 0" xyz="0 0 0.0005"/>
             <geometry name="ring_finger_knuckle_collision">
                 <mesh filename="shadow_hand/meshes/collision/knuckle.stl"/>
             </geometry>
-        </collision>
+        </collision> -->
         <inertial>
             <origin rpy="0 0 0" xyz="0 0 0.0"/>
             <mass value="0.4154"/>
@@ -431,10 +412,18 @@
             <geometry name="ring_finger_proximal_visual">
                 <mesh filename="shadow_hand/meshes/visual/finger_proximal.dae"/>
             </geometry>
+            <origin rpy="0 0 0" xyz="0 0 0.015"/>
+            <geometry name="ring_finger_proximal_visual">
+                <capsule length="0.02" radius="0.009"/>
+            </geometry>
         </visual>
         <collision>
-            <geometry name="ring_finger_proximal_collision">
+            <!-- <geometry name="ring_finger_proximal_collision">
                 <mesh filename="shadow_hand/meshes/collision/finger_proximal.stl"/>
+            </geometry> -->
+            <origin rpy="0 0 0" xyz="0 0 0.015"/>
+            <geometry name="ring_finger_proximal_collision">
+                <capsule length="0.02" radius="0.009"/>
             </geometry>
         </collision>
         <inertial>
@@ -449,10 +438,18 @@
             <geometry name="ring_finger_middle_visual">
                 <mesh filename="shadow_hand/meshes/visual/finger_middle.dae"/>
             </geometry>
+            <origin rpy="0 0 0" xyz="0 0 0.011"/>
+            <geometry name="ring_finger_middle_visual">
+                <capsule length="0.016" radius="0.008"/>
+            </geometry>
         </visual>
         <collision>
-            <geometry name="ring_finger_middle_collision">
+            <!-- <geometry name="ring_finger_middle_collision">
                 <mesh filename="shadow_hand/meshes/collision/finger_middle.stl"/>
+            </geometry> -->
+            <origin rpy="0 0 0" xyz="0 0 0.011"/>
+            <geometry name="ring_finger_middle_collision">
+                <capsule length="0.016" radius="0.008"/>
             </geometry>
         </collision>
         <inertial>
@@ -469,8 +466,12 @@
             </geometry>
         </visual>
         <collision>
-            <geometry name="ring_finger_distal_collision">
+            <!-- <geometry name="ring_finger_distal_collision">
                 <mesh filename="shadow_hand/meshes/collision/finger_distal.stl"/>
+            </geometry> -->
+            <origin rpy="0 0 0" xyz="0 0 0.017"/>
+            <geometry name="ring_finger_distal_collision">
+                <capsule length="0.009" radius="0.008"/>
             </geometry>
         </collision>
         <inertial>
@@ -521,11 +522,11 @@
                 <mesh filename="shadow_hand/meshes/visual/metacarpal.dae"/>
             </geometry>
         </visual>
-        <collision>
+        <!-- <collision>
             <geometry name="little_finger_metacarpal_collision">
                 <mesh filename="shadow_hand/meshes/collision/metacarpal.stl"/>
             </geometry>
-        </collision>
+        </collision> -->
         <inertial>
             <origin rpy="0 0 0" xyz="0 0 0.0"/>
             <mass value="0.4154"/>
@@ -540,12 +541,12 @@
                 <mesh filename="shadow_hand/meshes/visual/knuckle.dae"/>
             </geometry>
         </visual>
-        <collision>
+        <!-- <collision>
             <origin rpy="0 0 0" xyz="0 0 0.0005"/>
             <geometry name="little_finger_knuckle_collision">
                 <mesh filename="shadow_hand/meshes/collision/knuckle.stl"/>
             </geometry>
-        </collision>
+        </collision> -->
         <inertial>
             <origin rpy="0 0 0" xyz="0 0 0.0"/>
             <mass value="0.4154"/>
@@ -560,8 +561,12 @@
             </geometry>
         </visual>
         <collision>
-            <geometry name="little_finger_proximal_collision">
+            <!-- <geometry name="little_finger_proximal_collision">
                 <mesh filename="shadow_hand/meshes/collision/finger_proximal.stl"/>
+            </geometry> -->
+            <origin rpy="0 0 0" xyz="0 0 0.015"/>
+            <geometry name="little_finger_proximal_collision">
+                <capsule length="0.02" radius="0.009"/>
             </geometry>
         </collision>
         <inertial>
@@ -578,8 +583,12 @@
             </geometry>
         </visual>
         <collision>
-            <geometry name="little_finger_middle_collision">
+            <!-- <geometry name="little_finger_middle_collision">
                 <mesh filename="shadow_hand/meshes/collision/finger_middle.stl"/>
+            </geometry> -->
+            <origin rpy="0 0 0" xyz="0 0 0.011"/>
+            <geometry name="little_finger_middle_collision">
+                <capsule length="0.016" radius="0.008"/>
             </geometry>
         </collision>
         <inertial>
@@ -596,8 +605,12 @@
             </geometry>
         </visual>
         <collision>
-            <geometry name="little_finger_distal_collision">
+            <!-- <geometry name="little_finger_distal_collision">
                 <mesh filename="shadow_hand/meshes/collision/finger_distal.stl"/>
+            </geometry> -->
+            <origin rpy="0 0 0" xyz="0 0 0.017"/>
+            <geometry name="little_finger_distal_collision">
+                <capsule length="0.009" radius="0.008"/>
             </geometry>
         </collision>
         <inertial>
