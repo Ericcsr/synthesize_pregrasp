@@ -8,6 +8,7 @@ allegro_hand_urdf_path     = 'model/resources/allegro_hand_description/urdf/alle
 allegro_arm_urdf_path = 'model/resources/allegro_hand_description/urdf/allegro_arm.urdf'
 
 shadow_hand_urdf_path = "model/resources/shadow_hand_description/urdf/shadow_hand.urdf"
+shadow_hand_urdf_collision_path = "model/resources/shadow_hand_description/urdf/shadow_hand_collision.urdf"
 
 # Offset for counting joints for fingers
 allegro_hand_offset = 0
@@ -138,7 +139,14 @@ NameToShadowFingerIndex = {
 
 ActiveAllegroHandFingers =[AllegroHandFinger.THUMB,
                            AllegroHandFinger.INDEX,
-                           AllegroHandFinger.MIDDLE]
+                           AllegroHandFinger.MIDDLE,
+                           AllegroHandFinger.RING]
+
+ActiveShadowHandFingers = [ShadowHandFinger.THUMB,
+                           ShadowHandFinger.INDEX,
+                           ShadowHandFinger.MIDDLE,
+                           ShadowHandFinger.RING,
+                           ShadowHandFinger.LITTLE]
 
 AllAllegroHandFingers =[AllegroHandFinger.THUMB,
                         AllegroHandFinger.INDEX,
@@ -200,6 +208,22 @@ ShadowHandFingertipDrakeLinkOffset = {
     ShadowHandFinger.MIDDLE: np.array([0., 0., 0.016]),
     ShadowHandFinger.RING: np.array([0., 0., 0.016]),
     ShadowHandFinger.LITTLE: np.array([0., 0., 0.016]),
+}
+
+ShadowHandIndex2Link = {
+    ShadowHandFinger.THUMB: "thumb_distal",
+    ShadowHandFinger.INDEX: "index_finger_distal",
+    ShadowHandFinger.MIDDLE: "middle_finger_distal",
+    ShadowHandFinger.RING: "ring_finger_distal",
+    ShadowHandFinger.LITTLE: "little_finger_distal"
+}
+
+ShadowHandIndex2Name = {
+    ShadowHandFinger.THUMB: "thumb",
+    ShadowHandFinger.INDEX: "index_finger",
+    ShadowHandFinger.MIDDLE: "middle_finger",
+    ShadowHandFinger.RING: "ring_finger",
+    ShadowHandFinger.LITTLE: "little_finger"
 }
 
 # AllegroHandFingertipDrakeLinkOffset={

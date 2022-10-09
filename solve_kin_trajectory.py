@@ -57,7 +57,7 @@ def load_trajector_data(exp_name, extrapolate_frames=50, active_fingers=[0,1]):
     return obj_poses, obj_orns, merged_tip_poses
 
 # TODO: Solve key frames
-def fit_keypoints(num_key_points, obj_poses, obj_orns, tip_poses):
+def fit_keypoints(num_key_points, obj_poses, obj_orns, tip_poses, hand_model="allegro"):
     """
     Assume obj_poses, obj_orns, tip_poses is full trajectory and have same length
     Assume obj_poses, obj_orns, tip_poses have last frame repeated
@@ -71,12 +71,12 @@ def fit_keypoints(num_key_points, obj_poses, obj_orns, tip_poses):
     key_obj_orns = obj_orns[key_idx]
     key_tip_poses = tip_poses[key_idx]
 
-    key_joint_states, key_q_sols, desired_positions = kin.solve_ik_keypoints(key_tip_poses, key_obj_poses, key_obj_orns)
+    key_joint_states, key_q_sols, desired_positions = kin.solve_ik_keypoints(key_tip_poses, key_obj_poses, key_obj_orns, hand_model=hand_model)
     base_state = [np.hstack([joint_state[0], joint_state[1]]) for joint_state in key_joint_states]
     joints_state = [joint_state[2] for joint_state in key_joint_states]
     return (np.asarray(base_state), np.asarray(joints_state)), key_obj_poses, key_obj_orns, key_q_sols, key_idx, desired_positions
 
-def fit_interp(num_interp, obj_poses, obj_orns, tip_poses, q_start, q_end):
+def fit_interp(num_interp, obj_poses, obj_orns, tip_poses, q_start, q_end, hand_model):
     """
     Assume obj_poses, obj_orns, tip_poses, are a segment of full poses (Both ends are keyframes)
     Assume num_interp doesn't include both end
@@ -92,7 +92,7 @@ def fit_interp(num_interp, obj_poses, obj_orns, tip_poses, q_start, q_end):
     interp_obj_orns = obj_orns[interp_idx]
     interp_tip_poses = tip_poses[interp_idx]
 
-    interp_joint_state = kin.solve_interpolation(interp_tip_poses, interp_obj_poses, interp_obj_orns, q_start, q_end)
+    interp_joint_state = kin.solve_interpolation(interp_tip_poses, interp_obj_poses, interp_obj_orns, q_start, q_end, hand_model=hand_model)
     
     interp_full_joint_state = []
     interp_full_base_state = []
@@ -115,11 +115,17 @@ def main():
     parser.add_argument("--exp_name", type=str, default=None, required=True)
     parser.add_argument("--mode", type=str, default="keypoints")
     parser.add_argument("--extrapolate_frames", type=int, default=50)
+    parser.add_argument("--hand_model", type=str, default="allegro")
     args = parser.parse_args()
 
     # Create Pybullet Scenario
     p.connect(p.GUI)
-    hand_id = p.loadURDF("model/resources/allegro_hand_description/urdf/allegro_hand_description_right.urdf")
+    if args.hand_model == "allegro":
+        hand_id = p.loadURDF("model/resources/allegro_hand_description/urdf/allegro_hand_description_right.urdf")
+    elif args.hand_model == "shadow":
+        hand_id = p.loadURDF("model/resources/shadow_hand_description/urdf/shadow_hand_collision.urdf")
+    else:
+        raise NotImplementedError
     o_id = rb.create_primitive_shape(p, 1.0, p.GEOM_BOX, (0.2, 0.2, 0.05),         # half-extend
                                      color=(0.6, 0, 0, 0.8), collidable=True,
                                      init_xyz=np.array([0, 0, 0.05]),
@@ -128,9 +134,10 @@ def main():
     colors = [(0.9, 0.9, 0.9, 0.7),
               (0.9, 0.0, 0.0, 0.7),
               (0.0, 0.9, 0.0, 0.7),
-              (0.0, 0.0, 0.9, 0.7)]
+              (0.0, 0.0, 0.9, 0.7),
+              (0.0, 0.0, 0.0, 0.7)]
     tip_ids = []
-    for i in range(4):
+    for i in range(4 if args.hand_model =="allegro" else 5):
         tip_ids.append(rb.create_primitive_shape(p, 0.1, p.GEOM_SPHERE,
                                                  (0.01,), color=colors[i], 
                                                  collidable=False, init_xyz = (100,100,100)))
@@ -138,7 +145,7 @@ def main():
     obj_poses, obj_orns, finger_tip_poses = load_trajector_data(args.exp_name, args.extrapolate_frames)
 
     if args.mode == "keypoints":
-        key_states, key_obj_poses, key_obj_orns, key_q_sols, key_idx, des_poses = fit_keypoints(NUM_KEY_FRAMES, obj_poses, obj_orns, finger_tip_poses)
+        key_states, key_obj_poses, key_obj_orns, key_q_sols, key_idx, des_poses = fit_keypoints(NUM_KEY_FRAMES, obj_poses, obj_orns, finger_tip_poses, hand_model=args.hand_model)
         helper.animate_keyframe(o_id, hand_id, key_obj_poses, key_obj_orns, key_states[1], key_states[0], tip_ids=tip_ids, desired_positions=des_poses)
         np.savez(f"data/ik/{args.exp_name}_keyframes.npz", q_sols=key_q_sols, key_idx=key_idx)
 
@@ -152,7 +159,7 @@ def main():
         segment_tip_poses = finger_tip_poses[start_idx:end_idx]
         q_start = key_frame_data["q_sols"][idx]
         q_end = key_frame_data["q_sols"][idx+1]
-        interp_state = fit_interp(NUM_INTERP, segment_obj_poses, segment_obj_orns, segment_tip_poses, q_start, q_end)
+        interp_state = fit_interp(NUM_INTERP, segment_obj_poses, segment_obj_orns, segment_tip_poses, q_start, q_end,hand_model=args.hand_model)
         helper.animate(o_id, hand_id, segment_obj_poses, segment_obj_orns, interp_state[1], base_states=interp_state[0])
         np.savez(f"data/ik/{args.exp_name}_segment{idx}.npz", joint_states=interp_state[1], base_states=interp_state[0])
     elif args.mode == "animate":

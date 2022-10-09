@@ -20,6 +20,7 @@ from pydrake.solvers.osqp import OsqpSolver
 from pydrake.multibody.tree import FrameIndex
 
 # Using Albert's code with same API
+# WARNING: This code is depreciated please refers to kin_feasible
 class AllegroHandDrake:
     def __init__(self,
                  object_collidable=True, 
