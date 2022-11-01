@@ -1,5 +1,5 @@
 import pybullet as p
-from allegro_hand import AllegroHandDrake
+from unused.allegro_hand import AllegroHandDrake
 import numpy as np
 import torch
 import time

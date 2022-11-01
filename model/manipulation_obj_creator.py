@@ -8,14 +8,14 @@ def create_laptop_env(plant, has_floor = False):
     scenario.AddShape(plant, Box(0.4, 0.4, 0.1), "manipulated_object",
                       collidable=True)
     if has_floor:
-        scenario.AddShape(plant, Box(2.0, 2.0, 0.02), "floor", collidable=True)
+        scenario.AddShape(plant, Box(10.0, 10.0, 0.02), "floor", collidable=True)
         plant.WeldFrames(plant.world_frame(),
                          plant.GetFrameByName("floor"),
                          RigidTransform(p=[0., 0., -0.012])) # Add slightly more clearance to prevent problem in collision detection
 
-def create_book_shelf_env(plant, has_floor = False):
+def create_bookshelf_env(plant, has_floor = False): # Need to confirm whether this is right
     scenario.AddShape(plant, Box(0.4, 0.4, 0.1), "manipulated_object",
-                     colliable=True)
+                     collidable=True)
     scenario.AddShape(plant, Box(0.4, 0.4, 0.1), "left_book",
                       collidable=True)
     scenario.AddShape(plant, Box(0.4, 0.4, 0.1), "right_book",
@@ -28,10 +28,35 @@ def create_book_shelf_env(plant, has_floor = False):
                                     p = [0., 0.11, 0.2]))
     plant.WeldFrames(plant.world_frame(),
                      plant.GetFrameByName("right_book"),
-                     RigidTransform(quaternio=eigen_geometry.Quaternion([0.7071068, 0, 0, 0.7071068]),
+                     RigidTransform(quaternion=eigen_geometry.Quaternion([0.7071068, 0, 0, 0.7071068]),
                                     p = [0., -0.11, 0.2]))
     if has_floor:
         scenario.AddShape(plant, Box(2.0, 2.0, 0.02), "floor", collidable=True)
         plant.WeldFrames(plant.world_frame(),
                          plant.GetFrameByName("floor"),
                          RigidTransform(p=[0., 0., -0.012])) # Add slightly more clearance to prevent problem in collision detection
+
+def create_tablebox_env(plant, has_floor=False):
+    scenario.AddShape(plant, Box(0.4, 0.4, 0.1), "manipulated_object", 
+                      collidable=True)
+    if has_floor:
+        scenario.AddShape(plant, Box(10.0, 10.0, 0.02), "floor", collidable=True)
+        plant.WeldFrames(plant.world_frame(),
+                         plant.GetFrameByName("floor"),
+                         RigidTransform(p=[0., 0., -0.012])) # Add slightly more clearance to prevent problem in collision detection
+
+def create_wallbox_env(plant, has_floor=False):
+    scenario.AddShape(plant, Box(0.4, 0.4, 0.1), "manipulated_object", 
+                      collidable=True)
+    if has_floor:
+        scenario.AddShape(plant, Box(10.0, 10.0, 0.02), "floor", collidable=True)
+        plant.WeldFrames(plant.world_frame(),
+                         plant.GetFrameByName("floor"),
+                         RigidTransform(p=[0., 0., -0.012])) # Add slightly more clearance to prevent problem in collision detection
+
+object_creators = {
+    "laptop":create_laptop_env,
+    "bookshelf":create_bookshelf_env,
+    "tablebox": create_tablebox_env,
+    "wallbox": create_wallbox_env
+}

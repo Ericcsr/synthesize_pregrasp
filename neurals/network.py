@@ -82,6 +82,11 @@ def define_graspgen(opt, arch, init_type, init_gain, pred_base, num_in_feats, ex
                               opt["pointnet_nclusters"], opt["latent_size"],
                               gpu_id, num_in_feats=num_in_feats,pred_base=pred_base,
                               extra_cond_dim=extra_cond_dim, num_pred_fingers=num_pred_fingers)
+    elif arch == 'regressor':
+        net = GraspRegressor(opt["model_scale"], opt["pointnet_radius"],
+                             opt["pointnet_nclusters"],gpu_id, 
+                             num_in_feats=num_in_feats,pred_base=pred_base,
+                             extra_cond_dim=extra_cond_dim,num_pred_fingers=num_pred_fingers)
     else:
         raise NotImplementedError('model name [%s] is not recognized' % arch)
     return init_net(net, init_type, init_gain, gpu_id)
@@ -97,6 +102,12 @@ def define_loss(opt,pred_base=True):
         kl_loss = losses.kl_divergence
         reconstruction_loss = losses.fingertip_positions_l1_loss
         return kl_loss, reconstruction_loss
+    elif opt["arch"] == "regressor" and not pred_base:
+        reconstruction_loss = losses.fingertip_positions_l1_loss
+        return reconstruction_loss
+    elif opt["arch"] == "regressor" and pred_base:
+        reconstruction_loss = losses.base_pose_and_fingertip_positions_l1_loss
+        return reconstruction_loss
 
     # elif opt.arch == 'gan':
     #     reconstruction_loss = losses.min_distance_loss
@@ -286,6 +297,75 @@ class GraspSamplerVAE(GraspSampler):
         ])
         return torch.stack([latents[i].flatten() for i in range(len(latents))],
                            dim=-1)
+
+class GraspRegressor(nn.Module):
+    def __init__(self,
+                 model_scale,
+                 pointnet_radius=0.02,
+                 pointnet_nclusters=128,
+                 gpu_id=0,
+                 num_in_feats=24,
+                 pred_base=True,
+                 extra_cond_dim=0,
+                 num_pred_fingers=3):
+        super(GraspRegressor, self).__init__()
+        self.gpu_id = gpu_id
+        self.pred_base = pred_base
+        self.num_pred_fingers = num_pred_fingers
+        self.create_encoder(model_scale, pointnet_radius, pointnet_nclusters, n_input_feats=num_in_feats+extra_cond_dim)
+        self.grasp_predictor = MLP(model_scale * 512, 3*num_pred_fingers)
+
+    def create_encoder(
+            self,
+            model_scale,
+            pointnet_radius,
+            pointnet_nclusters,
+            n_input_feats
+    ):
+        # The number of input features for the encoder is 24:
+        # (x,y,z) of points in point cloud +
+        # 3D base position + 9D base rotation matrix + 3x3D fingertip positions
+        # Recall the signature is
+        # base_network(pointnet_radius, pointnet_nclusters, scale, in_features)
+        self.encoder = base_network(pointnet_radius, pointnet_nclusters,
+                                    model_scale, n_input_feats).cuda(device=self.gpu_id)
+
+    def encode(self, xyz, xyz_features):
+        for module in self.encoder[0]: # Encoder 0 are PointNet layers
+            xyz, xyz_features = module(xyz, xyz_features)
+        return self.encoder[1](xyz_features.squeeze(-1))
+
+    def forward(self, pcs, extra_cond=None):
+        return self.forward_train(pcs, extra_cond)
+
+    def forward_train(self, pcs, extra_cond=None):
+        """
+        Function for training the network
+        :param input:
+        :return:
+        """
+        if extra_cond is None:
+            input_features = pcs.transpose(-1, 1).contiguous() # (batch_size*(3+in_feat_dim)*256)
+        else:
+            input_features = torch.cat(
+                (pcs, extra_cond.unsqueeze(1).expand(-1, pcs.shape[1], -1)), -1).transpose(-1,1).contiguous()
+        z = self.encode(pcs, input_features) # Latent variable
+        pred_grasp = self.grasp_predictor(z)
+        return pred_grasp
+
+class MLP(nn.Module):
+    def __init__(self, input_dim, output_dim):
+        super(MLP,self).__init__()
+        self.fc1 = nn.Linear(input_dim, 256)
+        self.fc2 = nn.Linear(256, 256)
+        self.out = nn.Linear(256, output_dim)
+
+    def forward(self, x):
+        x = self.fc1(x).relu()
+        x = self.fc2(x).relu()
+        x = self.out(x)
+        return x
+
 
 # Just a simple MLP
 class ScoreFunction(nn.Module):

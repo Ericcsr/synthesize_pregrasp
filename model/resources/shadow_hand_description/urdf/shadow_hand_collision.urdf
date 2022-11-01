@@ -12,12 +12,8 @@
     </joint>
     <link name="palm">
         <visual>
-            <!-- <geometry name="palm_visual">
-                <mesh filename="../shadow_hand/meshes/visual/palm.dae"/>
-            </geometry> -->
-            <origin rpy="0 0 0" xyz="0.0 0.0 0.05"/>
             <geometry name="palm_visual">
-                <box size="0.08 0.03 0.08"/>
+                <mesh filename="../shadow_hand/meshes/visual/palm.dae"/>
             </geometry>
         </visual>
         <collision>
@@ -43,12 +39,11 @@
     </link>
 
     <link name="thumb_proximal">
-        <!-- <visual>
-            <origin rpy="0 0 0" xyz="0 0 0.01"/>
+        <visual>
             <geometry name="thumb_proximal_visual">
-                <capsule length="0.015" radius="0.012"/>
+                <mesh filename="../shadow_hand/meshes/visual/thumb_proximal.dae"/>
             </geometry>
-        </visual> -->
+        </visual>
         <!-- <collision>
             <origin rpy="0 0 0" xyz="0 0 0.01"/>
             <geometry name="thumb_proximal_collision">
@@ -72,13 +67,13 @@
 
     <link name="thumb_middle">
         <visual>
-            <!-- <geometry name="thumb_middle_visual">
+            <geometry name="thumb_middle_visual">
                 <mesh filename="../shadow_hand/meshes/visual/thumb_middle.dae"/>
-            </geometry> -->
-            <origin rpy="0 0 0" xyz="0 0 0.015"/>
+            </geometry>
+            <!-- <origin rpy="0 0 0" xyz="0 0 0.015"/>
             <geometry name="thumb_middle_visual">
                 <capsule length="0.01" radius="0.01"/>
-            </geometry>
+            </geometry> -->
         </visual>
         <collision>
             <!-- <geometry name="thumb_middle_collision">
@@ -98,13 +93,13 @@
 
     <link name="thumb_distal">
         <visual>
-            <!-- <geometry name="thumb_distal_visual">
+            <geometry name="thumb_distal_visual">
                 <mesh filename="../shadow_hand/meshes/visual/thumb_distal.dae"/>
-            </geometry> -->
-            <origin rpy="0 0 0" xyz="0 0 0.02"/>
+            </geometry>
+            <!-- <origin rpy="0 0 0" xyz="0 0 0.02"/>
             <geometry name="thumb_distal_visual">
                 <capsule length="0.012" radius="0.009"/>
-            </geometry>
+            </geometry> -->
         </visual>
         <collision>
             <!-- <geometry name="thumb_distal_collision">
@@ -165,12 +160,12 @@
 
     <!-- Index Finger Links -->
     <link name="index_finger_knuckle">
-        <!-- <visual>
+        <visual>
             <origin rpy="0 0 0" xyz="0 0 0.0005"/>
             <geometry name="index_finger_knuckle_visual">
                 <mesh filename="../shadow_hand/meshes/visual/knuckle.dae"/>
             </geometry>
-        </visual> -->
+        </visual>
         <!-- <collision>
             <origin rpy="0 0 0" xyz="0 0 0.0005"/>
             <geometry name="index_finger_knuckle_collision">
@@ -186,13 +181,13 @@
 
     <link name="index_finger_proximal">
         <visual>
-            <!-- <geometry name="index_finger_proximal_visual">
+            <geometry name="index_finger_proximal_visual">
                 <mesh filename="../shadow_hand/meshes/visual/finger_proximal.dae"/>
-            </geometry> -->
-            <origin rpy="0 0 0" xyz="0 0 0.015"/>
+            </geometry>
+            <!-- <origin rpy="0 0 0" xyz="0 0 0.015"/>
             <geometry name="index_finger_proximal_visual">
                 <capsule length="0.02" radius="0.009"/>
-            </geometry>
+            </geometry> -->
         </visual>
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0.015"/>
@@ -209,10 +204,13 @@
 
     <link name="index_finger_middle">
         <visual>
-            <origin rpy="0 0 0" xyz="0 0 0.011"/>
+            <geometry name="index_finger_middle_visual">
+                <mesh filename="../shadow_hand/meshes/visual/finger_middle.dae"/>
+            </geometry>
+            <!-- <origin rpy="0 0 0" xyz="0 0 0.011"/>
             <geometry name="index_finger_middle_visual">
                 <capsule length="0.016" radius="0.008"/>
-            </geometry>
+            </geometry> -->
         </visual>
         <collision>
             <!-- <geometry name="index_finger_middle_collision">
@@ -232,13 +230,13 @@
 
     <link name="index_finger_distal">
         <visual>
-            <!-- <geometry name="index_finger_distal_visual">
+            <geometry name="index_finger_distal_visual">
                 <mesh filename="../shadow_hand/meshes/visual/finger_distal.dae"/>
-            </geometry> -->
-            <origin rpy="0 0 0" xyz="0 0 0.017"/>
+            </geometry>
+            <!-- <origin rpy="0 0 0" xyz="0 0 0.017"/>
             <geometry name="index_finger_distal_visual">
                 <capsule length="0.009" radius="0.008"/>
-            </geometry>
+            </geometry> -->
         </visual>
         <collision>
             <!-- <geometry name="index_finger_distal_collision">
@@ -292,12 +290,12 @@
 
     <!-- Middle Finger Links -->
     <link name="middle_finger_knuckle">
-        <!-- <visual>
+        <visual>
             <origin rpy="0 0 0" xyz="0 0 0.0005"/>
             <geometry name="middle_finger_knuckle_visual">
                 <mesh filename="../shadow_hand/meshes/visual/knuckle.dae"/>
             </geometry>
-        </visual> -->
+        </visual>
         <!-- <collision>
             <origin rpy="0 0 0" xyz="0 0 0.0005"/>
             <geometry name="middle_finger_knuckle_collision">
@@ -313,13 +311,13 @@
 
     <link name="middle_finger_proximal">
         <visual>
-            <!-- <geometry name="middle_finger_proximal_visual">
+            <geometry name="middle_finger_proximal_visual">
                 <mesh filename="../shadow_hand/meshes/visual/finger_proximal.dae"/>
-            </geometry> -->
-            <origin rpy="0 0 0" xyz="0 0 0.016"/>
+            </geometry>
+            <!-- <origin rpy="0 0 0" xyz="0 0 0.016"/>
             <geometry name="middle_finger_proximal_visual">
                 <capsule length="0.021" radius="0.009"/>
-            </geometry>
+            </geometry> -->
         </visual>
         <collision>
             <!-- <geometry name="middle_finger_proximal_collision">
@@ -339,13 +337,13 @@
 
     <link name="middle_finger_middle">
         <visual>
-            <!-- <geometry name="middle_finger_middle_visual">
+            <geometry name="middle_finger_middle_visual">
                 <mesh filename="../shadow_hand/meshes/visual/finger_middle.dae"/>
-            </geometry> -->
-            <origin rpy="0 0 0" xyz="0 0 0.012"/>
+            </geometry>
+            <!-- <origin rpy="0 0 0" xyz="0 0 0.012"/>
             <geometry name="middle_finger_middle_visual">
                 <capsule length="0.017" radius="0.008"/>
-            </geometry>
+            </geometry> -->
         </visual>
         <collision>
             <!-- <geometry name="middle_finger_middle_collision">
@@ -365,13 +363,13 @@
 
     <link name="middle_finger_distal">
         <visual>
-            <!-- <geometry name="middle_finger_distal_visual">
+            <geometry name="middle_finger_distal_visual">
                 <mesh filename="../shadow_hand/meshes/visual/finger_distal.dae"/>
-            </geometry> -->
-            <origin rpy="0 0 0" xyz="0 0 0.017"/>
+            </geometry>
+            <!-- <origin rpy="0 0 0" xyz="0 0 0.017"/>
             <geometry name="middle_finger_distal_visual">
                 <capsule length="0.009" radius="0.008"/>
-            </geometry>
+            </geometry> -->
         </visual>
         <collision>
             <!-- <geometry name="middle_finger_distal_collision">
@@ -425,12 +423,12 @@
 
     <!-- Ring Finger Links -->
     <link name="ring_finger_knuckle">
-        <!-- <visual>
+        <visual>
             <origin rpy="0 0 0" xyz="0 0 0.0005"/>
             <geometry name="ring_finger_knuckle_visual">
                 <mesh filename="../shadow_hand/meshes/visual/knuckle.dae"/>
             </geometry>
-        </visual> -->
+        </visual>
         <!-- <collision>
             <origin rpy="0 0 0" xyz="0 0 0.0005"/>
             <geometry name="ring_finger_knuckle_collision">
@@ -446,13 +444,13 @@
 
     <link name="ring_finger_proximal">
         <visual>
-            <!-- <geometry name="ring_finger_proximal_visual">
+            <geometry name="ring_finger_proximal_visual">
                 <mesh filename="../shadow_hand/meshes/visual/finger_proximal.dae"/>
-            </geometry> -->
-            <origin rpy="0 0 0" xyz="0 0 0.015"/>
+            </geometry>
+            <!-- <origin rpy="0 0 0" xyz="0 0 0.015"/>
             <geometry name="ring_finger_proximal_visual">
                 <capsule length="0.01" radius="0.009"/>
-            </geometry>
+            </geometry> -->
         </visual>
         <collision>
             <origin rpy="0 0 0" xyz="0 0 0.015"/>
@@ -469,13 +467,13 @@
 
     <link name="ring_finger_middle">
         <visual>
-            <!-- <geometry name="ring_finger_middle_visual">
+            <geometry name="ring_finger_middle_visual">
                 <mesh filename="../shadow_hand/meshes/visual/finger_middle.dae"/>
-            </geometry> -->
-            <origin rpy="0 0 0" xyz="0 0 0.011"/>
+            </geometry>
+            <!-- <origin rpy="0 0 0" xyz="0 0 0.011"/>
             <geometry name="ring_finger_middle_visual">
                 <capsule length="0.016" radius="0.008"/>
-            </geometry>
+            </geometry> -->
         </visual>
         <collision>
             <!-- <geometry name="ring_finger_middle_collision">
@@ -495,13 +493,13 @@
 
     <link name="ring_finger_distal">
         <visual>
-            <!-- <geometry name="ring_finger_distal_visual">
+            <geometry name="ring_finger_distal_visual">
                 <mesh filename="../shadow_hand/meshes/visual/finger_distal.dae"/>
-            </geometry> -->
-            <origin rpy="0 0 0" xyz="0 0 0.017"/>
+            </geometry>
+            <!-- <origin rpy="0 0 0" xyz="0 0 0.017"/>
             <geometry name="ring_finger_distal_visual">
                 <capsule length="0.009" radius="0.008"/>
-            </geometry>
+            </geometry> -->
         </visual>
         <collision>
             <!-- <geometry name="ring_finger_distal_collision">
@@ -555,11 +553,11 @@
 
     <!-- Little Finger Links -->
     <link name="little_finger_metacarpal">
-        <!-- <visual>
+        <visual>
             <geometry name="little_finger_metacarpal_visual">
                 <mesh filename="../shadow_hand/meshes/visual/metacarpal.dae"/>
             </geometry>
-        </visual> -->
+        </visual>
         <!-- <collision>
             <geometry name="little_finger_metacarpal_collision">
                 <mesh filename="../shadow_hand/meshes/collision/metacarpal.stl"/>
@@ -573,12 +571,12 @@
     </link>
 
     <link name="little_finger_knuckle">
-        <!-- <visual>
+        <visual>
             <origin rpy="0 0 0" xyz="0 0 0.0005"/>
             <geometry name="little_finger_knuckle_visual">
                 <mesh filename="../shadow_hand/meshes/visual/knuckle.dae"/>
             </geometry>
-        </visual> -->
+        </visual>
         <!-- <collision>
             <origin rpy="0 0 0" xyz="0 0 0.0005"/>
             <geometry name="little_finger_knuckle_collision">
@@ -594,13 +592,13 @@
 
     <link name="little_finger_proximal">
         <visual>
-            <!-- <geometry name="little_finger_proximal_visual">
+            <geometry name="little_finger_proximal_visual">
                 <mesh filename="../shadow_hand/meshes/visual/finger_proximal.dae"/>
-            </geometry> -->
-            <origin rpy="0 0 0" xyz="0 0 0.015"/>
+            </geometry>
+            <!-- <origin rpy="0 0 0" xyz="0 0 0.015"/>
             <geometry name="little_finger_proximal_visual">
                 <capsule length="0.01" radius="0.009"/>
-            </geometry>
+            </geometry> -->
         </visual>
         <!-- <collision>
             <origin rpy="0 0 0" xyz="0 0 0.015"/>
@@ -617,13 +615,13 @@
 
     <link name="little_finger_middle">
         <visual>
-            <!-- <geometry name="little_finger_middle_visual">
+            <geometry name="little_finger_middle_visual">
                 <mesh filename="../shadow_hand/meshes/visual/finger_middle.dae"/>
-            </geometry> -->
-            <origin rpy="0 0 0" xyz="0 0 0.011"/>
+            </geometry>
+            <!-- <origin rpy="0 0 0" xyz="0 0 0.011"/>
             <geometry name="little_finger_middle_collision">
                 <capsule length="0.016" radius="0.008"/>
-            </geometry>
+            </geometry> -->
         </visual>
         <collision>
             <!-- <geometry name="little_finger_middle_collision">
@@ -643,13 +641,13 @@
 
     <link name="little_finger_distal">
         <visual>
-            <!-- <geometry name="little_finger_distal_visual">
+            <geometry name="little_finger_distal_visual">
                 <mesh filename="../shadow_hand/meshes/visual/finger_distal.dae"/>
-            </geometry> -->
-            <origin rpy="0 0 0" xyz="0 0 0.017"/>
+            </geometry>
+            <!-- <origin rpy="0 0 0" xyz="0 0 0.017"/>
             <geometry name="little_finger_distal_collision">
                 <capsule length="0.009" radius="0.008"/>
-            </geometry>
+            </geometry> -->
         </visual>
         <collision>
             <!-- <geometry name="little_finger_distal_collision">

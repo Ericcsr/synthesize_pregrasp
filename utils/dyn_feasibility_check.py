@@ -8,12 +8,14 @@ import open3d as o3d
 import os
 import cvxpy as cp
 from tqdm import tqdm
-
+import pytorch_kinematics as pk
+import torch
+from itertools import combinations
 MIN_NORMAL_FORCE = {
     3:1.0,
     4:1000.0}
 MIN_DISTANCE_BETWEEN_FINGER = 0.03 # Should differ task from task
-DEFAULT_FRICTION_COEFF = 20.0
+DEFAULT_FRICTION_COEFF = 1
 
 def get_screw_symmetric(v):
     return np.array([[0, -v[2], v[1]],
@@ -118,6 +120,121 @@ def check_dyn_feasible_parallel(contact_points, contact_normals, tol=1e-4, num_p
     for result in results:
         if not (result is None):
             return result
+
+def project2norm(v, n):
+    return v.dot(n)/(np.linalg.norm(n)**2)*n
+
+def check_in_triangle(vertices, point):
+    res0 = np.cross(vertices[1] - vertices[0], point-vertices[0])
+    res1 = np.cross(vertices[2] - vertices[1], point-vertices[1])
+    res2 = np.cross(vertices[0] - vertices[2], point-vertices[2])
+    c1 = res0.dot(res1)
+    c2 = res0.dot(res2)
+    if (c1>0 and c2>0) or (c1<0 and c1<0):
+        return True
+    else:
+        return False
+
+def check_sign_change(vectors, vertices):
+    center = (vertices[0] + vertices[1] + vertices[2])/3
+    prev_c = None
+    for i in range(len(vertices)):
+        r = vertices[i] - center
+        c1 = np.cross(r, vectors[2*i])
+        c2 = np.cross(r, vectors[2*i+1])
+        if prev_c is None:
+            prev_c = c1
+        if prev_c.dot(c1) < 0 or c1.dot(c2) < 0:
+            return True
+        else:
+            prev_c = c2
+    return False       
+
+def simple_check_dyn_feasible_3p(contact_points, contact_normals):
+    v1 = contact_points[1] - contact_points[0]
+    v2 = contact_points[2] - contact_points[0]
+    n = np.cross(v1,v2)
+    if np.linalg.norm(n) < 1e-4: # 2cm2
+        return False
+    n /= np.linalg.norm(n) # Normalized normal vector
+    # Project every norm on to plane, assume vectors in contact_normals are normal vector
+    pj_n0 = project2norm(contact_normals[0], n)
+    pj_n1 = project2norm(contact_normals[1], n)
+    pj_n2 = project2norm(contact_normals[2], n)
+
+    # Project on plane
+    pj_p0 = contact_normals[0] - pj_n0
+    pj_p1 = contact_normals[1] - pj_n1
+    pj_p2 = contact_normals[2] - pj_n2
+
+    if np.linalg.norm(pj_n0) / np.linalg.norm(pj_p0) > DEFAULT_FRICTION_COEFF:
+        return False
+    elif np.linalg.norm(pj_n1) / np.linalg.norm(pj_p1) > DEFAULT_FRICTION_COEFF:
+        return False
+    elif np.linalg.norm(pj_n2) / np.linalg.norm(pj_p2) > DEFAULT_FRICTION_COEFF:
+        return False
+
+    temp0 = np.linalg.norm(contact_normals[0]) / np.linalg.norm(pj_p0) * np.linalg.norm(pj_n0)
+    temp1 = np.linalg.norm(contact_normals[1]) / np.linalg.norm(pj_p1) * np.linalg.norm(pj_n1)
+    temp2 = np.linalg.norm(contact_normals[2]) / np.linalg.norm(pj_p2) * np.linalg.norm(pj_n2)
+
+    mu = DEFAULT_FRICTION_COEFF
+    angle0 = np.arctan(np.sqrt(mu**2-temp0**2) / np.sqrt(temp0**2+np.linalg.norm(contact_normals[0])**2))
+    angle1 = np.arctan(np.sqrt(mu**2-temp1**2) / np.sqrt(temp1**2+np.linalg.norm(contact_normals[1])**2))
+    angle2 = np.arctan(np.sqrt(mu**2-temp2**2) / np.sqrt(temp2**2+np.linalg.norm(contact_normals[2])**2))
+
+    # Rotate via axis angle
+    pj_p0 = pj_p0 / np.linalg.norm(pj_p0)
+    pj_p1 = pj_p1 / np.linalg.norm(pj_p1)
+    pj_p2 = pj_p2 / np.linalg.norm(pj_p2)
+
+    cone00 = pk.quaternion_apply(pk.axis_angle_to_quaternion(torch.from_numpy(n*angle0)),torch.from_numpy(pj_p0)).numpy()
+    cone01 = pk.quaternion_apply(pk.axis_angle_to_quaternion(torch.from_numpy(-n*angle0)),torch.from_numpy(pj_p0)).numpy()
+    cone10 = pk.quaternion_apply(pk.axis_angle_to_quaternion(torch.from_numpy(n*angle1)),torch.from_numpy(pj_p1)).numpy()
+    cone11 = pk.quaternion_apply(pk.axis_angle_to_quaternion(torch.from_numpy(-n*angle1)),torch.from_numpy(pj_p1)).numpy()
+    cone20 = pk.quaternion_apply(pk.axis_angle_to_quaternion(torch.from_numpy(n*angle2)),torch.from_numpy(pj_p2)).numpy()
+    cone21 = pk.quaternion_apply(pk.axis_angle_to_quaternion(torch.from_numpy(-n*angle2)),torch.from_numpy(pj_p2)).numpy()
+    origin = np.zeros(3)
+    vectors = [cone00,cone01,cone10,cone11,cone20,cone21]
+    # Criteria for force closure
+    if check_in_triangle([cone00,cone10,cone20],origin):
+        pass
+    elif check_in_triangle([cone00,cone11,cone20],origin):
+        pass
+    elif check_in_triangle([cone00,cone10,cone21],origin):
+        pass
+    elif check_in_triangle([cone00,cone11,cone21],origin):
+        pass
+    elif check_in_triangle([cone01,cone10,cone20],origin):
+        pass
+    elif check_in_triangle([cone01,cone11,cone20],origin):
+        pass
+    elif check_in_triangle([cone01,cone10,cone21],origin):
+        pass
+    elif check_in_triangle([cone01,cone11,cone21],origin):
+        pass
+    else:
+        return False
+
+    # Criteria for torque closure
+    
+    if check_sign_change(vectors, contact_points):
+        return True
+    else:
+        return False
+    
+def simple_check_dyn_feasible(contact_points, contact_normals):
+    if len(contact_points)==3:
+        return simple_check_dyn_feasible_3p(contact_points, contact_normals)
+    else:
+        comb = combinations(list(range(len(contact_points))),3)
+        for c in list(comb):
+            c = list(c)
+            if simple_check_dyn_feasible_3p(contact_points[c],contact_normals[c]):
+                return True
+        return False
+    
+    
 
 def find_dynamically_feasible_contacts(point_cloud, tol=1e-4, num_procs=10, n_contacts=3):
     '''

@@ -38,7 +38,7 @@ from neurals.distancefield_utils import create_bookshelf_df
 from neurals.NPGraspNet import NPGraspNet
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-CLEARANCE_H = 0.005
+CLEARANCE_H = 0.01
 
 class BookShelfBulletEnv(gym.Env):
     metadata = {'render.modes': ['human', 'rgb_array'], 'video.frames_per_second': 50}
@@ -192,14 +192,18 @@ class BookShelfBulletEnv(gym.Env):
         self.pcd_kd_tree = o3d.geometry.KDTreeFlann(self.pcd_obj)
         
         # Create two walls:
-        self.w1_id = rb.create_primitive_shape(self._p, 1.0, pybullet.GEOM_BOX, (0.2, 0.2, 0.05),         # half-extend
-                                              color=(0.0, 0.6, 0, 0.8), collidable=True,
+        self.w1_id = rb.create_primitive_shape(self._p, 0, pybullet.GEOM_BOX, (0.2, 0.2, 0.05),         # half-extend
+                                              color=(0.0, 0.6, 0, 1), collidable=True,
                                               init_xyz=[0, 0.11, 0.2],
                                               init_quat=[0.7071068, 0, 0, 0.7071068])
 
-        self.w2_id = rb.create_primitive_shape(self._p, 1.0, pybullet.GEOM_BOX, (0.2, 0.2, 0.05),         # half-extend
-                                              color=(0., 0.6, 0, 0.8), collidable=True,
+        self.w2_id = rb.create_primitive_shape(self._p, 0, pybullet.GEOM_BOX, (0.2, 0.2, 0.05),         # half-extend
+                                              color=(0., 0.6, 0, 1), collidable=True,
                                               init_xyz=[0, -0.11, 0.2],
+                                              init_quat=[0.7071068, 0, 0, 0.7071068])
+        self.w3_id = rb.create_primitive_shape(self._p, 0, pybullet.GEOM_BOX, (0.05, 0.2, 0.2),         # half-extend
+                                              color=(0., 0.6, 0, 1), collidable=True,
+                                              init_xyz=[-0.28, 0, 0.2],
                                               init_quat=[0.7071068, 0, 0, 0.7071068])
         self.wall_size = np.array([0.2, 0.2, 0.05])
         
@@ -482,7 +486,7 @@ class BookShelfBulletEnv(gym.Env):
                 df = None
 
             pcd_obj.translate(-pos)
-            pcd_obj.rotate(rot_matrix.T)
+            pcd_obj.rotate(rot_matrix.T, center=[0.0, 0.0, 0.0])
 
             ave_score = 0
             if self.mode == "only_score":
@@ -501,13 +505,13 @@ class BookShelfBulletEnv(gym.Env):
             pos = np.array(pos_1)
             quat = np.array(quat_1)
             rot_matrix = convert_q_bullet_to_matrix(quat)
-            pcd_obj = copy.deepcopy(self.pcd_obj).rotate(rot_matrix)
+            pcd_obj = copy.deepcopy(self.pcd_obj).rotate(rot_matrix, center=[0.0, 0.0, 0.0])
             pcd_obj.translate(pos)
             
             # Remove all parts in occlusion
             pcd_obj = self.deocclude(pcd_obj)
             pcd_obj.translate(-pos)
-            pcd_obj.rotate(rot_matrix.T)
+            pcd_obj.rotate(rot_matrix.T, center=[0.0, 0.0, 0.0])
             return pcd_obj
 
         # Apply constraints on new contact points..
@@ -688,8 +692,8 @@ class BookShelfBulletEnv(gym.Env):
                                                   max_bound = np.array([0.205, 0.045, 100])))
         self.bounding_boxes.append(o3d.geometry.AxisAlignedBoundingBox(min_bound = np.array([0.205, -100, 0.005]),
                                                   max_bound = np.array([100, 100, 100])))
-        self.bounding_boxes.append(o3d.geometry.AxisAlignedBoundingBox(min_bound = np.array([-100, -100, 0.005]),
-                                                  max_bound = np.array([-0.205, 100, 100])))
+        # self.bounding_boxes.append(o3d.geometry.AxisAlignedBoundingBox(min_bound = np.array([-100, -100, 0.005]),
+        #                                           max_bound = np.array([-0.205, 100, 100])))
     
     def deocclude(self, pcd):
         pcd_points = []

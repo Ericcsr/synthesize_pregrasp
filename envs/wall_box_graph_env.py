@@ -174,8 +174,8 @@ class WallBoxBulletEnv(gym.Env):
 
         self.floor_id = self._p.loadURDF(os.path.join(currentdir, 'assets/plane.urdf'), [0, 0, 0.0], useFixedBase=1)
 
-        # TODO: Eric: Add a wall
-        self.wall_id = rb.create_primitive_shape(self._p, 1.0, pybullet.GEOM_BOX, (0.1, 2.0, 0.5),
+        # TODO: Eric: Add a wall Mass is 0 means attached
+        self.wall_id = rb.create_primitive_shape(self._p, 0, pybullet.GEOM_BOX, (0.1, 2.0, 0.5),
                                                  color = (0.5, 0.5, 0.5, 0.8), collidable=True,
                                                  init_xyz = np.array([-0.3, 0, 0.5]),
                                                  init_quat = np.array([0, 0, 0, 1]))
@@ -202,9 +202,11 @@ class WallBoxBulletEnv(gym.Env):
 
         # TODO: (Eric) Tune the friction, friction should be lower than previous case.
         self._p.changeDynamics(self.floor_id, -1,
-                               lateralFriction=20.0, restitution=0.0)            # TODO
+                               lateralFriction=10.0, restitution=0.0)            # TODO
         self._p.changeDynamics(self.o_id, -1,
-                               lateralFriction=20.0, restitution=0.0)             # TODO
+                               lateralFriction=10.0, restitution=0.0)             # TODO
+        self._p.changeDynamics(self.wall_id, -1, 
+                               lateralFriction=10.0, restitution=0.0)
 
         self.tip_ids = []
         colors = [[1.0, 1.0, 1.0, 1.0],[0.0, 0.0, 1.0, 1.0],[0.0, 1.0, 0.0, 1.0],[1.0, 0.0, 0.0, 1.0]]
@@ -693,6 +695,3 @@ class WallBoxBulletEnv(gym.Env):
         points = np.asarray(pcd.points)
         df = self.dist_field_env.get_points_distance(points)
         return df
-
-        
-

@@ -14,34 +14,48 @@ class SmallDataset(torch.utils.data.dataset.Dataset):
     def __init__(self, positive_grasp_folder="good_grasps", 
                        point_clouds=["pose_0_pcd", "pose_1_pcd", "pose_2_pcd", "pose_3_pcd", "pose_4_pcd"], 
                        negative_grasp_folder=None):
+        self.point_clouds = []
+        self.point_normals = []
+        pose_index = []
+        for point_cloud in point_clouds:
+            pose_index.append(int(point_cloud[5]))
+            pcd = o3d.io.read_point_cloud(f"data/hard_code_point_cloud/{point_cloud}.ply")
+            pcd_np = np.asarray(pcd.points)
+            normal_np = np.asarray(pcd.normals)
+            if pcd_np.shape[0] < 1024:
+                print(pcd_np.shape[0],point_cloud)
+                assert(False)
+            idx = np.random.choice(pcd_np.shape[0], 1024, replace=False)
+            self.point_clouds.append(pcd_np[idx])
+            self.point_normals.append(normal_np[idx])
+
         self.positive_grasps = []
         self.positive_pcd_mapping = []
         positive_grasp_files = os.listdir(f"data/{positive_grasp_folder}/")
         positive_grasp_files.sort(key=lambda x: int(x[5]))
-        for i,positive_grasp_file in enumerate(positive_grasp_files):
+        positive_files = []
+        for positive_grasp_file in positive_grasp_files:
+            if int(positive_grasp_file[5]) in pose_index:
+                positive_files.append(positive_grasp_file)
+        for i,positive_grasp_file in enumerate(positive_files):
             self.positive_grasps.append(np.load(f"data/{positive_grasp_folder}/{positive_grasp_file}")[:,:,:3])
             self.positive_pcd_mapping += [i] * len(self.positive_grasps[-1])
-        
-        if not(negative_grasp_folder is None):
+
+        if negative_grasp_folder is not None:
             self.negative_grasps = []
             self.negative_pcd_mapping = []
             negative_grasp_files = os.listdir(f"data/{negative_grasp_folder}")
             negative_grasp_files.sort(key=lambda x: int(x[5]))
-            for i, negative_grasp_file in enumerate(negative_grasp_files):
+            negative_files = []
+            for negative_grasp_file in negative_grasp_files:
+                if int(negative_grasp_file[5]) in pose_index:
+                    negative_files.append(negative_grasp_file)
+            for i, negative_grasp_file in enumerate(negative_files):
                 self.negative_grasps.append(np.load(f"data/{negative_grasp_folder}/{negative_grasp_file}")[:,:,:3])
                 self.negative_pcd_mapping += [i] * len(self.negative_grasps[-1])
         
-        self.point_clouds = []
-        self.point_normals = []
-        for point_cloud in point_clouds:
-            pcd = o3d.io.read_point_cloud(f"data/hard_code_point_cloud/{point_cloud}.ply")
-            pcd_np = np.asarray(pcd.points)
-            normal_np = np.asarray(pcd.normals)
-            assert(pcd_np.shape[0] > 1024)
-            idx = np.random.choice(pcd_np.shape[0], 1024, replace=False)
-            self.point_clouds.append(pcd_np[idx])
-            self.point_normals.append(normal_np[idx])
-        if not(negative_grasp_folder is None):
+        
+        if negative_grasp_folder is not None:
             self.grasps = np.concatenate(self.positive_grasps+self.negative_grasps, axis=0)
             self.pcd_mapping = np.array(self.positive_pcd_mapping+self.negative_pcd_mapping)
             self.labels = np.array([1]*len(self.positive_pcd_mapping)+[0]*len(self.negative_pcd_mapping))
@@ -50,6 +64,7 @@ class SmallDataset(torch.utils.data.dataset.Dataset):
             self.pcd_mapping = np.array(self.positive_pcd_mapping)
             self.labels = np.array([1]*len(self.grasps))
         self.grasps = self.grasps.reshape(len(self.grasps),-1)
+        print(self.grasps.shape)
         self.point_clouds = np.asarray(self.point_clouds)
     
     def __len__(self):

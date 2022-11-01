@@ -8,7 +8,7 @@ allegro_hand_urdf_path     = 'model/resources/allegro_hand_description/urdf/alle
 allegro_arm_urdf_path = 'model/resources/allegro_hand_description/urdf/allegro_arm.urdf'
 
 shadow_hand_urdf_path = "model/resources/shadow_hand_description/urdf/shadow_hand.urdf"
-shadow_hand_urdf_collision_path = "model/resources/shadow_hand_description/urdf/shadow_hand_collision.urdf"
+shadow_hand_urdf_collision_path = "model/resources/shadow_hand_description/urdf/shadow_hand_collision_.urdf"
 
 # Offset for counting joints for fingers
 allegro_hand_offset = 0
@@ -17,7 +17,7 @@ shadow_hand_offset = 2
 # allegro_base_inertia_offset = -0.0475
 # allegro_base_collision_offset = 0.0475
 gravity_vector = [0., 0., -9.8]
-object_padding = 0.01  # Radius of the finger
+object_padding = 0.005  # Radius of the finger
 
 force_closure_regularization_weight = 0.05
 min_finger_normal = 0.1
@@ -26,7 +26,8 @@ SCALE = 0.6
 POINT_NUM=20000
 MAX_FORCE=80
 CONTROL_SKIP=50
-ALLOWANCE=0.05
+ALLOWANCE=0.03
+ROOT_RANGE=1.0
 
 HAS_FLOOR=False
 
@@ -71,7 +72,7 @@ drake_ycb_objects = {
     "006_mustard_bottle": "base_link_mustard",
     "009_gelatin_box": "base_link_gelatin",
     "010_potted_meat_can": "base_link_meat",
-    "naive_box":"manipulated_object"
+    "naive_box": "manipulated_object"
 }
 
 drake_mesh_sdf_pose = {
@@ -139,8 +140,7 @@ NameToShadowFingerIndex = {
 
 ActiveAllegroHandFingers =[AllegroHandFinger.THUMB,
                            AllegroHandFinger.INDEX,
-                           AllegroHandFinger.MIDDLE,
-                           AllegroHandFinger.RING]
+                           AllegroHandFinger.MIDDLE]
 
 ActiveShadowHandFingers = [ShadowHandFinger.THUMB,
                            ShadowHandFinger.INDEX,

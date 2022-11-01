@@ -14,10 +14,11 @@ def main():
         import wandb
         wandb.init()
         wandb.config.update(opt)
-    model = dgn.DexGraspNetModel(opt, pred_base=False,pred_fingers=[2], extra_cond_fingers=[0,1], gpu_id=0)
-    full_dataset = neurals.dataset.SmallDataset(positive_grasp_folder="seeds/grasps",
-                                                point_clouds=["pose_0_pcd", "pose_1_pcd", "pose_2_pcd", "pose_3_pcd",
-                                                              "pose_4_pcd", "pose_5_pcd", "pose_6_pcd", "pose_7_pcd"])
+    model = dgn.DexGraspNetModel(opt, pred_base=False,pred_fingers=[0,2,3,4], extra_cond_fingers=[1], gpu_id=0)
+    full_dataset = neurals.dataset.SmallDataset(positive_grasp_folder="seeds_full/grasps",
+                                                point_clouds=["pose_0_pcd","pose_1_pcd","pose_2_pcd","pose_3_pcd",
+                                                              "pose_4_pcd","pose_5_pcd","pose_6_pcd","pose_7_pcd",
+                                                              "pose_8_pcd"])
 
     # Split the dataset
     dataset_size = len(full_dataset)

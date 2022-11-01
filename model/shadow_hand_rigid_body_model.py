@@ -1,10 +1,9 @@
 import os
+from typing import Dict
 import numpy as np
 import model.param as model_param
 from model.param import *
 import model.manipulation.scenario as scenario
-import copy
-import open3d as o3d
 
 ########## Drake stuff ##########
 import pydrake 
@@ -40,7 +39,7 @@ class ShadowHandPlantDrake:
             drake_object_path = FindResourceOrThrow(object_path)
             parser.AddModelFromFile(drake_object_path)
         elif not (object_creator is None):
-            object_creator(self.plant, has_floor=model_param.HAS_FLOOR)
+            object_creator(self.plant)
         else:
             scenario.AddShape(self.plant, Box(0.2 * 2, 0.2 * 2, 0.05 * 2),
                 object_base_link_name, collidable=True, color=(0.6,0,0,0.8))
@@ -221,33 +220,30 @@ class ShadowHandPlantDrake:
         ik = InverseKinematics(self.plant, plant_context)
         unused_fingers = set(ActiveShadowHandFingers)
         constraints_on_finger = {}
-        desired_positions = {}
+        desired_positions = get_desired_position(finger_tip_poses, padding, has_normals)
 
         finger_map = [ShadowHandFinger.THUMB, 
                       ShadowHandFinger.INDEX, 
                       ShadowHandFinger.MIDDLE, 
                       ShadowHandFinger.RING]
+        if len(finger_tip_poses)==5:
+            finger_map.append(ShadowHandFinger.LITTLE)
         for i, finger in enumerate(finger_map):
             contact_position = np.squeeze(finger_tip_poses[i, :3])
             if contact_position[0] > 50:
                 desired_positions[finger] = np.array([100., 100., 100.])
                 continue
-            if has_normals:
-                contact_normal = finger_tip_poses[i, 3:]
-                contact_normal /= np.linalg.norm(contact_normal)
-                desired_position = contact_position + contact_normal * padding
-            else:
-                desired_position = contact_position
-            desired_positions[finger] = desired_position
             constraints_on_finger[finger] = [ik.AddPositionConstraint(
                 self.fingertip_frames[finger],
                 np.zeros(3),
                 self.plant.world_frame(),
-                desired_position-allowed_deviation,
-                desired_position+allowed_deviation
+                desired_positions[finger]-allowed_deviation,
+                desired_positions[finger]+allowed_deviation
             )]
             # Add angle constraints
             if has_normals:
+                contact_normal = finger_tip_poses[i, 3:]
+                contact_normal /= np.linalg.norm(contact_normal)
                 constraints_on_finger[finger].append(ik.AddAngleBetweenVectorsConstraint(self.plant.world_frame(),
                                                  contact_normal,
                                                  self.fingertip_frames[finger],
@@ -277,3 +273,28 @@ class ShadowHandPlantDrake:
         return ik, constraints_on_finger, collision_constr, desired_positions
 
     
+def get_desired_position(finger_tip_poses, padding, has_normals)->Dict:
+    """
+    finger_tip_poses: dictionary of finger tip poses expressed in world coordinate
+    return a dictionary of modified tip position in the world coordinate
+    """
+    desired_positions = {}
+    finger_map = [ShadowHandFinger.THUMB, 
+                    ShadowHandFinger.INDEX, 
+                    ShadowHandFinger.MIDDLE, 
+                    ShadowHandFinger.RING]
+    if len(finger_tip_poses)==5:
+        finger_map.append(ShadowHandFinger.LITTLE)
+    for i, finger in enumerate(finger_map):
+        contact_position = np.squeeze(finger_tip_poses[i, :3])
+        if contact_position[0] > 50:
+            desired_positions[finger] = np.array([100., 100., 100.])
+            continue
+        if has_normals:
+            contact_normal = finger_tip_poses[i, 3:].copy()
+            contact_normal /= np.linalg.norm(contact_normal)
+            desired_position = contact_position + contact_normal * padding
+        else:
+            desired_position = contact_position
+        desired_positions[finger] = desired_position
+    return desired_positions

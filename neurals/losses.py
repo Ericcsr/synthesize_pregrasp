@@ -140,7 +140,8 @@ def base_pose_and_fingertip_positions_l1_loss(pred_control_points,
 
 def fingertip_positions_l1_loss(pred_control_points, gt_control_points, distance_weight=None):
     # Control points is a single dense vector of flatten finger tip pose.
-    fingertip_position_err = torch.mean(torch.abs(pred_control_points - gt_control_points), -1)
+    #print(pred_control_points[0],gt_control_points[0])
+    fingertip_position_err = torch.norm(pred_control_points - gt_control_points,dim=1)
     return torch.mean(distance_weight[0]*fingertip_position_err)
 
 def classification_with_confidence_loss(pred_logit,

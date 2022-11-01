@@ -14,5 +14,5 @@ num_rest_pose_initial_orn=10
 rest_pose_drop_height=0.25
 min_pc_point_height=0.015
 min_dist_between_fingers=0.03
-hand_ik_initial_guess_height=0.4
-ik_attempts=5
+hand_ik_initial_guess_height=0.6
+ik_attempts=8

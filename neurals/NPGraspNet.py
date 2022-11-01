@@ -21,7 +21,7 @@ class NPGraspNet(nn.Module):
         self.num_pred_fingers = len(pred_fingers)
         self.num_extra_fingers = len(extra_cond_fingers)
         self.device = torch.device(device)
-        self.gpu_id = int(device[-1]) if device != "cpu" else -1
+        self.gpu_id = 0
         self.mode = mode
         assert(self.mode in ["only_score", "decoder", "full"])
         
@@ -92,7 +92,8 @@ class NPGraspNet(nn.Module):
         downsample_idx = np.random.choice(len(pcd_points), 1024, replace=False)
         pcd_points = pcd_points[downsample_idx]
         pcd_th = torch.from_numpy(pcd_points).view(1, -1, 3).cuda(device=self.gpu_id).float()
-        extra_cond_th = torch.from_numpy(extra_cond).view(1,-1).cuda(device=self.gpu_id).float()
+        print(extra_cond)
+        extra_cond_th = torch.from_numpy(extra_cond.flatten()).view(1,-1).contiguous().cuda(device=self.gpu_id).float()
         grasps = []
         for _ in range(num_grasps):
             latent = self.sample_latent(1)
@@ -142,7 +143,5 @@ class NPGraspNet(nn.Module):
 
     def get_latent_size(self):
         return self.dex_grasp_net.get_latent_size()
-        
-            
 
 

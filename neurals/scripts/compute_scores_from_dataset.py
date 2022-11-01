@@ -9,10 +9,10 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from utils.dyn_feasibility_check import check_dyn_feasible_parallel
+from utils.dyn_feasibility_check import simple_check_dyn_feasible
 from utils.kin_feasibility_check import check_kin_feasible_parallel
 
-NUM_NEIGHBORS = 3
+NUM_NEIGHBORS = 1
 
 # Here finger tips should include condition + result hence it is fine
 def parse_input(data):
@@ -54,6 +54,7 @@ def main():
     parser = TestOptions()
     parser.parser.add_argument("--num_samples", type=int, default=20)
     parser.parser.add_argument("--exp_name", type=str, default="")
+    parser.parser.add_argument("--hand_model",type=str, default="shadow")
     opt = parser.parse()
     opt = opt.__dict__
     opt["force_skip_load"] = False
@@ -64,7 +65,7 @@ def main():
     # Prepare dataset, should consist of both negative dataset and positive ones
     full_dataset = neurals.dataset.SmallDataset(positive_grasp_folder="seeds/grasps",
                                                 point_clouds = ["pose_0_pcd","pose_1_pcd","pose_2_pcd","pose_3_pcd",
-                                                                "pose_4_pcd","pose_5_pcd","pose_6_pcd","pose_7_pcd"],
+                                                                "pose_4_pcd","pose_5_pcd","pose_6_pcd","pose_7_pcd","pose_8_pcd"],
                                                 negative_grasp_folder="seeds/bad_grasps")
     train_loader = torch.utils.data.DataLoader(
         full_dataset, batch_size=1)
@@ -96,9 +97,9 @@ def main():
         # check dyn_feasibility and kin_feasibility of each grasps (no need for permutation)
         score = intrinsic_score
         for projected_grasp in projected_grasps:
-            if not (check_dyn_feasible_parallel(projected_grasp[0], projected_grasp[1], num_process=24) is None) \
+            if simple_check_dyn_feasible(projected_grasp[2], projected_grasp[3]) \
                 and check_kin_feasible_parallel(np.vstack([projected_grasp[2], np.array([100,100,100])]), 
-                                                np.vstack([projected_grasp[3], np.array([0., 0., 0.])]), num_process=24)[0]:
+                                                np.vstack([projected_grasp[3], np.array([0., 0., 0.])]), num_process=16, hand_model=opt["hand_model"])[0]:
                 score += 1
         print("Current score: ", score)
         scores.append(float(score)/opt['num_samples'])

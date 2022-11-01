@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.spatial.transform as tf
+import pyquaternion as pyq
 import pybullet as p
 import torch
 import pytorch_kinematics as pk
@@ -84,7 +85,6 @@ def animate_keyframe(o_id,
         if not (desired_positions is None):
             default_orn = [0, 0, 0, 1]
             obsolete_pos = [100, 100, 100]
-            
             for j, desired_position in enumerate(desired_positions[i]):
                 #print(desired_position)
                 if desired_position[0] < 50:
@@ -124,27 +124,75 @@ def animate_keyframe_states(o_id,
         else:
             input("Press Enter to continue")
             
-
-def animate(o_id, hand_id, object_poses, object_orns, joint_states, base_states=None, renderer=None, gif_name="default"):
+def animate(o_id, 
+            hand_id, 
+            object_poses, 
+            object_orns, 
+            joint_states, 
+            base_states=None, 
+            renderer=None, 
+            gif_name="default",
+            desired_positions=None,
+            tip_ids=None):
     # Should be full joint states
     if renderer is None:
-        for i in range(len(joint_states)):
-            p.resetBasePositionAndOrientation(o_id, object_poses[i], object_orns[i])
-            setStates(hand_id, joint_states[i])
-            if not (base_states is None):
-                p.resetBasePositionAndOrientation(hand_id, 
-                                                  base_states[i,:3],
-                                                  base_states[i,3:])
+        for i in range(len(joint_states)+5):
+            if i < len(joint_states):
+                p.resetBasePositionAndOrientation(o_id, object_poses[i], object_orns[i])
+                if hand_id != -1:
+                    setStates(hand_id, joint_states[i])
+            else:
+                p.resetBasePositionAndOrientation(o_id, object_poses[-1], object_orns[-1])
+                if hand_id != -1:
+                    setStates(hand_id, joint_states[-1])
+            if not (base_states is None) and hand_id != -1:
+                if i<len(joint_states):
+                    p.resetBasePositionAndOrientation(hand_id, 
+                                                      base_states[i,:3],
+                                                      base_states[i,3:])
+                else:
+                    p.resetBasePositionAndOrientation(hand_id, 
+                                                      base_states[-1,:3],
+                                                      base_states[-1,3:])
+            if not (desired_positions is None):
+                default_orn = [0, 0, 0, 1]
+                obsolete_pos = [100, 100, 100]
+                index = i if i<len(joint_states) else -1
+                for j, desired_position in enumerate(desired_positions[index]):
+                    if desired_position[0] < 50:
+                        p.resetBasePositionAndOrientation(tip_ids[j], desired_position[:3], default_orn)
+                    else:
+                        p.resetBasePositionAndOrientation(tip_ids[j], obsolete_pos, default_orn)
             time.sleep(30 * TS)
     else:
         with imageio.get_writer(f"data/video/{gif_name}.gif", mode="I") as writer:
-            for i in range(len(joint_states)):
-                p.resetBasePositionAndOrientation(o_id, object_poses[i], object_orns[i])
-                setStates(hand_id, joint_states[i])
-                if not base_states==None:
-                    p.resetBasePositionAndOrientation(hand_id, 
-                                                    base_states[i,:3], 
-                                                    base_states[i,3:])
+            for i in range(len(joint_states)+5):
+                if i < len(joint_states):
+                    p.resetBasePositionAndOrientation(o_id, object_poses[i], object_orns[i])
+                    if hand_id != -1:
+                        setStates(hand_id, joint_states[i])
+                else:
+                    p.resetBasePositionAndOrientation(o_id, object_poses[-1], object_orns[-1])
+                    if hand_id != -1:
+                        setStates(hand_id, joint_states[-1])
+                if base_states is not None and hand_id != -1:
+                    if i < len(joint_states):
+                        p.resetBasePositionAndOrientation(hand_id, 
+                                                        base_states[i,:3], 
+                                                        base_states[i,3:])
+                    else:
+                        p.resetBasePositionAndOrientation(hand_id,
+                                                        base_states[-1,:3],
+                                                        base_states[-1,3:])
+                if not (desired_positions is None):
+                    default_orn = [0, 0, 0, 1]
+                    obsolete_pos = [100, 100, 100]
+                    index = i if i < len(joint_states) else -1
+                    for j, desired_position in enumerate(desired_positions[index]):
+                        if desired_position[0] < 50:
+                            p.resetBasePositionAndOrientation(tip_ids[j], desired_position[:3], default_orn)
+                        else:
+                            p.resetBasePositionAndOrientation(tip_ids[j], obsolete_pos, default_orn)
                 time.sleep(30 * TS)
                 image = renderer.render()
                 writer.append_data(image)
@@ -161,6 +209,63 @@ def animate_states(o_id,hand_id, object_states, joint_states, base_states=None, 
         if not renderer == None:
             renderer.render()
 
+def animate_base(o_id, hand_id, object_poses,object_orns, base_states,fixed_joint_states,gif_name="default", desired_positions=None,tip_ids=None,renderer=None):
+    # Should be full joint states
+    if hand_id != -1:
+        setStates(hand_id, fixed_joint_states)
+    if renderer is None:
+        for i in range(len(object_poses)+50):
+            if i < len(object_poses):
+                p.resetBasePositionAndOrientation(o_id, object_poses[i], object_orns[i])
+            else:
+                p.resetBasePositionAndOrientation(o_id, object_poses[-1], object_orns[-1])
+            if base_states is not None and hand_id != -1:
+                if i<len(object_poses):
+                    p.resetBasePositionAndOrientation(hand_id, 
+                                                      base_states[i,:3],
+                                                      base_states[i,3:])
+                else:
+                    p.resetBasePositionAndOrientation(hand_id, 
+                                                      base_states[-1,:3],
+                                                      base_states[-1,3:])
+            if not (desired_positions is None):
+                default_orn = [0, 0, 0, 1]
+                obsolete_pos = [100, 100, 100]
+                index = i if i<len(object_poses) else -1
+                for j, desired_position in enumerate(desired_positions[index]):
+                    if desired_position[0] < 50:
+                        p.resetBasePositionAndOrientation(tip_ids[j], desired_position[:3], default_orn)
+                    else:
+                        p.resetBasePositionAndOrientation(tip_ids[j], obsolete_pos, default_orn)
+            time.sleep(30 * TS)
+    else:
+        with imageio.get_writer(f"data/video/{gif_name}.gif", mode="I") as writer:
+            for i in range(len(object_poses)+50):
+                if i < len(object_poses):
+                    p.resetBasePositionAndOrientation(o_id, object_poses[i], object_orns[i])
+                else:
+                    p.resetBasePositionAndOrientation(o_id, object_poses[-1], object_orns[-1])
+                if base_states is not None and hand_id != -1:
+                    if i < len(object_poses):
+                        p.resetBasePositionAndOrientation(hand_id, 
+                                                        base_states[i,:3], 
+                                                        base_states[i,3:])
+                    else:
+                        p.resetBasePositionAndOrientation(hand_id,
+                                                        base_states[-1,:3],
+                                                        base_states[-1,3:])
+                if desired_positions is not None:
+                    default_orn = [0, 0, 0, 1]
+                    obsolete_pos = [100, 100, 100]
+                    index = i if i < len(object_poses) else -1
+                    for j, desired_position in enumerate(desired_positions[index]):
+                        if desired_position[0] < 50:
+                            p.resetBasePositionAndOrientation(tip_ids[j], desired_position[:3], default_orn)
+                        else:
+                            p.resetBasePositionAndOrientation(tip_ids[j], obsolete_pos, default_orn)
+                time.sleep(30 * TS)
+                image = renderer.render()
+                writer.append_data(image)
 
 def convert_quat_for_bullet(quat):
     return np.array([quat[1],quat[2],quat[3],quat[0]])
@@ -233,4 +338,8 @@ def getSGSigmapoints(dimensions, sigma):
     center = torch.zeros(1,dimensions)
     return torch.vstack([center, pos_points, neg_points])
 
-    
+def quaternion_distance(q1, q2):
+    Q1 = pyq.Quaternion(q1)
+    Q2 = pyq.Quaternion(q2)
+    dist = pyq.Quaternion.absolute_distance(Q1, Q2)
+    return dist

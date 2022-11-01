@@ -29,6 +29,7 @@ class DexGraspNetModel:
         self.extra_cond_fingers = extra_cond_fingers
         self.pred_fingers = pred_fingers
         self.num_pred_fingers = len(pred_fingers)
+        self.num_fingers = len(pred_fingers) + len(extra_cond_fingers)
         if self.opt['is_train']: # self.opt.is_train:
             if self.opt["override_saved"]:
                 #self.save_dir = join(opt.checkpoints_dir, opt.name)
@@ -233,7 +234,7 @@ class DexGraspNetModel:
     def finger_to_idx(self,fingers):
         idxs = []
         for finger in fingers:
-            idxs += [finger,finger+1, finger+2]
+            idxs += [finger*3,finger*3+1, finger*3+2]
         return idxs
 
     def sample_latent(self, batch_size):
@@ -292,3 +293,191 @@ class DexGraspNetModel:
     def get_latent_size(self):
         return self.net.get_latent_size()
     
+class DexGraspNetRegressor:
+    def __init__(self, opt, pred_base=True, pred_fingers=[0, 1, 2], extra_cond_fingers=[], gpu_id=1):
+        if isinstance(opt, dict):
+            self.opt = opt
+        else:
+            opt = opt.__dict__
+            self.opt = opt
+        self.gpu_id = gpu_id
+        self.is_train = opt["is_train"]
+        self.pred_base = pred_base
+        self.num_in_feats = 3 # Here the pred_fingers are not consider as input as CVAE
+        if pred_base:
+            self.num_in_feats += 12
+        self.extra_cond_dim = len(extra_cond_fingers) * 3
+        self.extra_cond_fingers = extra_cond_fingers
+        self.pred_fingers = pred_fingers
+        self.num_pred_fingers = len(pred_fingers)
+        if self.opt["is_train"]:
+            if self.opt["override_saved"]:
+                self.save_dir = join(opt["checkpoints_dir"], opt["name"])
+            else:
+                self.save_dir = join(opt["checkpoints_dir"], opt["name"], str(time.time()))
+            if not os.path.isdir(self.save_dir):
+                os.makedirs(self.save_dir)
+            else:
+                assert self.opt["override_saved"]
+        else:
+            self.save_dir_no_time = join(opt["checkpoints_dir"], opt["name"])
+            if not(opt["store_timestamp"] is None):
+                self.save_dir = join(opt["checkpoints_dir"], opt["name"], opt["store_timestamp"])
+            else:
+                self.save_dir = join(opt["checkpoints_dir"], opt["name"])
+        self.optimizer = None
+        self.loss_train = None
+        self.pcs = None
+        opt["arch"] = "regressor"
+        self.net = network.define_graspgen(opt, opt["arch"],
+                                           opt["init_type"], opt["init_gain"],
+                                           self.pred_base,
+                                           num_in_feats=self.num_in_feats,
+                                           extra_cond_dim=self.extra_cond_dim,
+                                           num_pred_fingers=self.num_pred_fingers,
+                                           gpu_id=self.gpu_id)
+        
+        self.criterion = network.define_loss(opt,pred_base)
+        self.fingertip_pos_loss_train = None
+        if self.pred_base:
+            self.base_pos_loss_train = None
+            self.base_orn_loss_train = None
+
+        if self.is_train:
+            self.optimizer = torch.optim.Adam(self.net.parameters(),lr=opt["lr"],
+                                              betas=(opt["beta1"], 0.999))
+            self.scheduler = network.get_scheduler(self.optimizer, opt)
+
+        if (not self.is_train or opt["continue_train"]) and not opt["force_skip_load"]:
+            self.load_network(opt["which_epoch"], self.is_train, opt["which_timestamp"])
+    
+        if self.pred_base:
+            self.distance_weight = torch.ones(3, dtype=torch.float32).cuda(device=self.gpu_id)
+            # position weights scaled by 100
+            self.distance_weight[0] *= 2.
+            self.distance_weight[1] *= 0.2
+            self.distance_weight[2] *= 10.
+        else:
+            self.distance_weight = torch.ones(1, dtype=torch.float32).cuda(device=self.gpu_id)
+            self.distance_weight[0] *= 10
+
+    def eval(self):
+        self.net.eval()
+
+    def train(self):
+        self.net.train()
+
+    def set_input(self, data):
+        input_pcs = data["point_cloud"].contiguous().float()
+        extra_cond = data["fingertip_pos"][:, self.finger_to_idx(self.extra_cond_fingers)].float()
+        self.extra_cond = extra_cond.cuda(device=self.gpu_id).requires_grad_(self.is_train)
+        targets = data['fingertip_pos'][:,self.finger_to_idx(self.pred_fingers)].float()
+        self.targets = targets.cuda(device=self.gpu_id).requires_grad_(self.is_train)
+        self.pcs = input_pcs.cuda(device=self.gpu_id).requires_grad_(self.is_train)
+
+    def set_input_test(self, data):
+        input_pcs = data["point_cloud"].contiguous().float()
+        extra_cond = data['fingertip_pos'][:,self.finger_to_idx(self.extra_cond_fingers)].float()
+        self.extra_cond_test = extra_cond.cuda(device=self.gpu_id).requires_grad_(False)
+        targets_test = data['fingertip_pos'][:,self.finger_to_idx(self.pred_fingers)].float()
+        self.targets_test = targets_test.cuda(device=self.gpu_id).requires_grad_(False)
+        self.pcs_test = input_pcs.cuda(device=self.gpu_id).requires_grad_(False)
+
+    def forward(self):
+        return self.net(self.pcs,self.extra_cond if self.extra_cond_dim!= 0 else None)
+
+    def _compute_loss(self, out, targets):
+        predicted_grasp = out
+        if self.pred_base:
+            base_pos_loss_train, base_orn_loss_train, fingertip_pos_loss_train = self.criterion(
+                predicted_grasp,
+                targets,
+                confidence=None,
+                confidence_weight=self.opt["confidence_weight"],
+                device=self.gpu_id,
+                distance_weight=self.distance_weight)
+            total_loss = base_pos_loss_train + base_orn_loss_train + fingertip_pos_loss_train
+        else:
+            fingertip_pos_loss_train = self.criterion(
+                predicted_grasp,
+                targets,
+                distance_weight=self.distance_weight)
+            total_loss = fingertip_pos_loss_train
+        return total_loss, fingertip_pos_loss_train
+
+    def compute_loss_on_test_data(self):
+        with torch.no_grad():
+            targets_test = self.targets_test
+            out = self.net(self.pcs_test, self.extra_cond_test if self.extra_cond_dim != 0 else None)
+            if self.pred_base:
+                self.loss_test, self.base_pos_loss_test, self.base_orn_loss_test, self.fingertip_pos_loss_test = \
+                    self._compute_loss(out, targets_test)
+            else:
+                self.loss_test, self.fingertip_pos_loss_test = \
+                    self._compute_loss(out, targets_test)
+    
+    def backward(self, out):
+        if self.pred_base:
+            self.loss_train, self.base_pos_loss_train, self.base_orn_loss_train, self.fingertip_pos_loss_train=\
+                self._compute_loss(out, self.targets)
+        else:
+            self.loss_train, self.fingertip_pos_loss_train = \
+                self._compute_loss(out, self.targets)
+        self.loss_train.backward()
+
+    def optimize_parameters(self):
+        self.optimizer.zero_grad()
+        out = self.forward()
+        self.backward(out)
+        self.optimizer.step()
+
+    def finger_to_idx(self, fingers):
+        idxs = []
+        for finger in fingers:
+            idxs += [finger, finger+1, finger+2]
+        return idxs
+
+    def load_network(self, which_epoch, train=True, which_timestamp=''):
+        save_filename = f"{which_epoch}_net.pth"
+        if which_timestamp == "":
+            load_path = join(self.save_dir_no_time, save_filename)
+        else:
+            load_path = join(self.save_dir_no_time, which_timestamp, save_filename)
+        net = self.net
+        if isinstance(net, torch.nn.DataParallel):
+            net = net.module
+        print(f"loading the model from {load_path}")
+        checkpoint = torch.load(load_path, map_location=torch.device(f"cuda:{self.gpu_id}"))
+        if hasattr(checkpoint['model_state_dict'], '_metadata'):
+            del checkpoint['model_state_dict']._metadata
+        net.load_state_dict(checkpoint['model_state_dict'])
+        if train:
+            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            self.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+            self.opt["epoch_count"] = checkpoint["epoch"]
+        else:
+            net.eval()
+
+    def load_network_test(self, network_path):
+        if isinstance(self.net, torch.nn.DataParallel):
+            self.net.module.load_state_dict(torch.load(network_path))
+        else:
+            self.net.load_state_dict(torch.load(network_path))
+
+    def save_network(self, net_name, epoch_num):
+        """save model to disk"""
+        save_filename = '%s_net.pth' % (net_name)
+        save_path = join(self.save_dir, save_filename)
+        torch.save(
+            {
+                'epoch': epoch_num + 1,
+                'model_state_dict': self.net.cpu().state_dict(),
+                'optimizer_state_dict': self.optimizer.state_dict(),
+                'scheduler_state_dict': self.scheduler.state_dict(),
+            }, save_path)
+        self.net.cuda(device=self.gpu_id)
+
+    def update_learning_rate(self):
+        self.scheduler.step()
+        lr = self.optimizer.param_groups[0]['lr']
+        print(f"learning rate = {lr}")

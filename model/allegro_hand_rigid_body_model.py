@@ -1,10 +1,10 @@
 import os
+from typing import Dict
 import numpy as np
 import model.param as model_param
 from model.param import *
 import model.manipulation.scenario as scenario
 import copy
-import open3d as o3d
 
 ########## Drake stuff ##########
 import pydrake 
@@ -206,30 +206,21 @@ class AllegroHandPlantDrake:
         ik = InverseKinematics(self.plant, plant_context)
         unused_fingers = set(AllegroHandFinger)
         constraints_on_finger = {}
-        desired_positions = {}
+        desired_positions = get_desired_position(finger_tip_poses, padding, has_normals)
 
-        finger_map = [AllegroHandFinger.THUMB, AllegroHandFinger.INDEX, AllegroHandFinger.MIDDLE, AllegroHandFinger.RING]
+        finger_map = [AllegroHandFinger.THUMB, AllegroHandFinger.INDEX, AllegroHandFinger.MIDDLE]
         for i, finger in enumerate(finger_map):
-            contact_position = np.squeeze(finger_tip_poses[i, :3])
-            if contact_position[0] > 50:
-                desired_positions[finger] = np.array([100., 100., 100.])
-                continue
-            if has_normals:
-                contact_normal = finger_tip_poses[i, 3:]
-                contact_normal /= np.linalg.norm(contact_normal)
-                desired_position = contact_position + contact_normal * padding
-            else:
-                desired_position = contact_position
-            desired_positions[finger] = desired_position
             constraints_on_finger[finger] = [ik.AddPositionConstraint(
                 self.fingertip_frames[finger],
                 np.zeros(3),
                 self.plant.world_frame(),
-                desired_position-allowed_deviation,
-                desired_position+allowed_deviation
+                desired_positions[finger]-allowed_deviation,
+                desired_positions[finger]+allowed_deviation
             )]
             # Add angle constraints
             if has_normals:
+                contact_normal = finger_tip_poses[i, 3:]
+                contact_normal /= np.linalg.norm(contact_normal)
                 constraints_on_finger[finger].append(ik.AddAngleBetweenVectorsConstraint(self.plant.world_frame(),
                                                  contact_normal,
                                                  self.fingertip_frames[finger],
@@ -259,3 +250,26 @@ class AllegroHandPlantDrake:
         return ik, constraints_on_finger, collision_constr, desired_positions
 
     
+def get_desired_position(finger_tip_poses, padding, has_normals)->Dict:
+    """
+    finger_tip_poses: dictionary of finger tip poses expressed in world coordinate
+    return a dictionary of modified tip position in the world coordinate
+    """
+    desired_positions = {}
+    finger_map = [AllegroHandFinger.THUMB, 
+                  AllegroHandFinger.INDEX, 
+                  AllegroHandFinger.MIDDLE, 
+                  AllegroHandFinger.RING]
+    for i, finger in enumerate(finger_map):
+        contact_position = np.squeeze(finger_tip_poses[i, :3])
+        if contact_position[0] > 50:
+            desired_positions[finger] = np.array([100., 100., 100.])
+            continue
+        if has_normals:
+            contact_normal = finger_tip_poses[i, 3:]
+            contact_normal /= np.linalg.norm(contact_normal)
+            desired_position = contact_position + contact_normal * padding
+        else:
+            desired_position = contact_position
+        desired_positions[finger] = desired_position
+        return desired_positions
