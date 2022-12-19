@@ -244,11 +244,11 @@ class ShadowHandPlantDrake:
             if has_normals:
                 contact_normal = finger_tip_poses[i, 3:]
                 contact_normal /= np.linalg.norm(contact_normal)
-                constraints_on_finger[finger].append(ik.AddAngleBetweenVectorsConstraint(self.plant.world_frame(),
-                                                 contact_normal,
-                                                 self.fingertip_frames[finger],
-                                                 np.array([0.,0.,-1.]),
-                                                 0., np.pi/2))
+                # constraints_on_finger[finger].append(ik.AddAngleBetweenVectorsConstraint(self.plant.world_frame(),
+                #                                  contact_normal,
+                #                                  self.fingertip_frames[finger],
+                #                                  np.array([0.,0.,-1.]),
+                #                                  0., np.pi/3))
             unused_fingers.remove(finger)
 
         prog = ik.get_mutable_prog()

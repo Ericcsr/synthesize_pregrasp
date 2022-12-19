@@ -2,7 +2,10 @@ from envs.small_block_contact_graph_env import LaptopBulletEnv
 from envs.bookshelf_graph_env import BookShelfBulletEnv
 from envs.wall_box_graph_env import WallBoxBulletEnv
 from envs.table_box_graph_env import TableBoxBulletEnv
-
+from envs.plate_contact_graph_env import PlateBulletEnv
+from envs.handle_contact_graph_env import HandleBulletEnv
+from envs.waterbottle_graph_env import WaterbottleBulletEnv
+from envs.groovepen_contact_graph_env import GroovePenBulletEnv
 import open3d as o3d
 import numpy as np
 import random
@@ -19,11 +22,23 @@ def parse_fin_data(fin_data):
             post_data[i,j,3] = fin_data[i][j][1]
     return post_data
 
+def parse_tip_data(tip_poses):
+    new_tip_pose = np.ones((len(tip_poses), 5, 6)) * 100
+    for i in range(len(tip_poses)):
+        num_fingers = len(tip_poses[i])
+        new_tip_pose[i,:num_fingers] = tip_poses[i]
+    return new_tip_pose
+        
+
 envs_dict = {
     "bookshelf":BookShelfBulletEnv,
     "laptop":LaptopBulletEnv,
     "wallbox":WallBoxBulletEnv,
-    "tablebox":TableBoxBulletEnv
+    "tablebox":TableBoxBulletEnv,
+    "plate":PlateBulletEnv,
+    "handle":HandleBulletEnv,
+    "waterbottle":WaterbottleBulletEnv,
+    "groovepen": GroovePenBulletEnv
 }
 
 if __name__ == '__main__':
@@ -34,13 +49,15 @@ if __name__ == '__main__':
     parser.add_argument("--playback",action="store_true", default=False)
     parser.add_argument("--showImage", action="store_true", default=False)
     parser.add_argument("--camera_conf", type=str, default="camera_1")
+    parser.add_argument("--add_physics", action="store_true", default=False)
     args = parser.parse_args()
 
     uopt = np.load(f"data/traj/{args.exp_name}.npy")
     # Directly read max force information from experiment name.
     max_force = float(args.exp_name.split("_")[-1])
     print("Using Max Force:", max_force)
-
+    if max_force == 0:
+        max_force = 80
     steps = uopt.shape[0]
 
     if args.init_data != "":
@@ -55,7 +72,10 @@ if __name__ == '__main__':
     camera_config = json.loads(data)
 
     # Define paths
-    path = np.array([5,5,0])
+    path = np.array([0,0,0])#np.array([5,5,0])
+
+    if args.add_physics:
+        full_grasp = np.load(f"data/predicted_grasps/{args.exp_name}.npy")[2:]
 
     env = envs_dict[args.env]
     world = env(render=True, 
@@ -67,7 +87,10 @@ if __name__ == '__main__':
                 steps = steps,
                 path=path,
                 showImage=args.showImage,
-                max_forces = max_force*0.5)
+                max_forces = max_force,
+                add_physics=args.add_physics)
+    if args.add_physics:
+        world.load_grasp(full_grasp)
     world.renderer.read_config(camera_config)
 
     seed = 0
@@ -84,7 +107,7 @@ if __name__ == '__main__':
         images = []
         pcd = None
         for j in range(steps):
-            state, c, done, info = world.step(uopt[j, :])
+            state, c, done, info = world.step(uopt[j, :],rollout_verify=True)
             finger_poses += info["finger_pos"]
             object_poses += info["object_pose"]
             images += info['images']
@@ -93,12 +116,13 @@ if __name__ == '__main__':
             c = -c
             J += c
         if not args.playback:
-            np.save(f"data/tip_data/{args.exp_name}_tip_poses.npy", finger_poses)
+            # TODO: Cannot directly save tip pose, need additional conversion
+            np.save(f"data/tip_data/{args.exp_name}_tip_poses.npy", parse_tip_data(finger_poses))
             np.save(f"data/object_poses/{args.exp_name}_object_poses.npy", object_poses)
             # fin_data = parse_fin_data(last_fins)
             # np.save(f"data/fin_data/{args.exp_name}_fin_data.npy", fin_data)
             if not (pcd is None):
                 o3d.io.write_point_cloud(f"data/output_pcds/{args.exp_name}_pcd.ply", pcd)
-            with imageio.get_writer(f"data/video/{args.exp_name}_test.gif",mode="I") as writer:
+            with imageio.get_writer(f"data/videos/{args.exp_name}_test.gif",mode="I") as writer:
                 for i in range(len(images)):
                     writer.append_data(images[i])

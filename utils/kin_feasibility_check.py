@@ -21,7 +21,7 @@ allegro_finger_permutations = list(permutations(allegro_rbm.ActiveAllegroHandFin
 shadow_finger_permutations = list(permutations(shadow_rbm.ActiveShadowHandFingers))
 random_state = np.random.RandomState(0)
 
-ik_attempts = 10
+ik_attempts = 3
 num_process = 16
 quat_inits = np.zeros((num_process, ik_attempts, 4))
 pose_inits = np.zeros((num_process, ik_attempts, 2))
@@ -341,7 +341,7 @@ def solve_ik_keypoints(targets, obj_poses, obj_orns, object_path=None, object_cr
                 success_flags.append(True)
             desired_positions.append(results[-1][3])
         print(f"Target: {i}, result: {success_flags[-1]}")
-    desired_positions_np = np.ones((len(desired_positions),len(targets),3)) * 100
+    desired_positions_np = np.ones((len(desired_positions),targets.shape[1],3)) * 100
     for i in range(len(desired_positions)):
         finger_map = ALLEGRO_FINGER_MAP if hand_model == "allegro" else SHADOW_FINGER_MAP[:len(targets)]
         for j,finger in enumerate(finger_map):

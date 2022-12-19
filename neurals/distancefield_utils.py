@@ -48,13 +48,38 @@ def create_laptop_with_table():
 def create_bookshelf_df():
     floor = o3d.geometry.TriangleMesh.create_box(2, 2, 0.02)
     floor.translate([-1, -1, -0.02])
-    box_left = o3d.geometry.TriangleMesh.create_box(0.4, 0.1, 0.4)
-    box_left.translate([-0.2, -0.16, 0])
-    box_right = o3d.geometry.TriangleMesh.create_box(0.4, 0.1, 0.4)
-    box_right.translate([-0.2, 0.06, 0])
+    box_left = o3d.geometry.TriangleMesh.create_box(0.4, 0.1, 0.4).translate([-0.2, -0.16, 0])
+    box_right = o3d.geometry.TriangleMesh.create_box(0.4, 0.1, 0.4).translate([-0.2, 0.06, 0])
     return DistFieldEnv([floor, box_right, box_left])
 
-env_lists = [create_laptop_df, create_laptop_with_x_wall_df, create_laptop_with_y_wall_df, create_bookshelf_df, create_laptop_with_table]
+def create_waterbottle_df():
+    floor = o3d.geometry.TriangleMesh.create_box(2, 2, 0.02)
+    floor.translate([-1,-1,-0.02])
+    bottle_left = o3d.geometry.TriangleMesh.create_cylinder(radius=0.045, height=0.22).translate([0,-0.1, 0.11])
+    bottle_right = o3d.geometry.TriangleMesh.create_cylinder(radius=0.045, height=0.22).translate([0,0.1, 0.11])
+    backwall = o3d.geometry.TriangleMesh.create_box(0.1,0.4,0.4).translate([-0.15,-0.2,0])
+    return DistFieldEnv([floor, bottle_left, bottle_right, backwall])
+    
+def create_plate_df():
+    floor = o3d.geometry.TriangleMesh.create_box(2,2,0.02)
+    floor.translate([-1, -1,-0.02])
+    return DistFieldEnv([floor])
+
+def create_handle_df():
+    floor = o3d.geometry.TriangleMesh.create_box(2,2,0.02)
+    floor.translate([-1, -1,-0.02])
+    handle_shell = o3d.io.read_triangle_mesh("envs/assets/handle_shell.obj")
+    return DistFieldEnv([floor, handle_shell])
+
+def create_groovepen_df():
+    floor = o3d.geometry.TriangleMesh.create_box(2,2,0.02)
+    floor.translate([-1, -1, -0.02])
+    wall1 = o3d.geometry.TriangleMesh.create_box(0.4,0.04,0.03).translate([0,-0.06,0])
+    wall2 = o3d.geometry.TriangleMesh.create_box(0.4,0.04,0.03).translate([0,0.02,0])
+    wall3 = o3d.geometry.TriangleMesh.create_box(0.04,0.12,0.03).translate([-0.04,-0.06,0])
+    return DistFieldEnv([floor, wall1, wall2, wall3])
+
+env_lists = [create_laptop_df, create_laptop_with_x_wall_df, create_laptop_with_y_wall_df, create_bookshelf_df, create_laptop_with_table, create_plate_df, create_waterbottle_df]
 
 if __name__ == "__main__":
     floor = o3d.geometry.TriangleMesh.create_box(2, 2, 0.02)

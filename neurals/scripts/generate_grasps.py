@@ -69,6 +69,8 @@ def main():
     print(new_tip_pose[:], finger_idx)
     # Load pointcloud should be in canonical pose
     pcd_o3d = o3d.io.read_point_cloud(f"data/output_pcds/{args.exp_name}_pcd.ply")
+    # if len(pcd_o3d.points) > 1024:
+    #     pcd_o3d = pcd_o3d.farthest_point_down_sample(1024)
     o3d.visualization.draw_geometries([pcd_o3d])
     assert(pcd_o3d.has_normals())
     points, normals, kd_tree = process_pcd(pcd_o3d)

@@ -10,6 +10,8 @@ allegro_arm_urdf_path = 'model/resources/allegro_hand_description/urdf/allegro_a
 shadow_hand_urdf_path = "model/resources/shadow_hand_description/urdf/shadow_hand.urdf"
 shadow_hand_urdf_collision_path = "model/resources/shadow_hand_description/urdf/shadow_hand_collision_.urdf"
 
+plate_mesh_path = "model/resources/meshes/plate_cvx.obj" # Should be full convex hull drake only accept obj file
+
 # Offset for counting joints for fingers
 allegro_hand_offset = 0
 allegro_arm_offset  = 4

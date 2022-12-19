@@ -10,10 +10,14 @@ import model.allegro_hand_rigid_body_model as allegro_rbm
 import model.shadow_hand_rigid_body_model as shadow_rbm
 import utils.helper as helper
 import utils.rigidBodySento as rb
+from utils.blender_recorder import PyBulletRecorder
 from argparse import ArgumentParser
 
-NUM_KEY_FRAMES=2
+NUM_KEY_FRAMES=5
 NUM_INTERP=4
+FULL_FINGERS = [0,1,2,3,4]
+
+SCALE = [1.0, 1.0, 1.0]
 
 ALLEGRO_FINGER_MAP = [model_param.AllegroHandFinger.THUMB, 
                   model_param.AllegroHandFinger.INDEX, 
@@ -27,7 +31,10 @@ SHADOW_FINGER_MAP = [model_param.ShadowHandFinger.THUMB,
                      model_param.ShadowHandFinger.LITTLE]
 
 # TODO: Load object poses as well as finger tip pose trajectory
-def load_object_poses(exp_name, extrapolate_frames = 50, early_term=50*(NUM_KEY_FRAMES-1)):
+def load_object_poses(exp_name, extrapolate_frames = 50, early_term=50*(NUM_KEY_FRAMES-1), add_physics=False):
+    if add_physics:
+        extrapolate_frames = 0
+        early_term = None
     obj_poses = np.load(f"data/object_poses/{exp_name}_object_poses.npy")
     length = len(obj_poses) if early_term is None or len(obj_poses) < early_term else early_term
     obj_pos = np.zeros((length+extrapolate_frames+1, 3))
@@ -39,7 +46,10 @@ def load_object_poses(exp_name, extrapolate_frames = 50, early_term=50*(NUM_KEY_
         obj_orn[i] = obj_poses[length-1,3:]
     return obj_pos, obj_orn, obj_poses[length-1,:3], obj_poses[length-1,3:]
 
-def load_stage_one_finger_tip_trajectory(exp_name, active_fingers = [0,1], early_term=50*(NUM_KEY_FRAMES-1)):
+def load_stage_one_finger_tip_trajectory(exp_name, active_fingers = [0,1], early_term=50*(NUM_KEY_FRAMES-1), add_physics=False):
+    print("Active Fingers:",active_fingers)
+    if add_physics:
+        early_term = None
     tip_poses = np.load(f"data/tip_data/{exp_name}_tip_poses.npy")
     length = len(tip_poses) if early_term is None or len(tip_poses)<early_term else early_term
     full_tip_poses = np.ones((length, 5, 6)) * 100
@@ -59,9 +69,9 @@ def load_final_grasp(exp_name, last_obj_pos, last_obj_orn):
             world_tip_pose[i] = np.array([100., 100., 100., 0, 0, 0])
     return world_tip_pose
 
-def load_trajector_data(exp_name, extrapolate_frames=50, active_fingers=[0,1]):
+def load_trajector_data(exp_name, extrapolate_frames=50, active_fingers=[0,1], add_physics=False):
     obj_poses, obj_orns, last_obj_pos, last_obj_orn = load_object_poses(exp_name, extrapolate_frames)
-    stage_one_tip_poses = load_stage_one_finger_tip_trajectory(exp_name, active_fingers)
+    stage_one_tip_poses = load_stage_one_finger_tip_trajectory(exp_name, active_fingers if not add_physics else FULL_FINGERS)
     print(stage_one_tip_poses[-1])
     stage_two_tip_poses = np.asarray([stage_one_tip_poses[-1]]*(extrapolate_frames+1))
     final_grasp = load_final_grasp(exp_name, last_obj_pos, last_obj_orn)
@@ -84,7 +94,7 @@ def fit_keypoints(num_key_points, obj_poses, obj_orns, tip_poses, hand_model="al
     key_obj_poses = obj_poses[key_idx]
     key_obj_orns = obj_orns[key_idx]
     key_tip_poses = tip_poses[key_idx]
-
+    print("Key Pose:",key_tip_poses.shape)
     key_joint_states, key_q_sols, desired_positions = kin.solve_ik_keypoints(key_tip_poses, 
                                                                              key_obj_poses, 
                                                                              key_obj_orns, 
@@ -143,21 +153,27 @@ def main():
     parser.add_argument("--has_floor", action="store_true", default=False)
     parser.add_argument("--target_offset",type=list, default=[0,0,0.3])
     parser.add_argument("--disable_hand",action="store_true", default=False)
+    parser.add_argument("--disable_tip", action="store_true", default=False)
+    parser.add_argument("--start_idx",type=int, default=0)
+    parser.add_argument("--add_physics",action="store_true", default=False)
     args = parser.parse_args()
 
     # Create Pybullet Scenario
     p.connect(p.GUI)
     if args.hand_model == "allegro"  and not args.disable_hand:
-        hand_id = p.loadURDF("model/resources/allegro_hand_description/urdf/allegro_hand_description_right.urdf")
+        hand_path = "model/resources/allegro_hand_description/urdf/allegro_hand_description_right.urdf"
+        hand_id = p.loadURDF(hand_path)
         alpha=0.8
     elif args.hand_model == "shadow" and not args.disable_hand:
-        hand_id = p.loadURDF("model/resources/shadow_hand_description/urdf/shadow_hand_collision.urdf")
+        hand_path = "model/resources/shadow_hand_description/urdf/shadow_hand_visual.urdf"
+        hand_id = p.loadURDF(hand_path)
         alpha=0.8
     elif args.disable_hand:
         hand_id = -1
         alpha = 0.5
-    o_id = setup_pybullet.pybullet_creator[args.env](p, alpha)
-    object_creator = partial(creator.object_creators[args.env],has_floor=args.has_floor)
+    ids = setup_pybullet.pybullet_creator[args.env](p, alpha, scale=SCALE)
+    o_id = ids[0]
+    object_creator = partial(creator.object_creators[args.env],has_floor=args.has_floor, scale=SCALE)
     # Create Visualization for finger tip
     colors = [(0.9, 0.9, 0.9, 0.7),
               (0.9, 0.0, 0.0, 0.7),
@@ -169,8 +185,9 @@ def main():
         tip_ids.append(rb.create_primitive_shape(p, 0.1, p.GEOM_SPHERE,
                                                  (0.02,), color=colors[i], 
                                                  collidable=False, init_xyz = (100,100,100)))
-
-    obj_poses, obj_orns, finger_tip_poses = load_trajector_data(args.exp_name, args.extrapolate_frames)
+    print("Length:",len(tip_ids))
+    obj_poses, obj_orns, finger_tip_poses = load_trajector_data(args.exp_name, args.extrapolate_frames, 
+                                                                add_physics=args.add_physics)
 
     if args.mode == "keypoints":
         key_states, key_obj_poses, key_obj_orns, key_q_sols, key_idx, des_poses = fit_keypoints(NUM_KEY_FRAMES, 
@@ -179,12 +196,17 @@ def main():
                                                                                                 finger_tip_poses, 
                                                                                                 hand_model=args.hand_model,
                                                                                                 object_creator=object_creator)
-        helper.animate_keyframe(o_id, hand_id, key_obj_poses, key_obj_orns, key_states[1], key_states[0], tip_ids=tip_ids, desired_positions=des_poses)
+        print(des_poses.shape)
+        helper.animate_keyframe(o_id, hand_id, key_obj_poses, key_obj_orns, key_states[1], key_states[0], 
+                                tip_ids=tip_ids if not args.disable_tip else None, 
+                                desired_positions=des_poses if not args.disable_tip else None)
         np.savez(f"data/ik/{args.exp_name}_keyframes.npz", q_sols=key_q_sols, key_idx=key_idx, key_obj_poses=key_obj_poses, key_obj_orns=key_obj_orns, 
                                                            key_base_states=key_states[0], key_joint_states=key_states[1], desired_positions=des_poses)
     elif args.mode == "animate_keyframes":
         data = np.load(f"data/ik/{args.exp_name}_keyframes.npz")
-        helper.animate_keyframe(o_id, hand_id, data["key_obj_poses"], data["key_obj_orns"], data["key_joint_states"], data["key_base_states"], tip_ids=tip_ids, desired_positions=data["desired_positions"])
+        helper.animate_keyframe(o_id, hand_id, data["key_obj_poses"], data["key_obj_orns"], data["key_joint_states"], data["key_base_states"], 
+                                tip_ids=tip_ids if not args.disable_tip else None, 
+                                desired_positions=data["desired_positions"] if not args.disable_tip else None)
     elif args.mode.startswith("interp"):
         idx = int(args.mode[-1])
         key_frame_data = np.load(f"data/ik/{args.exp_name}_keyframes.npz")
@@ -210,7 +232,8 @@ def main():
                 desired_positions_np[i,j] = desired_positions[i][finger]
         helper.animate(o_id, hand_id, segment_obj_poses, segment_obj_orns, 
                        interp_state[1], base_states=interp_state[0],
-                       desired_positions=desired_positions_np, tip_ids=tip_ids)
+                       desired_positions=desired_positions_np if not args.disable_tip else None, 
+                       tip_ids=tip_ids if not args.disable_tip else None)
         np.savez(f"data/ik/{args.exp_name}_segment{idx}.npz", joint_states=interp_state[1], base_states=interp_state[0])
     elif args.mode == "final":
         file_lists = os.listdir("data/ik")
@@ -246,7 +269,9 @@ def main():
             finger_map = ALLEGRO_FINGER_MAP if args.hand_model == "allegro" else SHADOW_FINGER_MAP
             for j,finger in enumerate(finger_map):
                 desired_positions_np[i,j] = desired_positions[i][finger]
-        helper.animate_base(o_id, hand_id, obj_pos_traj, obj_orn_traj, base_traj, fixed_joint_state, desired_positions=desired_positions_np,tip_ids=tip_ids)
+        helper.animate_base(o_id, hand_id, obj_pos_traj, obj_orn_traj, base_traj, fixed_joint_state, 
+                            desired_positions=desired_positions_np if not args.disable_tip else None,
+                            tip_ids=tip_ids if not args.disable_tip else None)
         np.savez(f"data/ik/{args.exp_name}_final.npz", 
                  obj_pos_traj=obj_pos_traj, 
                  obj_orn_traj=obj_orn_traj, 
@@ -272,10 +297,26 @@ def main():
             finger_map = ALLEGRO_FINGER_MAP if args.hand_model == "allegro" else SHADOW_FINGER_MAP[:-1]
             for j,finger in enumerate(finger_map):
                 desired_positions_np[i,j] = desired_positions[i][finger]
-        helper.animate(o_id, hand_id, obj_poses[20:50*NUM_KEY_FRAMES], obj_orns[20:50*NUM_KEY_FRAMES], joint_states[20:50*NUM_KEY_FRAMES], 
-                       base_states[20:50*NUM_KEY_FRAMES], desired_positions=desired_positions_np[20:50*NUM_KEY_FRAMES],tip_ids=tip_ids)
-        final = np.load(f"data/ik/{args.exp_name}_final.npz")
-        helper.animate_base(o_id, hand_id, final["obj_pos_traj"],final["obj_orn_traj"], final["base_traj"],final["fixed_joint_state"], desired_positions=final["desired_positions"],tip_ids=tip_ids)
+        # Create recorder for blender
+        recorder = PyBulletRecorder()
+        recorder.register_object(hand_id, hand_path)
+        recorder.register_object(ids[0], "envs/assets/box.urdf")
+        recorder.register_object(ids[1], "envs/assets/plane.urdf")
+        
+        helper.animate(o_id, hand_id, obj_poses[args.start_idx:50*(NUM_KEY_FRAMES-1)], obj_orns[args.start_idx:50*(NUM_KEY_FRAMES-1)], joint_states[args.start_idx:50*(NUM_KEY_FRAMES-1)], 
+                       base_states[args.start_idx:50*(NUM_KEY_FRAMES-1)], 
+                       desired_positions=desired_positions_np[args.start_idx:50*(NUM_KEY_FRAMES-1)] if not args.disable_tip else None,
+                       tip_ids=tip_ids if not args.disable_tip else None,
+                       recorder=recorder)
+        np.save(f"data/full_traj/{args.exp_name}_obj_orns.npy", obj_orns[args.start_idx:50*(NUM_KEY_FRAMES-1)])
+        np.save(f"data/full_traj/{args.exp_name}_obj_poses.npy", obj_poses[args.start_idx:50*(NUM_KEY_FRAMES-1)])
+        np.save(f"data/full_traj/{args.exp_name}_hand_poses.npy", base_states[args.start_idx:50*(NUM_KEY_FRAMES-1)])
+        recorder.save(f"data/blender/{args.exp_name}.pkl")
+        if not args.add_physics:
+            final = np.load(f"data/ik/{args.exp_name}_final.npz")
+            helper.animate_base(o_id, hand_id, final["obj_pos_traj"],final["obj_orn_traj"], final["base_traj"],final["fixed_joint_state"], 
+                                desired_positions=final["desired_positions"] if not args.disable_tip else None,
+                                tip_ids=tip_ids if not args.disable_tip else None)
         
         
 if __name__ == "__main__":

@@ -19,7 +19,7 @@ from pydrake.all import (
     MultibodyPlant, Parser, PassThrough, PrismaticJoint, RenderCameraCore,
     RenderEngineVtkParams, RevoluteJoint, Rgba, RigidTransform, RollPitchYaw,
     RotationMatrix, RgbdSensor, SchunkWsgPositionController, SpatialInertia,
-    Sphere, StateInterpolatorWithDiscreteDerivative, UnitInertia)
+    Sphere, StateInterpolatorWithDiscreteDerivative, UnitInertia, Convex)
 from model.manipulation.utils import FindResource
 
 ycb = [
@@ -186,6 +186,25 @@ def AddShape(plant, shape, name, mass=1, mu=1, color=[.5, .5, .9, 1.0],
 
     return instance
 
+
+def AddConvexMesh(plant, mesh_path, name, mass=1, mu=1, color=[0.5,0.5,0.9,1.0],
+                  collidable=False):
+    instance = plant.AddModelInstance(name)
+    spatial_inertia = SpatialInertia(mass=mass, p_PScm_E=np.zeros(3),G_SP_E=UnitInertia(0.,0.,0.))
+    body = plant.AddRigidBody(name=name,M_BBo_B=spatial_inertia,model_instance=instance)
+    shape = Convex(mesh_path)
+    plant.RegisterVisualGeometry(body=body,X_BG=RigidTransform([0.,0.,0.]),shape=shape,name=name,diffuse_color=color)
+    if collidable:
+        plant.RegisterCollisionGeometry(body=body,X_BG=RigidTransform([0.,0.,0.]),shape=shape,
+                                        coulomb_friction=CoulombFriction(mu,mu),name=name)
+    return instance
+
+def AddURDFModel(plant, urdf_path, fixed_body_name=None):
+    parser = Parser(plant)
+    object = parser.AddModelFromFile(urdf_path)
+    if fixed_body_name is not None:
+        plant.WeldFrames(plant.world_frame(), plant.GetFrameByName(fixed_body_name))
+    return object
 
 # Add the camera_box.sdf.
 def AddCameraBox(plant, X_WC, name="camera0", parent_frame=None):

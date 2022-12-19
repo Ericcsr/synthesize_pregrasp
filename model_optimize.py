@@ -1,8 +1,12 @@
 #from my_pybullet_envs.point_contact_env import PointContactBulletEnv
+from envs.plate_contact_graph_env import PlateBulletEnv
 from envs.small_block_contact_graph_env import LaptopBulletEnv
 from envs.bookshelf_graph_env import BookShelfBulletEnv
 from envs.wall_box_graph_env import WallBoxBulletEnv
 from envs.table_box_graph_env import TableBoxBulletEnv
+from envs.handle_contact_graph_env import HandleBulletEnv
+from envs.waterbottle_graph_env import WaterbottleBulletEnv
+from envs.groovepen_contact_graph_env import GroovePenBulletEnv
 import model.param as model_param
 from stoch_traj_opt import StochTrajOptimizer
 import numpy as np
@@ -15,7 +19,11 @@ envs_dict = {
     "bookshelf":BookShelfBulletEnv,
     "laptop":LaptopBulletEnv,
     "tablebox":TableBoxBulletEnv,
-    "wallbox":WallBoxBulletEnv
+    "wallbox":WallBoxBulletEnv,
+    "plate":PlateBulletEnv,
+    "handle":HandleBulletEnv,
+    "waterbottle": WaterbottleBulletEnv,
+    "groovepen": GroovePenBulletEnv
 }
 
 if __name__ == '__main__':
@@ -47,7 +55,7 @@ if __name__ == '__main__':
     # paths = filter_paths(paths_raw, ref_env.csg, ref_env.contact_region)
     # Need to check final state dynamical feasibility here
     
-    paths = np.array([[5,5,0]])
+    paths = np.array([[0,0,0]]) #
     weight = np.array([0.5])
 
     log_text_list = []
@@ -58,7 +66,7 @@ if __name__ == '__main__':
         for i, path in enumerate(paths): # Search for all the paths.
             optimizer = StochTrajOptimizer(env=envs_dict[args.env], sigma=0.8, initial_guess=None,
                                     TimeSteps=args.steps, seed=12367134, render=False, Iterations=args.iters, active_finger_tips=[0,1], num_interp_f=7,
-                                    Num_processes=6, Traj_per_process=65, opt_time=False, verbose=1,mode=args.mode,
+                                    Num_processes=4, Traj_per_process=65, opt_time=False, verbose=1,mode=args.mode,
                                     last_fins=fin_data, init_obj_pose=init_obj_pose, steps=args.steps, path=path,
                                     sc_path=f"neurals/pretrained_score_function/{args.name_score}/{args.name_epoch}.pth",
                                     dex_path=f"checkpoints/{args.name}/latest_net.pth", opt_dict=opt_dict, 

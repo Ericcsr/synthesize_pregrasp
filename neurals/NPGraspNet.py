@@ -88,9 +88,9 @@ class NPGraspNet(nn.Module):
         num_grasps: number of samples that we use
         """
         # Down sample pointcloud if needed
-        assert(len(pcd_points) > 1024)
-        downsample_idx = np.random.choice(len(pcd_points), 1024, replace=False)
-        pcd_points = pcd_points[downsample_idx]
+        if(len(pcd_points) > 1024):
+            downsample_idx = np.random.choice(len(pcd_points), 1024, replace=False)
+            pcd_points = pcd_points[downsample_idx]
         pcd_th = torch.from_numpy(pcd_points).view(1, -1, 3).cuda(device=self.gpu_id).float()
         print(extra_cond)
         extra_cond_th = torch.from_numpy(extra_cond.flatten()).view(1,-1).contiguous().cuda(device=self.gpu_id).float()

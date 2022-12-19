@@ -14,11 +14,16 @@ def main():
         import wandb
         wandb.init()
         wandb.config.update(opt)
-    model = dgn.DexGraspNetModel(opt, pred_base=False,pred_fingers=[0,2,3,4], extra_cond_fingers=[1], gpu_id=0)
-    full_dataset = neurals.dataset.SmallDataset(positive_grasp_folder="seeds_full/grasps",
-                                                point_clouds=["pose_0_pcd","pose_1_pcd","pose_2_pcd","pose_3_pcd",
-                                                              "pose_4_pcd","pose_5_pcd","pose_6_pcd","pose_7_pcd",
-                                                              "pose_8_pcd"])
+    model = dgn.DexGraspNetModel(opt, pred_base=False,pred_fingers=[2,3,4], extra_cond_fingers=[0,1], gpu_id=0)
+    full_dataset = neurals.dataset.SmallDataset(seed_folder="seeds_scale",
+                                                point_clouds=["pose_00_pcd","pose_01_pcd","pose_02_pcd","pose_03_pcd",
+                                                              "pose_04_pcd","pose_05_pcd","pose_06_pcd","pose_07_pcd",
+                                                              "pose_08_pcd","pose_09_pcd","pose_10_pcd","pose_11_pcd","pose_12_pcd",
+                                                              "pose_13_pcd","pose_14_pcd","pose_15_pcd","pose_16_pcd",
+                                                              "pose_17_pcd","pose_18_pcd","pose_19_pcd","pose_20_pcd",
+                                                              "pose_21_pcd","pose_22_pcd","pose_23_pcd","pose_24_pcd",
+                                                              "pose_25_pcd","pose_26_pcd","pose_27_pcd","pose_28_pcd","pose_29_pcd",
+                                                              "pose_30_pcd","pose_31_pcd","pose_32_pcd"])
 
     # Split the dataset
     dataset_size = len(full_dataset)

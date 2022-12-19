@@ -46,7 +46,7 @@ def main():
     parser.add_argument("--pretrain_pcn", type=str, default=None)
     parser.add_argument("--latent_dim", type=int, default=20)
     parser.add_argument("--has_distance_field", action="store_true", default=False)
-    parser.add_argument("--dataset_file", type=str, default="new_score_data")
+    parser.add_argument("--dataset_file", type=str, default=None, required=True)
     opt = parser.parse_args()
 
     if opt == None:
@@ -60,6 +60,7 @@ def main():
         wandb.config.update(opt)
     score_function = LargeScoreFunction(num_fingers=2, latent_dim=opt.latent_dim, has_distance_field=opt.has_distance_field)
     if not (opt.pretrain_pcn is None):
+        print("Pretrained PCN is loaded!!!")
         score_function.pcn.load_state_dict(torch.load(f"neurals/pcn_model/{opt.pretrain_pcn}.pth"))
     score_function.cuda()
     loss_fn = nn.MSELoss()

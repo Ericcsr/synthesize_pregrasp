@@ -8,7 +8,7 @@ import time
 import model.param as model_params
 import imageio
 
-TS=1/250.
+TS=1/240.
 
 finger_idxs = {
     "ifinger":[5,6,7,8],
@@ -82,7 +82,7 @@ def animate_keyframe(o_id,
                                               base_states[i,:3],
                                               base_states[i,3:])
         # Create Visual features # need to change this
-        if not (desired_positions is None):
+        if desired_positions is not None:
             default_orn = [0, 0, 0, 1]
             obsolete_pos = [100, 100, 100]
             for j, desired_position in enumerate(desired_positions[i]):
@@ -90,6 +90,7 @@ def animate_keyframe(o_id,
                 if desired_position[0] < 50:
                     p.resetBasePositionAndOrientation(tip_ids[j], desired_position[:3], default_orn)
                 else:
+                    print("j:",j)
                     p.resetBasePositionAndOrientation(tip_ids[j], obsolete_pos, default_orn)
         
         if not (renderer is None):
@@ -133,10 +134,11 @@ def animate(o_id,
             renderer=None, 
             gif_name="default",
             desired_positions=None,
-            tip_ids=None):
+            tip_ids=None,
+            recorder=None):
     # Should be full joint states
     if renderer is None:
-        for i in range(len(joint_states)+5):
+        for i in range(len(joint_states)+30):
             if i < len(joint_states):
                 p.resetBasePositionAndOrientation(o_id, object_poses[i], object_orns[i])
                 if hand_id != -1:
@@ -163,10 +165,13 @@ def animate(o_id,
                         p.resetBasePositionAndOrientation(tip_ids[j], desired_position[:3], default_orn)
                     else:
                         p.resetBasePositionAndOrientation(tip_ids[j], obsolete_pos, default_orn)
-            time.sleep(30 * TS)
+            time.sleep(10*TS)
+            if recorder is not None:
+                print("Step:",i)
+                recorder.add_keyframe()
     else:
         with imageio.get_writer(f"data/video/{gif_name}.gif", mode="I") as writer:
-            for i in range(len(joint_states)+5):
+            for i in range(len(joint_states)+30):
                 if i < len(joint_states):
                     p.resetBasePositionAndOrientation(o_id, object_poses[i], object_orns[i])
                     if hand_id != -1:
@@ -343,3 +348,9 @@ def quaternion_distance(q1, q2):
     Q2 = pyq.Quaternion(q2)
     dist = pyq.Quaternion.absolute_distance(Q1, Q2)
     return dist
+
+def convert_euler_to_bullet_quat(x=0,y=0,z=0):
+    euler_angle = torch.tensor([x,y,z]).float()
+    quat = pk.matrix_to_quaternion(pk.euler_angles_to_matrix(euler_angle, convention="XYZ"))
+    return quat.numpy()[[1,2,3,0]]
+
