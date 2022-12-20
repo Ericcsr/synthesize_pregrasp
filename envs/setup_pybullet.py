@@ -119,6 +119,16 @@ def create_groovepen(p, alpha=0.8):
                                       init_quat = np.array([0, 0, 0, 1]))
     return o_id, floor_id, w1_id, w2_id, w3_id
 
+def create_ruler(p, alpha=0.8):
+    floor_id = p.loadURDF(os.path.join(currentdir, "assets/plane.urdf"),useFixedBase=True)
+    o_id = p.loadURDF(os.path.join(currentdir, "assets/ruler.urdf"), basePosition=[0,0,0.001])
+    return o_id, floor_id
+
+def create_cardboard(p, alpha=0.8):
+    floor_id = p.loadURDF(os.path.join(currentdir, "assets/plane.urdf"),useFixedBase=True)
+    o_id = p.loadURDF(os.path.join(currentdir, "assets/cardboard.urdf"), basePosition=[0,0,0.001])
+    return o_id, floor_id
+
 pybullet_creator = {
     "laptop":create_laptop,
     "bookshelf":create_bookshelf,
@@ -127,13 +137,15 @@ pybullet_creator = {
     "plate":create_plate,
     "handle":create_handle,
     "waterbottle":create_waterbottle,
-    "groovepen":create_groovepen
+    "groovepen":create_groovepen,
+    "ruler":create_ruler,
+    "cardboard":create_cardboard
 }
 
 if __name__ == "__main__":
     import pybullet as p
     import time
     p.connect(p.GUI)
-    o_id = create_groovepen(p)
+    o_id = create_tablebox(p)
     while True:
         time.sleep(1/240.0)

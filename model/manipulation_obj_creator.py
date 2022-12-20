@@ -66,10 +66,9 @@ def create_tablebox_env(plant, has_floor=False):
     scenario.AddShape(plant, Box(0.4, 0.4, 0.1), "manipulated_object", 
                       collidable=True)
     if has_floor:
-        scenario.AddShape(plant, Box(10.0, 10.0, 0.02), "floor", collidable=True)
-        plant.WeldFrames(plant.world_frame(),
-                         plant.GetFrameByName("floor"),
-                         RigidTransform(p=[0., 0., -0.012])) # Add slightly more clearance to prevent problem in collision detection
+        scenario.AddShape(plant, Box(3,3,10),"floor",collidable=True)
+        plant.WeldFrames(plant.world_frame(), plant.GetFrameByName("floor"),
+                         RigidTransform(p=[0,1.32,-5.01]))
 
 def create_wallbox_env(plant, has_floor=False):
     scenario.AddShape(plant, Box(0.4, 0.4, 0.1), "manipulated_object", 
@@ -118,6 +117,21 @@ def create_groovepen_env(plant, has_floor=False):
         plant.WeldFrames(plant.world_frame(),plant.GetFrameByName("floor"), 
                          RigidTransform(p=[0.,0., -0.012]))
 
+def create_ruler_env(plant, has_floor = False, scale=[1,1,1]):
+    scenario.AddShape(plant, Box(0.36, 0.028, 0.002), "manipulated_object",
+                      collidable=True)
+    if has_floor:
+        scenario.AddShape(plant, Box(3,3,10),"floor",collidable=True)
+        plant.WeldFrames(plant.world_frame(), plant.GetFrameByName("floor"),
+                         RigidTransform(p=[0,1.32,-5.01]))
+
+def create_cardboard_env(plant, has_floor=False, scale=[1,1,1]):
+    scenario.AddShape(plant, Box(0.4, 0.4, 0.002), "manipulated_object",
+                      collidable=True)
+    if has_floor:
+        scenario.AddShape(plant, Box(3,3,10), "floor", collidable=True)
+        plant.WeldFrames(plant.world_frame(), plant.GetFrameByName("floor"),
+                         RigidTransform(p=[0,1.32,-5.01]))
 
 object_creators = {
     "laptop":create_laptop_env,
@@ -127,5 +141,6 @@ object_creators = {
     "plate": create_plate_env,
     "handle": create_handle_env,
     "waterbottle":create_waterbottle_env,
-    "groovepen":create_groovepen_env
+    "groovepen":create_groovepen_env,
+    "ruler":create_ruler_env
 }

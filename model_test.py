@@ -6,6 +6,8 @@ from envs.plate_contact_graph_env import PlateBulletEnv
 from envs.handle_contact_graph_env import HandleBulletEnv
 from envs.waterbottle_graph_env import WaterbottleBulletEnv
 from envs.groovepen_contact_graph_env import GroovePenBulletEnv
+from envs.ruler_contact_graph_env import RulerBulletEnv
+from envs.cardboard_contact_graph_env import CardboardBulletEnv
 import open3d as o3d
 import numpy as np
 import random
@@ -38,7 +40,9 @@ envs_dict = {
     "plate":PlateBulletEnv,
     "handle":HandleBulletEnv,
     "waterbottle":WaterbottleBulletEnv,
-    "groovepen": GroovePenBulletEnv
+    "groovepen": GroovePenBulletEnv,
+    "ruler":RulerBulletEnv,
+    "cardboard":CardboardBulletEnv
 }
 
 if __name__ == '__main__':

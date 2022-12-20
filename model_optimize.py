@@ -7,6 +7,8 @@ from envs.table_box_graph_env import TableBoxBulletEnv
 from envs.handle_contact_graph_env import HandleBulletEnv
 from envs.waterbottle_graph_env import WaterbottleBulletEnv
 from envs.groovepen_contact_graph_env import GroovePenBulletEnv
+from envs.ruler_contact_graph_env import RulerBulletEnv
+from envs.cardboard_contact_graph_env import CardboardBulletEnv
 import model.param as model_param
 from stoch_traj_opt import StochTrajOptimizer
 import numpy as np
@@ -23,7 +25,9 @@ envs_dict = {
     "plate":PlateBulletEnv,
     "handle":HandleBulletEnv,
     "waterbottle": WaterbottleBulletEnv,
-    "groovepen": GroovePenBulletEnv
+    "groovepen": GroovePenBulletEnv,
+    "ruler": RulerBulletEnv,
+    "cardboard": CardboardBulletEnv
 }
 
 if __name__ == '__main__':

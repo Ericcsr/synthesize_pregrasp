@@ -79,7 +79,17 @@ def create_groovepen_df():
     wall3 = o3d.geometry.TriangleMesh.create_box(0.04,0.12,0.03).translate([-0.04,-0.06,0])
     return DistFieldEnv([floor, wall1, wall2, wall3])
 
-env_lists = [create_laptop_df, create_laptop_with_x_wall_df, create_laptop_with_y_wall_df, create_bookshelf_df, create_laptop_with_table, create_plate_df, create_waterbottle_df]
+def create_ruler_df():
+    table = o3d.geometry.TriangleMesh.create_box(3, 3, 10)
+    table.translate([-2.7, -1.5, -10])
+    return DistFieldEnv([table])
+
+def create_cardboard_df():
+    table = o3d.geometry.TriangleMesh.create_box(3,3,10)
+    table.translate([-2.7,-1.5,-10])
+    return DistFieldEnv([table])
+
+env_lists = [create_laptop_df, create_laptop_with_x_wall_df, create_laptop_with_y_wall_df, create_bookshelf_df, create_laptop_with_table, create_plate_df, create_waterbottle_df, create_ruler_df, create_cardboard_df]
 
 if __name__ == "__main__":
     floor = o3d.geometry.TriangleMesh.create_box(2, 2, 0.02)
