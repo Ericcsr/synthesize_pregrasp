@@ -76,8 +76,9 @@ def animate_keyframe(o_id,
         p.resetBasePositionAndOrientation(o_id, 
                                           object_poses_keyframe[i],
                                           object_orns_keyframe[i])
-        setStates(hand_id, joint_states[i])
-        if not (base_states is None):
+        if hand_id != -1:
+            setStates(hand_id, joint_states[i])
+        if base_states is not None and hand_id != -1:
             p.resetBasePositionAndOrientation(hand_id,
                                               base_states[i,:3],
                                               base_states[i,3:])
@@ -138,7 +139,7 @@ def animate(o_id,
             recorder=None):
     # Should be full joint states
     if renderer is None:
-        for i in range(len(joint_states)+30):
+        for i in range(len(joint_states)+0):
             if i < len(joint_states):
                 p.resetBasePositionAndOrientation(o_id, object_poses[i], object_orns[i])
                 if hand_id != -1:

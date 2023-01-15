@@ -1,5 +1,5 @@
-from envs.small_block_contact_env import LaptopBulletEnv
-from envs.bookshelf_env import BookShelfBulletEnv
+from unused.small_block_contact_env import LaptopBulletEnv
+from unused.bookshelf_env import BookShelfBulletEnv
 
 from stoch_traj_opt import StochTrajOptimizer
 import numpy as np

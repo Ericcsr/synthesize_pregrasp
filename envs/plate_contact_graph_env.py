@@ -94,7 +94,7 @@ class PlateBulletEnv(gym.Env):
         mesh = o3d.io.read_triangle_mesh(os.path.join(currentdir, "assets/plate_cvx_simple.obj"))
         mesh.compute_vertex_normals()
         mesh.compute_triangle_normals()
-        self.contact_region = MeshRegion(mesh)
+        self.contact_region = MeshRegion(mesh.scale(0.9,center=[0,0,0]))
         #self.contact_region.create_geodesic_agent()
         #self.distance_matrix = self.contact_region.construct_distance_matrix()
         #self.csg = ContactStateEmbedding(np.load("data/contact_states/laptop_env/dummy_states_2.npy"), distance_table=self.distance_matrix, beta=0.5)
@@ -158,7 +158,7 @@ class PlateBulletEnv(gym.Env):
             if self.mode != "only_score":
                 self.score_function.load_dex_grasp_net(dex_path)
             self.score_function.load_score_function(sc_path)
-            self.dist_field_env = create_plate_df()
+        self.dist_field_env = create_plate_df()
 
         obs = self.reset()  # and update init obs
 
@@ -211,7 +211,7 @@ class PlateBulletEnv(gym.Env):
         for finger in self.all_fingers:
             color = colors[finger]
 
-            size = [0.01, 0.01, 0.011]       # thumb is the same size
+            size = [0.01, 0.01, 0.011] if finger != 0 else [0.02,0.02,0.011]       # thumb is the same size
 
             init_xyz = (finger+2.0, finger+2.0, finger+2.0) if finger in self.active_finger_tips else (100,100,100)
             tip_id = rb.create_primitive_shape(self._p, 0.01, pybullet.GEOM_BOX, size,         # half-extend
@@ -429,23 +429,6 @@ class PlateBulletEnv(gym.Env):
                 current_fins.append((f_vec[-4:-1], f_vec[-1] > 0)) # A 3D vector with a flag, position information comes from [-4:-1] contact flag is last bit
 
             return current_fins, interped_fs
-
-        # Should be modified to be task agnorant heuristic reward to accelerate searching
-        def calc_reward_value():
-            # post obj config
-            cps_1 = self._p.getContactPoints(self.o_id, self.floor_id, -1, -1) # contact points between floor and object
-            pos_1, quat_1 = rb.get_link_com_xyz_orn(self._p, self.o_id, -1) # Object pose and orn
-            vel_1 = rb.get_link_com_linear_velocity(self._p, self.o_id, -1) # object's linear velocity vec 3
-
-            z_axis, _ = self._p.multiplyTransforms(
-                [0, 0, 0], quat_1, [0, 0, 1], [0, 0, 0, 1]
-            ) # Compute the object's z-axis vector in world frame
-            rot_metric = np.array(z_axis).dot(self.task)        # in [-1,1] # z-axis need to tilted to a given angle cosine similarity should be raise up seems to be
-
-            r  = - np.linalg.norm(vel_1) * 20 - len(cps_1) * 250 # As slow as possible, as less contact point as possible.
-            r += - 300 * np.linalg.norm([pos_1[0], pos_1[1], pos_1[2] - 0.3]) # COM should be 0.3 meter off the ground. While x and y coordinate remain the same.
-            r += 150 * rot_metric # hope the object can be rotate to a given z orientation
-            return r
         
         def calc_reward_value_stage_one():
             # TODO: Transform the pointcloud
@@ -560,12 +543,18 @@ class PlateBulletEnv(gym.Env):
             images = []
         for t in range(self.control_skip):
             pos, quat = rb.get_link_com_xyz_orn(self._p, self.o_id, -1)
-            
+            if t == 0 and self.c_step_timer == 0 and not self.train:
+                init_pcd = get_canonical_point_cloud()
+                init_df = self.compute_distance_field(init_pcd)
+                o3d.io.write_point_cloud(f"{currentdir}/assets/init_pcds/plate.ply",init_pcd)
+                np.save(f"{currentdir}/assets/init_dfs/plate.npy", init_df)
+                np.save(f"{currentdir}/assets/init_pose/plate.npy", np.hstack([pos,quat]))
             if not self.train:
                 tip_pose = []
                 for idx in range(self.num_fingertips):
                     tip_pose_candidate = list(self._p.multiplyTransforms(pos, quat, self.cur_fins[idx][0], [0, 0, 0, 1])[0])
                     local_normals = self.compute_tip_normals(self.cur_fins[idx][0])
+                    print("finger:",idx,"norm",local_normals)
                     tip_pose_candidate += list(self._p.multiplyTransforms([0,0,0], quat, local_normals, [0, 0, 0, 1])[0])
                     tip_pose.append(tip_pose_candidate)
                 tip_poses.append(tip_pose) # position + tip_normals 
@@ -607,7 +596,7 @@ class PlateBulletEnv(gym.Env):
         if self.c_step_timer == self.n_steps:
             pcd_output = get_canonical_point_cloud()
             com_h = rb.get_link_com_xyz_orn(self._p, self.o_id, -1)[0][2] * 0.5
-            for _ in range(50):
+            for _ in range(50 if self.train else 0):
                 pos, quat = rb.get_link_com_xyz_orn(self._p, self.o_id, -1)
                 if not self.train and self.add_physics:
                     self.update_grasp(pos, quat)
@@ -615,7 +604,7 @@ class PlateBulletEnv(gym.Env):
                     for idx in range(len(self.all_fingers)):
                         tip_pose_candidate = list(self._p.getBasePositionAndOrientation(self.tip_ids[idx])[0])
                         # Get normal using local coordinate
-                        local_normals = self.compute_tip_normals(self.cur_fins[idx][0] if idx < self.num_fingertips else self.grasp_pos[idx-self.num_fingertips])
+                        local_normals = self.compute_tip_normals(self.cur_fins[idx][0] if idx < self.num_fingertips else self.grasp_pos[idx])
                         tip_pose_candidate += list(self._p.multiplyTransforms([0,0,0], quat, local_normals, [0, 0, 0, 1])[0])
                         tip_pose.append(tip_pose_candidate)
                     tip_poses.append(tip_pose) # position + tip_normals 
@@ -639,7 +628,7 @@ class PlateBulletEnv(gym.Env):
                     for idx in range(len(self.all_fingers)):
                         tip_pose_candidate = list(self._p.getBasePositionAndOrientation(self.tip_ids[idx])[0])
                         # Get normal using local coordinate
-                        local_normals = self.compute_tip_normals(self.cur_fins[idx][0] if idx < self.num_fingertips else self.grasp_pos[idx-self.num_fingertips])
+                        local_normals = self.compute_tip_normals(self.cur_fins[idx][0] if idx < self.num_fingertips else self.grasp_pos[idx])
                         tip_pose_candidate += list(self._p.multiplyTransforms([0,0,0], quat, local_normals, [0, 0, 0, 1])[0])
                         tip_pose.append(tip_pose_candidate)
                     tip_poses.append(tip_pose) # position + tip_normals 
@@ -740,24 +729,26 @@ class PlateBulletEnv(gym.Env):
 
     def setup_grasp(self,pos, quat):
         self.grasp_constraint = []
-        for i,tip in enumerate(self.grasp_pos):
+        for i,idx in enumerate(self.grasp_idx):
+            tip = self.grasp_pos[idx]
             tip_pose, _ = self._p.multiplyTransforms(pos, quat, tip, [0, 0, 0, 1]) # Position of finger tip in world coordinate
-            self._p.setCollisionFilterPair(self.tip_ids[self.grasp_idx[i]], self.o_id, -1, -1, 0)
-            self._p.resetBasePositionAndOrientation(self.tip_ids[self.grasp_idx[i]],
+            self._p.setCollisionFilterPair(self.tip_ids[idx], self.o_id, -1, -1, 0)
+            self._p.resetBasePositionAndOrientation(self.tip_ids[idx],
                                                     tip_pose,
                                                     quat)
             # Connect finger tips to the object for this simulation step
-            c = self._p.createConstraint(self.tip_ids[self.grasp_idx[i]], -1, -1, -1, pybullet.JOINT_FIXED,
+            c = self._p.createConstraint(self.tip_ids[idx], -1, -1, -1, pybullet.JOINT_FIXED,
                                             [0, 0, 0], [0, 0, 0],
                                             childFramePosition=tip_pose,
                                             childFrameOrientation=quat)
             self.grasp_constraint.append(c)
         self._p.stepSimulation()
-        for i, tip in enumerate(self.grasp_pos):
-            self._p.setCollisionFilterPair(self.tip_ids[self.grasp_idx[i]],self.o_id, -1, -1, 1)
+        for i, idx in enumerate(self.grasp_idx):
+            self._p.setCollisionFilterPair(self.tip_ids[idx],self.o_id, -1, -1, 1)
 
     def update_grasp(self, pos, quat):
-        for i,tip in enumerate(self.grasp_pos):
+        for i, idx in enumerate(self.grasp_idx):
+            tip = self.grasp_pos[idx]
             tip_pose, _ = self._p.multiplyTransforms(pos, quat, tip, [0, 0, 0, 1])
             tip_pose = np.array(tip_pose)
             self._p.changeConstraint(self.grasp_constraint[i], tip_pose, quat, maxForce=self.max_forces, erp=0.9)
@@ -769,10 +760,11 @@ class PlateBulletEnv(gym.Env):
             tip_pose,_ = self._p.multiplyTransforms(pos, quat, self.cur_fins[i][0], [0, 0, 0, 1])
             self.ref_poses_cond.append(np.array(tip_pose))
         self.ref_poses_grasp = []
-        for i,tip in enumerate(self.grasp_pos):
+        for i,idx in enumerate(self.grasp_idx):
+            tip = self.grasp_pos[idx]
             tip_pose, _ = self._p.multiplyTransforms(pos, quat, tip, [0, 0, 0, 1])
             self.ref_poses_grasp.append(np.array(tip_pose))
-        self._p.changeDynamics(self.o_id,-1,mass=0.1) # Have very good effect!
+        self._p.changeDynamics(self.o_id,-1,mass=0.3) # Have very good effect!
 
 
     def update_constraint_with_delta(self,quat,delta=None):
@@ -782,7 +774,7 @@ class PlateBulletEnv(gym.Env):
                 tip_pose += delta
             self._p.changeConstraint(self.tip_cids[i], tip_pose, quat, maxForce=self.max_forces, erp=0.9)
 
-        for i in range(len(self.grasp_pos)):
+        for i, idx in enumerate(self.grasp_idx):
             tip_pose = self.ref_poses_grasp[i]
             if delta is not None:
                 tip_pose += delta

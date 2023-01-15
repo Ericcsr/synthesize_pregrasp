@@ -37,11 +37,12 @@ from utils.contact_state_graph import ContactStateGraph
 from neurals.distancefield_utils import create_waterbottle_df
 from neurals.NPGraspNet import NPGraspNet
 from envs.setup_pybullet import create_waterbottle
+from envs.scales import SCALES
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 CLEARANCE_H = 0.01
 
-SCALE = np.array([1.0, 1.0, 1.0])
+SCALE = SCALES["waterbottle"]
 
 class WaterbottleBulletEnv(gym.Env):
     metadata = {'render.modes': ['human', 'rgb_array'], 'video.frames_per_second': 50}
@@ -152,7 +153,7 @@ class WaterbottleBulletEnv(gym.Env):
             if self.mode != "only_score":
                 self.score_function.load_dex_grasp_net(dex_path)
             self.score_function.load_score_function(sc_path)
-            self.dist_field_env = create_waterbottle_df()
+        self.dist_field_env = create_waterbottle_df()
 
         obs = self.reset()  # and update init obs
 
@@ -200,7 +201,7 @@ class WaterbottleBulletEnv(gym.Env):
         for finger in self.all_fingers:
             color = colors[finger]
 
-            size = [0.02, 0.02, 0.011] if finger == 0 else [0.01, 0.01, 0.011]       # thumb larger
+            size = [0.01, 0.01, 0.011] if finger == 0 else [0.01, 0.01, 0.011]       # thumb larger
             
             init_xyz = (finger+2.0, finger+2.0, finger+2.0) if finger in self.active_finger_tips else (100,100,100)
             tip_id = rb.create_primitive_shape(self._p, 0.01, pybullet.GEOM_BOX, size,         # half-extend
@@ -453,7 +454,12 @@ class WaterbottleBulletEnv(gym.Env):
             images = []
         for t in range(self.control_skip):
             pos, quat = rb.get_link_com_xyz_orn(self._p, self.o_id, -1)
-            
+            if t == 0 and self.c_step_timer == 0 and not self.train:
+                init_pcd = get_canonical_point_cloud()
+                init_df = self.compute_distance_field(init_pcd)
+                o3d.io.write_point_cloud(f"{currentdir}/assets/init_pcds/waterbottle.ply",init_pcd)
+                np.save(f"{currentdir}/assets/init_dfs/waterbottle.npy", init_df)
+                np.save(f"{currentdir}/assets/init_pose/waterbottle.npy", np.hstack([pos,quat]))
             if not self.train:
                 tip_pose = []
                 for idx in range(self.num_fingertips):
@@ -499,7 +505,7 @@ class WaterbottleBulletEnv(gym.Env):
         if self.c_step_timer == self.n_steps:
             pcd_output = get_canonical_point_cloud()
             com_x = rb.get_link_com_xyz_orn(self._p, self.o_id, -1)[0][0] * 0.5
-            for _ in range(50):
+            for _ in range(50 if self.train else 0):
                 pos, quat = rb.get_link_com_xyz_orn(self._p, self.o_id, -1)
                 if not self.train and self.add_physics:
                     self.update_grasp(pos, quat)
@@ -507,7 +513,7 @@ class WaterbottleBulletEnv(gym.Env):
                     for idx in range(len(self.all_fingers)):
                         tip_pose_candidate = list(self._p.getBasePositionAndOrientation(self.tip_ids[idx])[0])
                         # Get normal using local coordinate
-                        local_normals = self.compute_tip_normals(self.cur_fins[idx][0] if idx < self.num_fingertips else self.grasp_pos[idx-self.num_fingertips])
+                        local_normals = self.compute_tip_normals(self.cur_fins[idx][0] if idx < self.num_fingertips else self.grasp_pos[idx])
                         tip_pose_candidate += list(self._p.multiplyTransforms([0,0,0], quat, local_normals, [0, 0, 0, 1])[0])
                         tip_pose.append(tip_pose_candidate)
                     tip_poses.append(tip_pose) # position + tip_normals 
@@ -519,11 +525,11 @@ class WaterbottleBulletEnv(gym.Env):
                     if self.showImage:
                         time.sleep(self._ts * 4.0)
                     image = self.renderer.render()
-            delta = np.array([0,0,0.2])/100
+            delta = np.array([0,0,0.1])/100
             pos, quat = rb.get_link_com_xyz_orn(self._p, self.o_id, -1)
             if not self.train and self.add_physics:
                 self.get_ref_tip_pose(pos,quat)
-            for t in range(100 if not self.train else 50):
+            for t in range(50 if self.train else 100):
                 pos, quat = rb.get_link_com_xyz_orn(self._p, self.o_id, -1)
                 if not self.train and self.add_physics:
                     self.update_constraint_with_delta(quat,delta=delta)
@@ -531,7 +537,7 @@ class WaterbottleBulletEnv(gym.Env):
                     for idx in range(len(self.all_fingers)):
                         tip_pose_candidate = list(self._p.getBasePositionAndOrientation(self.tip_ids[idx])[0])
                         # Get normal using local coordinate
-                        local_normals = self.compute_tip_normals(self.cur_fins[idx][0] if idx < self.num_fingertips else self.grasp_pos[idx-self.num_fingertips])
+                        local_normals = self.compute_tip_normals(self.cur_fins[idx][0] if idx < self.num_fingertips else self.grasp_pos[idx])
                         tip_pose_candidate += list(self._p.multiplyTransforms([0,0,0], quat, local_normals, [0, 0, 0, 1])[0])
                         tip_pose.append(tip_pose_candidate)
                     tip_poses.append(tip_pose) # position + tip_normals 
@@ -544,7 +550,7 @@ class WaterbottleBulletEnv(gym.Env):
                         time.sleep(self._ts * 4.0)
                     image = self.renderer.render()
 
-            for _ in range(150 if not self.train else 200):
+            for _ in range(0 if not self.train else 200):
                 self._p.stepSimulation()
                 final_r += 0 #calc_reward_value()
                 if self.render:
@@ -662,30 +668,34 @@ class WaterbottleBulletEnv(gym.Env):
         df = self.dist_field_env.get_points_distance(points)
         return df
 
-    def load_grasp(self, grasp, finger_idx=[2,3,4]):
+    def load_grasp(self, grasp, finger_idx=[0,2,3,4]):
         self.grasp_pos = grasp[:,:3] + 0.01 * grasp[:,3:]
         self.grasp_idx = finger_idx
 
     def setup_grasp(self,pos, quat):
         self.grasp_constraint = []
-        for i,tip in enumerate(self.grasp_pos):
+        for idx in self.grasp_idx:
+            tip = self.grasp_pos[idx]
             tip_pose, _ = self._p.multiplyTransforms(pos, quat, tip, [0, 0, 0, 1]) # Position of finger tip in world coordinate
-            self._p.setCollisionFilterPair(self.tip_ids[self.grasp_idx[i]], self.o_id, -1, -1, 0)
-            self._p.resetBasePositionAndOrientation(self.tip_ids[self.grasp_idx[i]],
+            self._p.setCollisionFilterPair(self.tip_ids[idx], self.o_id, -1, -1, 0)
+            self._p.resetBasePositionAndOrientation(self.tip_ids[idx],
                                                     tip_pose,
                                                     quat)
             # Connect finger tips to the object for this simulation step
-            c = self._p.createConstraint(self.tip_ids[self.grasp_idx[i]], -1, -1, -1, pybullet.JOINT_FIXED,
+            c = self._p.createConstraint(self.tip_ids[idx], -1, -1, -1, pybullet.JOINT_FIXED,
                                             [0, 0, 0], [0, 0, 0],
                                             childFramePosition=tip_pose,
                                             childFrameOrientation=quat)
+            print(c)
             self.grasp_constraint.append(c)
         self._p.stepSimulation()
-        for i, tip in enumerate(self.grasp_pos):
-            self._p.setCollisionFilterPair(self.tip_ids[self.grasp_idx[i]],self.o_id, -1, -1, 1)
+        for idx in self.grasp_idx:
+            self._p.setCollisionFilterPair(self.tip_ids[idx],self.o_id, -1, -1, 1)
 
     def update_grasp(self, pos, quat):
-        for i,tip in enumerate(self.grasp_pos):
+        self._p.changeConstraint(self.tip_cids[0], maxForce=0)
+        for i, idx in enumerate(self.grasp_idx):
+            tip = self.grasp_pos[idx]
             tip_pose, _ = self._p.multiplyTransforms(pos, quat, tip, [0, 0, 0, 1])
             tip_pose = np.array(tip_pose)
             self._p.changeConstraint(self.grasp_constraint[i], tip_pose, quat, maxForce=self.max_forces, erp=0.9)
@@ -697,7 +707,8 @@ class WaterbottleBulletEnv(gym.Env):
             tip_pose,_ = self._p.multiplyTransforms(pos, quat, self.cur_fins[i][0], [0, 0, 0, 1])
             self.ref_poses_cond.append(np.array(tip_pose))
         self.ref_poses_grasp = []
-        for i,tip in enumerate(self.grasp_pos):
+        for i,idx in enumerate(self.grasp_idx):
+            tip = self.grasp_pos[idx]
             tip_pose, _ = self._p.multiplyTransforms(pos, quat, tip, [0, 0, 0, 1])
             self.ref_poses_grasp.append(np.array(tip_pose))
         self._p.changeDynamics(self.o_id,-1,mass=0.3) # Have very good effect!
@@ -707,13 +718,17 @@ class WaterbottleBulletEnv(gym.Env):
             tip_pose = self.ref_poses_cond[i]
             if delta is not None:
                 tip_pose += delta
-            self._p.changeConstraint(self.tip_cids[i], tip_pose, quat, maxForce=self.max_forces*2, erp=0.9)
+            if i == 0:
+                self._p.changeConstraint(self.tip_cids[i], tip_pose, quat, maxForce=0, erp=0.9)
+            else:
+                self._p.changeConstraint(self.tip_cids[i], tip_pose, quat, maxForce=self.max_forces, erp=0.9)
 
-        for i in range(len(self.grasp_pos)):
+        for i, idx in enumerate(self.grasp_idx):
             tip_pose = self.ref_poses_grasp[i]
             if delta is not None:
                 tip_pose += delta
-            self._p.changeConstraint(self.grasp_constraint[i],tip_pose, quat, maxForce=self.max_forces*2, erp=0.9)
+            #print(self.max_forces)
+            self._p.changeConstraint(self.grasp_constraint[i],tip_pose, quat, maxForce=self.max_forces, erp=0.9)
 
 
             

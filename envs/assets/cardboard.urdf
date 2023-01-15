@@ -1,15 +1,16 @@
-<?xml version="0.0" ?>
+<?xml version="1.0" ?>
 <robot name="cardboard">
   <link name="cardboardBody">
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-       <mass value="1.0"/>
+       <mass value="2.0"/>
        <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
     </inertial>
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-		<box size="0.4 0.4 0.002"/>
+		    <!-- <box size="0.24 0.4 0.002"/> -->
+        <mesh filename="box.stl" scale="0.6 1 0.02"/>
       </geometry>
        <material name="white">
         <color rgba="0.5 0.5 0.8 1"/>
@@ -18,7 +19,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-	 	<box size="0.4 0.4 0.002"/>
+	 	    <box size="0.24 0.4 0.002"/>
       </geometry>
     </collision>
   </link>

@@ -34,15 +34,15 @@ from utils.helper import convert_q_bullet_to_matrix, getSGSigmapoints
 from utils.small_block_region import SmallBlockRegionDummy
 from utils.contact_state_graph import ContactStateGraph
 from neurals.distancefield_utils import create_cardboard_df
-from envs.setup_pybullet import create_ruler
-
+from envs.setup_pybullet import create_cardboard
+from envs.scales import SCALES
 # Import neural network related information
 from neurals.NPGraspNet import NPGraspNet
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-CLEARANCE_H = 0.0005
+CLEARANCE_H = 0.001
 
-SCALE = np.array([1,1,0.02])
+SCALE = SCALES["cardboard"]
 
 class CardboardBulletEnv(gym.Env):
     metadata = {'render.modes': ['human', 'rgb_array'], 'video.frames_per_second': 50}
@@ -153,7 +153,7 @@ class CardboardBulletEnv(gym.Env):
             if self.mode != "only_score":
                 self.score_function.load_dex_grasp_net(dex_path)
             self.score_function.load_score_function(sc_path)
-            self.dist_field_env = create_cardboard_df()
+        self.dist_field_env = create_cardboard_df()
 
         obs = self.reset()  # and update init obs
 
@@ -174,7 +174,7 @@ class CardboardBulletEnv(gym.Env):
         self._p.setTimeStep(self._ts)
         self._p.setGravity(0, 0, -10)
 
-        self.o_id,self.floor_id = create_ruler(self._p)
+        self.o_id,self.floor_id = create_cardboard(self._p, scale=SCALE)
         # Need to create corresponding pointcloud
         self.mesh_obj = o3d.geometry.TriangleMesh.create_box(0.4*SCALE[0], 0.4*SCALE[1], 0.1*SCALE[2]) # Not half extend
         self.mesh_obj.compute_vertex_normals()
@@ -187,7 +187,7 @@ class CardboardBulletEnv(gym.Env):
 
         # TODO: (Eric) Need to tune friction.
         self._p.changeDynamics(self.floor_id, -1,
-                               lateralFriction=70.0, restitution=0.0)            # TODO
+                               lateralFriction=0.002, restitution=0.0)            # TODO
         self._p.changeDynamics(self.o_id, -1,
                                lateralFriction=70.0, restitution=0.0)             # TODO
 
@@ -381,7 +381,7 @@ class CardboardBulletEnv(gym.Env):
                 extra_cond[0,i*3:(i+1)*3] = self.project_to_pcd(self.cur_fins[fin][0])
             rot_matrix = convert_q_bullet_to_matrix(quat)
             
-            pcd_obj = copy.deepcopy(self.pcd_obj).rotate(rot_matrix)
+            pcd_obj = copy.deepcopy(self.pcd_obj).rotate(rot_matrix, center=[0,0,0])
             pcd_obj.translate(pos)
             
             # Remove all parts in occlusion
@@ -393,7 +393,7 @@ class CardboardBulletEnv(gym.Env):
                 df = None
 
             pcd_obj.translate(-pos)
-            pcd_obj.rotate(rot_matrix.T)
+            pcd_obj.rotate(rot_matrix.T, center=[0,0,0])
             
             # IDEA: Build a bounding box system, each bounding box must be disjoint,
             # crop all the point outside the bounding box system, merge all the point
@@ -421,13 +421,13 @@ class CardboardBulletEnv(gym.Env):
             pos = np.array(pos_1)
             quat = np.array(quat_1)
             rot_matrix = convert_q_bullet_to_matrix(quat)
-            pcd_obj = copy.deepcopy(self.pcd_obj).rotate(rot_matrix)
+            pcd_obj = copy.deepcopy(self.pcd_obj).rotate(rot_matrix, center=[0,0,0])
             pcd_obj.translate(pos)
             
             # Remove all parts in occlusion
             pcd_obj = self.deocclude(pcd_obj)
             pcd_obj.translate(-pos)
-            pcd_obj.rotate(rot_matrix.T)
+            pcd_obj.rotate(rot_matrix.T, center=[0,0,0])
             return pcd_obj
 
         # Apply constraints on new contact points..
@@ -483,7 +483,12 @@ class CardboardBulletEnv(gym.Env):
             images = []
         for t in range(self.control_skip):
             pos, quat = rb.get_link_com_xyz_orn(self._p, self.o_id, -1)
-            
+            if t == 0 and self.c_step_timer == 0 and not self.train:
+                init_pcd = get_canonical_point_cloud()
+                init_df = self.compute_distance_field(init_pcd)
+                o3d.io.write_point_cloud(f"{currentdir}/assets/init_pcds/cardboard.ply",init_pcd)
+                np.save(f"{currentdir}/assets/init_dfs/cardboard.npy", init_df)
+                np.save(f"{currentdir}/assets/init_pose/cardboard.npy", np.hstack([pos,quat]))
             if not self.train:
                 tip_pose = []
                 for idx in range(self.num_fingertips):
@@ -530,14 +535,14 @@ class CardboardBulletEnv(gym.Env):
         if self.c_step_timer == self.n_steps:
             pcd_output = get_canonical_point_cloud()
             com_h = rb.get_link_com_xyz_orn(self._p, self.o_id, -1)[0][2] * 0.5
-            for _ in range(50):
+            for _ in range(50 if self.train else 0):
                 pos, quat = rb.get_link_com_xyz_orn(self._p, self.o_id, -1)
                 if not self.train and self.add_physics:
                     self.update_grasp(pos, quat)
                     tip_pose = []
                     for idx in range(len(self.all_fingers)):
                         tip_pose_candidate = list(self._p.getBasePositionAndOrientation(self.tip_ids[idx])[0])
-                        local_normals = self.compute_tip_normals(self.cur_fins[idx][0] if idx < self.num_fingertips else self.grasp_pos[idx-self.num_fingertips])
+                        local_normals = self.compute_tip_normals(self.cur_fins[idx][0] if idx < self.num_fingertips else self.grasp_pos[idx])
                         tip_pose_candidate += list(self._p.multiplyTransforms([0,0,0], quat, local_normals, [0, 0, 0, 1])[0])
                         tip_pose.append(tip_pose_candidate)
                     tip_poses.append(tip_pose)
@@ -549,18 +554,18 @@ class CardboardBulletEnv(gym.Env):
                     if self.showImage:
                         time.sleep(self._ts * 4.0)
                     self.renderer.render()
-            delta = np.array([0, 0, 0.2])/100
+            delta = np.array([0, 0, 0.1])/100
             pos, quat = rb.get_link_com_xyz_orn(self._p, self.o_id, -1)
             if not self.train and self.add_physics:
                 self.get_ref_tip_pose(pos, quat)
-            for t in range(100 if not self.train else 50):
+            for t in range(50 if self.train else 100):
                 pos, quat = rb.get_link_com_xyz_orn(self._p, self.o_id, -1)
                 if not self.train and self.add_physics:
                     self.update_constraint_with_delta(quat, delta=delta)
                     tip_pose = []
                     for idx in range(len(self.all_fingers)):
                         tip_pose_candidate = list(self._p.getBasePositionAndOrientation(self.tip_ids[idx])[0])
-                        local_normals = self.compute_tip_normals(self.cur_fins[idx][0] if idx < self.num_fingertips else self.grasp_pos[idx-self.num_fingertips])
+                        local_normals = self.compute_tip_normals(self.cur_fins[idx][0] if idx < self.num_fingertips else self.grasp_pos[idx])
                         tip_pose_candidate += list(self._p.multiplyTransforms([0, 0, 0], quat, local_normals, [0, 0, 0, 1])[0])
                         tip_pose.append(tip_pose_candidate)
                     tip_poses.append(tip_pose)
@@ -570,6 +575,7 @@ class CardboardBulletEnv(gym.Env):
                 if self.render:
                     if self.showImage:
                         time.sleep(self._ts * 4.0)
+                    self.renderer.render()
             com_h += rb.get_link_com_xyz_orn(self._p, self.o_id, -1)[0][2] * 0.5
         obs = self.get_extended_observation()
 
@@ -631,20 +637,20 @@ class CardboardBulletEnv(gym.Env):
     def initialize_deocclude_module(self):
         self.feasible_boxes = []
         # The box on the top of desk
-        self.feasible_boxes.append(o3d.geometry.AxisAlignedBoundingBox(min_bound=np.array([-1.5, -0.18, 0.0005]),
-                                                        max_bound=np.array([1.5, 2.82, 100])))
-        # The box ahead of the table
-        self.feasible_boxes.append(o3d.geometry.AxisAlignedBoundingBox(min_bound=np.array([1.5, -100, -100]),
-                                                         max_bound=np.array([100, 100, 100])))
-        # The box behind the table
-        self.feasible_boxes.append(o3d.geometry.AxisAlignedBoundingBox(min_bound=np.array([-100, -100, -100]),
-                                                         max_bound=np.array([-1.5, 100, 100])))
-        # The box left to the table
-        self.feasible_boxes.append(o3d.geometry.AxisAlignedBoundingBox(min_bound=np.array([-1.5, 2.82, -100]),
-                                                                       max_bound=np.array([1.5, 100, 100])))
+        self.feasible_boxes.append(o3d.geometry.AxisAlignedBoundingBox(min_bound=np.array([-1.5, -0.02, 0.0005]),
+                                                        max_bound=np.array([1.5, 3.00, 100])))
+        # # The box ahead of the table
+        # self.feasible_boxes.append(o3d.geometry.AxisAlignedBoundingBox(min_bound=np.array([1.5, -100, -100]),
+        #                                                  max_bound=np.array([100, 100, 100])))
+        # # The box behind the table
+        # self.feasible_boxes.append(o3d.geometry.AxisAlignedBoundingBox(min_bound=np.array([-100, -100, -100]),
+        #                                                  max_bound=np.array([-1.5, 100, 100])))
+        # # The box left to the table
+        # self.feasible_boxes.append(o3d.geometry.AxisAlignedBoundingBox(min_bound=np.array([-1.5, 2.82, -100]),
+        #                                                                max_bound=np.array([1.5, 100, 100])))
         # The box right to the table
         self.feasible_boxes.append(o3d.geometry.AxisAlignedBoundingBox(min_bound=np.array([-1.5, -100, -100]),
-                                                                       max_bound=np.array([1.5, -0.18, 100])))
+                                                                       max_bound=np.array([1.5, -0.02, 100])))
         
     def deocclude(self, pcd):
         all_points = []
@@ -678,30 +684,39 @@ class CardboardBulletEnv(gym.Env):
         df = self.dist_field_env.get_points_distance(points)
         return df
 
-    def load_grasp(self, grasp, finger_idx=[2,3,4]):
+    def load_grasp(self, grasp, finger_idx=[1,2,3,4]):
         self.grasp_pos = grasp[:,:3] + 0.01 * grasp[:,3:]
         self.grasp_idx = finger_idx
+        self.inverse_cond_idx = [0,1]
+        if 0 in self.grasp_idx:
+            self.inverse_cond_idx.remove(1)
+        elif 1 in self.grasp_idx:
+            self.inverse_cond_idx.remove(0)
 
     def setup_grasp(self,pos, quat):
         self.grasp_constraint = []
-        for i,tip in enumerate(self.grasp_pos):
+        for i,idx in enumerate(self.grasp_idx):
+            tip = self.grasp_pos[idx]
             tip_pose, _ = self._p.multiplyTransforms(pos, quat, tip, [0, 0, 0, 1]) # Position of finger tip in world coordinate
-            self._p.setCollisionFilterPair(self.tip_ids[self.grasp_idx[i]], self.o_id, -1, -1, 0)
-            self._p.resetBasePositionAndOrientation(self.tip_ids[self.grasp_idx[i]],
+            self._p.setCollisionFilterPair(self.tip_ids[idx], self.o_id, -1, -1, 0)
+            self._p.resetBasePositionAndOrientation(self.tip_ids[idx],
                                                     tip_pose,
                                                     quat)
             # Connect finger tips to the object for this simulation step
-            c = self._p.createConstraint(self.tip_ids[self.grasp_idx[i]], -1, -1, -1, pybullet.JOINT_FIXED,
+            c = self._p.createConstraint(self.tip_ids[idx], -1, -1, -1, pybullet.JOINT_FIXED,
                                             [0, 0, 0], [0, 0, 0],
                                             childFramePosition=tip_pose,
                                             childFrameOrientation=quat)
             self.grasp_constraint.append(c)
         self._p.stepSimulation()
-        for i, tip in enumerate(self.grasp_pos):
-            self._p.setCollisionFilterPair(self.tip_ids[self.grasp_idx[i]],self.o_id, -1, -1, 1)
+        for i, idx in enumerate(self.grasp_idx):
+            self._p.setCollisionFilterPair(self.tip_ids[idx],self.o_id, -1, -1, 1)
 
     def update_grasp(self, pos, quat):
-        for i,tip in enumerate(self.grasp_pos):
+        for i in self.inverse_cond_idx:
+            self._p.changeConstraint(self.tip_cids[i], maxForce=0)
+        for i,idx in enumerate(self.grasp_idx):
+            tip = self.grasp_pos[idx]
             tip_pose, _ = self._p.multiplyTransforms(pos, quat, tip, [0, 0, 0, 1])
             tip_pose = np.array(tip_pose)
             self._p.changeConstraint(self.grasp_constraint[i], tip_pose, quat, maxForce=self.max_forces, erp=0.9)
@@ -713,23 +728,27 @@ class CardboardBulletEnv(gym.Env):
             tip_pose,_ = self._p.multiplyTransforms(pos, quat, self.cur_fins[i][0], [0, 0, 0, 1])
             self.ref_poses_cond.append(np.array(tip_pose))
         self.ref_poses_grasp = []
-        for i,tip in enumerate(self.grasp_pos):
+        for i,idx in enumerate(self.grasp_idx):
+            tip = self.grasp_pos[idx]
             tip_pose, _ = self._p.multiplyTransforms(pos, quat, tip, [0, 0, 0, 1])
             self.ref_poses_grasp.append(np.array(tip_pose))
-        self._p.changeDynamics(self.o_id,-1,mass=0.2) # Have very good effect!
+        self._p.changeDynamics(self.o_id,-1,mass=0.1) # Have very good effect!
 
     def update_constraint_with_delta(self,quat,delta=None):
         for i in range(self.num_fingertips):
             tip_pose = self.ref_poses_cond[i]
             if delta is not None:
                 tip_pose += delta
-            self._p.changeConstraint(self.tip_cids[i], tip_pose, quat, maxForce=self.max_forces, erp=0.9)
+            if i in self.inverse_cond_idx:
+                self._p.changeConstraint(self.tip_cids[i], maxForce=0)
+            else:
+                self._p.changeConstraint(self.tip_cids[i], tip_pose, quat, maxForce=2*self.max_forces, erp=0.9)
 
-        for i in range(len(self.grasp_pos)):
+        for i, idx in enumerate(self.grasp_idx):
             tip_pose = self.ref_poses_grasp[i]
             if delta is not None:
                 tip_pose += delta
-            self._p.changeConstraint(self.grasp_constraint[i],tip_pose, quat, maxForce=self.max_forces, erp=0.9)
+            self._p.changeConstraint(self.grasp_constraint[i],tip_pose, quat, maxForce=2*self.max_forces, erp=0.9)
 
         
 

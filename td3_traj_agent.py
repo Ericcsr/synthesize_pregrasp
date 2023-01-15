@@ -1,7 +1,7 @@
 import stable_baselines3 as sb3
 import torch
 import numpy as np
-from envs.small_block_contact_env import SmallBlockContactBulletEnv
+from unused.small_block_contact_env import SmallBlockContactBulletEnv
 from argparse import ArgumentParser
 import random
 

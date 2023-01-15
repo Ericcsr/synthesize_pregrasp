@@ -8,9 +8,8 @@ allegro_hand_urdf_path     = 'model/resources/allegro_hand_description/urdf/alle
 allegro_arm_urdf_path = 'model/resources/allegro_hand_description/urdf/allegro_arm.urdf'
 
 shadow_hand_urdf_path = "model/resources/shadow_hand_description/urdf/shadow_hand.urdf"
-shadow_hand_urdf_collision_path = "model/resources/shadow_hand_description/urdf/shadow_hand_collision_.urdf"
-
-plate_mesh_path = "model/resources/meshes/plate_cvx.obj" # Should be full convex hull drake only accept obj file
+shadow_hand_urdf_collision_path = "model/resources/shadow_hand_description/urdf/shadow_hand_collision.urdf"
+shadow_hand_urdf_simple_collision_path = "model/resources/shadow_hand_description/urdf/shadow_hand_collision_.urdf"
 
 # Offset for counting joints for fingers
 allegro_hand_offset = 0
@@ -19,7 +18,7 @@ shadow_hand_offset = 2
 # allegro_base_inertia_offset = -0.0475
 # allegro_base_collision_offset = 0.0475
 gravity_vector = [0., 0., -9.8]
-object_padding = 0.005  # Radius of the finger
+object_padding = 0.0  # Radius of the finger
 
 force_closure_regularization_weight = 0.05
 min_finger_normal = 0.1
@@ -28,7 +27,7 @@ SCALE = 0.6
 POINT_NUM=20000
 MAX_FORCE=80
 CONTROL_SKIP=50
-ALLOWANCE=0.03
+ALLOWANCE=0.02
 ROOT_RANGE=1.0
 
 HAS_FLOOR=False
@@ -50,19 +49,19 @@ USE_SOFT_BOUNDING=False
 # For checking collisions
 # joint idx: local transform of collision checking point (one per link)
 # TODO: Hard coded collision dict currently UNUSED
-collision_points_dict = {-1:(2.04e-2, 0., -0.095),
-                         0: (9.8e-3,0.,8.2e-3),
-                         1: (9.8e-3,0.,2.7e-2),
-                         2: (9.8e-3,0.,1.92e-2),
-                         3: (9.8e-3,0.,1.335e-2),
-                         5: (9.8e-3,0.,8.2e-3),
-                         6: (9.8e-3,0.,1.92e-2),
-                         7: (9.8e-3,0.,1.335e-2),
-                         8: (9.8e-3,0.,8.2e-3),
-                         15: (9.8e-3,0.,1.79e-2),
-                         16: (9.8e-3,0.,8.85e-3),
-                         17: (9.8e-3,0.,2.57e-2),
-                         18:(9.8e-3,0.,2.115e-2)}
+collision_points_dict = {-1: (2.04e-2, 0., -0.095),
+                         0: (9.8e-3, 0., 8.2e-3),
+                         1: (9.8e-3, 0., 2.7e-2),
+                         2: (9.8e-3, 0., 1.92e-2),
+                         3: (9.8e-3, 0., 1.335e-2),
+                         5: (9.8e-3, 0., 8.2e-3),
+                         6: (9.8e-3, 0., 1.92e-2),
+                         7: (9.8e-3, 0., 1.335e-2),
+                         8: (9.8e-3, 0., 8.2e-3),
+                         15: (9.8e-3, 0., 1.79e-2),
+                         16: (9.8e-3, 0., 8.85e-3),
+                         17: (9.8e-3, 0., 2.57e-2),
+                         18: (9.8e-3, 0., 2.115e-2)}
 
 friction_coefficient = 0.3
 
@@ -206,7 +205,7 @@ AllegroArmFingertipDrakeLinkOffset={
 
 ShadowHandFingertipDrakeLinkOffset = {
     ShadowHandFinger.THUMB: np.array([0., 0., 0.02]),
-    ShadowHandFinger.INDEX: np.array([0., 0., 0.016]),
+    ShadowHandFinger.INDEX: np.array([0., 0., 0.02]),
     ShadowHandFinger.MIDDLE: np.array([0., 0., 0.016]),
     ShadowHandFinger.RING: np.array([0., 0., 0.016]),
     ShadowHandFinger.LITTLE: np.array([0., 0., 0.016]),
@@ -234,6 +233,16 @@ ShadowHandIndex2Name = {
 #     AllegroHandFinger.MIDDLE: np.array([0.,0.,0.0]),
 #     AllegroHandFinger.RING: np.array([0.,0.,0.0])
 # }
+
+DEFAULT_SHADOW={
+    ShadowHandFinger.THUMB: np.array([0.0, 0.4, 0.0, 0.1, 0.1]),
+    ShadowHandFinger.INDEX: np.array([-0.1, 0.3, 0.3, 0.3]),
+    ShadowHandFinger.MIDDLE: np.array([0, 0.3, 0.3, 0.3]),
+    ShadowHandFinger.RING: np.array([0, 0.3, 0.3, 0.3]),
+    ShadowHandFinger.LITTLE: np.array([0.2, -0.1, 0.3, 0.3, 0.3])
+}
+
+DEFAULT_JOINT_ALLOWANCE=0.05
 
 def finger_angles_dict_to_finger_q(finger_angles_dict):
     """

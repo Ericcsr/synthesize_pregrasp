@@ -47,6 +47,7 @@ def main():
     parser.add_argument("--latent_dim", type=int, default=20)
     parser.add_argument("--has_distance_field", action="store_true", default=False)
     parser.add_argument("--dataset_file", type=str, default=None, required=True)
+    parser.add_argument("--epochs", type=int, default=3000)
     opt = parser.parse_args()
 
     if opt == None:
@@ -73,7 +74,7 @@ def main():
     # Prepare the score saving directory
     os.makedirs(current_dir+f"/only_score_model_{opt.exp_name}", exist_ok=True)
 
-    for epoch in range(3000):
+    for epoch in range(opt.epochs):
         # Need to reset dataset periteration to prevent overfit
         train_loader, test_loader, train_size, test_size = load_dataset(opt)
         # dataset preparation end
@@ -109,7 +110,7 @@ def main():
             iter_data_time = time.time()
 
             print('End of epoch %d / %d \t Time Taken: %d sec' %
-                (epoch, 3000,
+                (epoch, opt.epochs,
                 time.time() - epoch_start_time))
         
         if epoch % 5 == 0:

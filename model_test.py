@@ -1,13 +1,12 @@
-from envs.small_block_contact_graph_env import LaptopBulletEnv
+from envs.foodbox_contact_graph_env import FoodboxBulletEnv
 from envs.bookshelf_graph_env import BookShelfBulletEnv
-from envs.wall_box_graph_env import WallBoxBulletEnv
-from envs.table_box_graph_env import TableBoxBulletEnv
+from envs.laptop_contact_graph_env import LaptopBulletEnv
 from envs.plate_contact_graph_env import PlateBulletEnv
-from envs.handle_contact_graph_env import HandleBulletEnv
 from envs.waterbottle_graph_env import WaterbottleBulletEnv
 from envs.groovepen_contact_graph_env import GroovePenBulletEnv
 from envs.ruler_contact_graph_env import RulerBulletEnv
 from envs.cardboard_contact_graph_env import CardboardBulletEnv
+from envs.keyboard_contact_graph_env import KeyboardBulletEnv
 import open3d as o3d
 import numpy as np
 import random
@@ -34,21 +33,20 @@ def parse_tip_data(tip_poses):
 
 envs_dict = {
     "bookshelf":BookShelfBulletEnv,
+    "foodbox":FoodboxBulletEnv,
     "laptop":LaptopBulletEnv,
-    "wallbox":WallBoxBulletEnv,
-    "tablebox":TableBoxBulletEnv,
     "plate":PlateBulletEnv,
-    "handle":HandleBulletEnv,
     "waterbottle":WaterbottleBulletEnv,
     "groovepen": GroovePenBulletEnv,
     "ruler":RulerBulletEnv,
-    "cardboard":CardboardBulletEnv
+    "cardboard":CardboardBulletEnv,
+    "keyboard":KeyboardBulletEnv
 }
 
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("--exp_name", type=str, default="u_opt_0-10_tp4")
-    parser.add_argument("--env", type=str, default="laptop")
+    parser.add_argument("--env", type=str, default="foodbox")
     parser.add_argument("--init_data", type=str, default="")
     parser.add_argument("--playback",action="store_true", default=False)
     parser.add_argument("--showImage", action="store_true", default=False)
@@ -79,7 +77,7 @@ if __name__ == '__main__':
     path = np.array([0,0,0])#np.array([5,5,0])
 
     if args.add_physics:
-        full_grasp = np.load(f"data/predicted_grasps/{args.exp_name}.npy")[2:]
+        full_grasp = np.load(f"data/predicted_grasps/{args.exp_name}.npy")
 
     env = envs_dict[args.env]
     world = env(render=True, 
@@ -92,7 +90,8 @@ if __name__ == '__main__':
                 path=path,
                 showImage=args.showImage,
                 max_forces = max_force,
-                add_physics=args.add_physics)
+                add_physics=args.add_physics,
+                has_distance_field = True)
     if args.add_physics:
         world.load_grasp(full_grasp)
     world.renderer.read_config(camera_config)

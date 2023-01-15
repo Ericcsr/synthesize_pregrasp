@@ -1,14 +1,13 @@
 #from my_pybullet_envs.point_contact_env import PointContactBulletEnv
 from envs.plate_contact_graph_env import PlateBulletEnv
-from envs.small_block_contact_graph_env import LaptopBulletEnv
+from envs.foodbox_contact_graph_env import FoodboxBulletEnv
 from envs.bookshelf_graph_env import BookShelfBulletEnv
-from envs.wall_box_graph_env import WallBoxBulletEnv
-from envs.table_box_graph_env import TableBoxBulletEnv
-from envs.handle_contact_graph_env import HandleBulletEnv
+from envs.laptop_contact_graph_env import LaptopBulletEnv
 from envs.waterbottle_graph_env import WaterbottleBulletEnv
 from envs.groovepen_contact_graph_env import GroovePenBulletEnv
 from envs.ruler_contact_graph_env import RulerBulletEnv
 from envs.cardboard_contact_graph_env import CardboardBulletEnv
+from envs.keyboard_contact_graph_env import KeyboardBulletEnv
 import model.param as model_param
 from stoch_traj_opt import StochTrajOptimizer
 import numpy as np
@@ -19,22 +18,21 @@ from neurals.test_options import TestOptions
 
 envs_dict = {
     "bookshelf":BookShelfBulletEnv,
-    "laptop":LaptopBulletEnv,
-    "tablebox":TableBoxBulletEnv,
-    "wallbox":WallBoxBulletEnv,
+    "foodbox":FoodboxBulletEnv,
+    "wallbox":LaptopBulletEnv,
     "plate":PlateBulletEnv,
-    "handle":HandleBulletEnv,
     "waterbottle": WaterbottleBulletEnv,
     "groovepen": GroovePenBulletEnv,
     "ruler": RulerBulletEnv,
-    "cardboard": CardboardBulletEnv
+    "cardboard": CardboardBulletEnv,
+    "keyboard": KeyboardBulletEnv
 }
 
 if __name__ == '__main__':
     original_parser = TestOptions()
     parser = original_parser.parser
     parser.add_argument("--exp_name", type=str, default="u_opt_0-10_tp4")
-    parser.add_argument("--env", type=str, default="laptop")
+    parser.add_argument("--env", type=str, default="foodbox")
     parser.add_argument("--render", action="store_true",default=False)
     parser.add_argument("--iters",type=int, default=20)
     parser.add_argument("--steps", type=int, default=2)
@@ -42,7 +40,7 @@ if __name__ == '__main__':
     parser.add_argument("--max_force", type=float, default=-1)
     parser.add_argument("--mode", type=str, default="only_score")
     parser.add_argument("--name_score", type=str, default=None, required=True)
-    parser.add_argument("--name_epoch", type=str, default=None, required=True)
+    parser.add_argument("--name_epoch", type=str, default=2980)
     parser.add_argument("--has_distance_field", action="store_true", default=False)
     args = original_parser.parse()
 
@@ -59,7 +57,7 @@ if __name__ == '__main__':
     # paths = filter_paths(paths_raw, ref_env.csg, ref_env.contact_region)
     # Need to check final state dynamical feasibility here
     
-    paths = np.array([[0,0,0]]) #
+    paths = np.array([[2,2,2]]) #
     weight = np.array([0.5])
 
     log_text_list = []
@@ -70,7 +68,7 @@ if __name__ == '__main__':
         for i, path in enumerate(paths): # Search for all the paths.
             optimizer = StochTrajOptimizer(env=envs_dict[args.env], sigma=0.8, initial_guess=None,
                                     TimeSteps=args.steps, seed=12367134, render=False, Iterations=args.iters, active_finger_tips=[0,1], num_interp_f=7,
-                                    Num_processes=4, Traj_per_process=65, opt_time=False, verbose=1,mode=args.mode,
+                                    Num_processes=2, Traj_per_process=130, opt_time=False, verbose=1,mode=args.mode,
                                     last_fins=fin_data, init_obj_pose=init_obj_pose, steps=args.steps, path=path,
                                     sc_path=f"neurals/pretrained_score_function/{args.name_score}/{args.name_epoch}.pth",
                                     dex_path=f"checkpoints/{args.name}/latest_net.pth", opt_dict=opt_dict, 

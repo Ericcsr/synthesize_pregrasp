@@ -36,11 +36,13 @@ from utils.small_block_region import SmallBlockRegionDummy
 from utils.contact_state_graph import ContactStateGraph
 from neurals.distancefield_utils import create_bookshelf_df
 from neurals.NPGraspNet import NPGraspNet
+from envs.setup_pybullet import create_bookshelf
+from envs.scales import SCALES
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 CLEARANCE_H = 0.01
 
-SCALE = np.array([1.0, 1.0, 1.0])
+SCALE = SCALES["bookshelf"]
 
 class BookShelfBulletEnv(gym.Env):
     metadata = {'render.modes': ['human', 'rgb_array'], 'video.frames_per_second': 50}
@@ -151,7 +153,7 @@ class BookShelfBulletEnv(gym.Env):
             if self.mode != "only_score":
                 self.score_function.load_dex_grasp_net(dex_path)
             self.score_function.load_score_function(sc_path)
-            self.dist_field_env = create_bookshelf_df()
+        self.dist_field_env = create_bookshelf_df(scale=SCALE)
 
         obs = self.reset()  # and update init obs
 
@@ -172,22 +174,8 @@ class BookShelfBulletEnv(gym.Env):
         self._p.setTimeStep(self._ts)
         self._p.setGravity(0, 0, -10)
 
-        self.floor_id = self._p.loadURDF(os.path.join(currentdir, 'assets/plane.urdf'), [0, 0, 0.0], useFixedBase=1)
+        self.o_id, self.floor_id, self.w1_id, self.w2_id, self.w3_id = create_bookshelf(self._p, scale=SCALE)
 
-        if isinstance(self.init_obj_pose, np.ndarray):
-            init_xyz = self.init_obj_pose[:3]
-            init_orn = self.init_obj_pose[3:] # Assume it is a euler angle
-        else:
-            init_xyz = np.array([0, 0, 0.2]) * SCALE
-            init_orn = torch.tensor([np.pi/2, 0, np.pi/2])
-        init_orn_matrix = pk.euler_angles_to_matrix(init_orn, convention="XYZ")
-        init_orn = pk.matrix_to_quaternion(init_orn_matrix).numpy()
-        init_orn = np.array([init_orn[1], init_orn[2], init_orn[3], init_orn[0]])
-        self.o_id = rb.create_primitive_shape(self._p, 1.0, pybullet.GEOM_BOX, np.array([0.2, 0.2, 0.05])*SCALE,
-                                              color=(0.6, 0, 0, 0.8), collidable=True,
-                                              init_xyz=init_xyz,
-                                              init_quat=init_orn)
-        #self.o_id = self._p.loadURDF(os.path.join(currentdir, "assets/book.urdf"),basePosition=init_xyz, baseOrientation=init_orn)
         self.mesh_obj = o3d.geometry.TriangleMesh.create_box(0.4*SCALE[0], 0.4*SCALE[1], 0.1*SCALE[2])
         self.mesh_obj.compute_vertex_normals()
         self.mesh_obj.compute_triangle_normals()
@@ -197,33 +185,11 @@ class BookShelfBulletEnv(gym.Env):
         self.normals = np.asarray(self.pcd_obj.normals)
         self.pcd_kd_tree = o3d.geometry.KDTreeFlann(self.pcd_obj)
         
-        # Create two walls:
-        self.w1_id = rb.create_primitive_shape(self._p, 0, pybullet.GEOM_BOX, np.array([0.2, 0.2, 0.05])*SCALE,         # half-extend
-                                              color=(0.0, 0.6, 0, 1), collidable=True,
-                                              init_xyz=np.array([0, 0.11, 0.2])*SCALE,
-                                              init_quat=[0.7071068, 0, 0, 0.7071068])
-
-        self.w2_id = rb.create_primitive_shape(self._p, 0, pybullet.GEOM_BOX, np.array([0.2, 0.2, 0.05])*SCALE,         # half-extend
-                                              color=(0., 0.6, 0, 1), collidable=True,
-                                              init_xyz=np.array([0, -0.11, 0.2])*SCALE,
-                                              init_quat=[0.7071068, 0, 0, 0.7071068])
-        self.w3_id = rb.create_primitive_shape(self._p, 0, pybullet.GEOM_BOX, np.array([0.05, 0.2, 0.2])*SCALE,         # half-extend
-                                              color=(0., 0.6, 0, 1), collidable=True,
-                                              init_xyz=np.array([-0.28, 0, 0.2])*SCALE,
-                                              init_quat=[0.7071068, 0, 0, 0.7071068])
+        
         self.wall_size = np.array([0.2, 0.2, 0.05])
         
         self._p.changeDynamics(self.w1_id, -1, lateralFriction=0.0)
         self._p.changeDynamics(self.w2_id, -1, lateralFriction=0.0)
-
-        self._p.createConstraint(self.w1_id,-1, -1, -1, pybullet.JOINT_FIXED,
-                                 [0, 0, 0], [0, 0, 0],
-                                 childFramePosition=np.array([0,  0.11, 0.2])*SCALE,
-                                 childFrameOrientation=[0.7071068, 0, 0, 0.7071068])
-        self._p.createConstraint(self.w2_id,-1, -1, -1, pybullet.JOINT_FIXED,
-                                 [0, 0, 0], [0, 0, 0],
-                                 childFramePosition=np.array([0, -0.11, 0.2])*SCALE,
-                                 childFrameOrientation=[0.7071068, 0, 0, 0.7071068])
         self._p.changeConstraint(self.w1_id, maxForce=10000)
         self._p.changeConstraint(self.w2_id, maxForce=10000)
 
@@ -232,6 +198,8 @@ class BookShelfBulletEnv(gym.Env):
                                lateralFriction=70.0, restitution=0.0)            # TODO
         self._p.changeDynamics(self.o_id, -1,
                                lateralFriction=70.0, restitution=0.0)             # TODO
+
+        # full reload
 
         self.tip_ids = []
         colors = [[1.0, 1.0, 1.0, 1.0],[0.0, 0.0, 1.0, 1.0],[0.0, 1.0, 0.0, 1.0],[1.0, 0.0, 0.0, 1.0],[1.0,1.0,0,1.0]]
@@ -271,50 +239,6 @@ class BookShelfBulletEnv(gym.Env):
             2:None,
             3:None}
         return obs
-
-    def get_hand_pose(self,
-                      finger_infos: List[Tuple[List[float], bool]],
-                      last_finger_infos: List[Tuple[List[float], bool]])\
-                      -> Tuple[List[float], List[List[float]], float]:
-        # hand / fingers pose in object frame
-
-        #assert self.use_split_region
-
-        # offsets in object frame
-        # Eric: Hard coded offset, Need to get the position of finger tip here
-        offsets = np.array([
-            [+0.25, -0.03, 0],  # thumb
-            [+0.25, +0.05, +0.1],  # ring
-            [+0.25, 0.0, +0.1],  # middle
-            [+0.25, -0.05, +0.1],  # index
-        ])
-
-        proposals = np.empty((0, 3), float)
-        for fin_ind, fin_info in enumerate(finger_infos):
-            if fin_info[1]:
-                proposals = np.vstack((proposals, np.array(fin_info[0]) + offsets[fin_ind, :]))
-            elif last_finger_infos[fin_ind][1]:
-                proposals = np.vstack((proposals, np.array(last_finger_infos[fin_ind][0]) + offsets[fin_ind, :]))
-
-        if proposals.shape[0] == 0:
-            # no fixed fingers
-            mean = np.array([0.5, 0.0, 0.3])
-            cost = 0.0
-        else:
-            mean = proposals.mean(axis=0)
-            cost = proposals.var(axis=0).sum()
-            #print(proposals.var(axis=0))
-
-        fin_pos = []
-        for fin_ind in range(self.num_fingertips):
-            if finger_infos[fin_ind][1]:
-                fin_pos.append(finger_infos[fin_ind][0])
-            elif last_finger_infos[fin_ind][1]:
-                fin_pos.append(last_finger_infos[fin_ind][0])
-            else:
-                fin_pos.append(list(mean - offsets[fin_ind, :]))
-
-        return list(mean), fin_pos, cost
 
     def step(self, a: List[float], rollout_verify=False):
 
@@ -452,28 +376,6 @@ class BookShelfBulletEnv(gym.Env):
 
             return current_fins, interped_fs
 
-        def calc_reward_value():
-            # post obj config
-            cps_1 = self._p.getContactPoints(self.o_id, self.floor_id, -1, -1) # contact points between floor and object
-            cps_2 = self._p.getContactPoints(self.o_id, self.w1_id, -1, -1)
-            cps_3 = self._p.getContactPoints(self.o_id, self.w2_id, -1, -1)
-            pos_1, quat_1 = rb.get_link_com_xyz_orn(self._p, self.o_id, -1) # Object pose and orn
-            vel_1 = rb.get_link_com_linear_velocity(self._p, self.o_id, -1) # object's linear velocity vec 3
-
-            z_axis, _ = self._p.multiplyTransforms(
-                [0, 0, 0], quat_1, [0, 0, 1], [0, 0, 0, 1]
-            ) # Compute the object's z-axis vector in world frame
-            rot_metric = np.array(z_axis).dot(self.task)        # in [-1,1] # z-axis need to tilted to a given angle cosine similarity should be raise up seems to be
-
-            r  = - np.linalg.norm(vel_1) * 20
-            if self.c_step_timer < self.n_steps - 1:
-                r -= (len(cps_1) + len(cps_2) + len(cps_3)) * 10 # As slow as possible, as less contact point as possible. 250
-            else:
-                r -= (len(cps_1) + len(cps_2) + len(cps_3)) * 50
-            r += - 300 * np.linalg.norm([pos_1[:3] - self.target_pose]) # COM should be 0.3 meter off the ground. While x and y coordinate remain the same.
-            r += 150 * rot_metric # hope the object can be rotate to a given z orientation
-            return r
-
         def calc_reward_value_stage_one():
             pos_1, quat_1 = rb.get_link_com_xyz_orn(self._p, self.o_id, -1)
             pos = np.array(pos_1)
@@ -483,10 +385,11 @@ class BookShelfBulletEnv(gym.Env):
             for i, fin in enumerate(self.active_finger_tips):
                 extra_cond[0, i*3:(i+1)*3] = self.project_to_pcd(self.cur_fins[fin][0])
             rot_matrix = convert_q_bullet_to_matrix(quat)
-            pcd_obj = copy.deepcopy(self.pcd_obj).rotate(rot_matrix)
+            pcd_obj = copy.deepcopy(self.pcd_obj).rotate(rot_matrix, center = [0,0,0])
             pcd_obj.translate(pos)
 
             pcd_obj = self.deocclude(pcd_obj)
+            #print("Num of points:",len(pcd_obj.points))
             if self.has_distance_field:
                 df = self.compute_distance_field(pcd_obj)
             else:
@@ -571,11 +474,17 @@ class BookShelfBulletEnv(gym.Env):
             images = []
         for t in range(self.control_skip):
             pos, quat = rb.get_link_com_xyz_orn(self._p, self.o_id, -1)
-            
+            if t == 0 and self.c_step_timer == 0 and not self.train:
+                init_pcd = get_canonical_point_cloud()
+                init_df = self.compute_distance_field(init_pcd)
+                o3d.io.write_point_cloud(f"{currentdir}/assets/init_pcds/bookshelf.ply",init_pcd)
+                np.save(f"{currentdir}/assets/init_dfs/bookshelf.npy", init_df)
+                np.save(f"{currentdir}/assets/init_pose/bookshelf.npy", np.hstack([pos,quat]))
             if not self.train:
                 tip_pose = []
                 for idx in range(self.num_fingertips):
-                    tip_pose_candidate = list(self._p.multiplyTransforms(pos, quat, self.cur_fins[idx][0], [0, 0, 0, 1])[0])
+                    cur_fin = np.asarray(self.cur_fins[idx][0]) * np.array([1,1,0.5])
+                    tip_pose_candidate = list(self._p.multiplyTransforms(pos, quat, cur_fin, [0, 0, 0, 1])[0])
                     local_normals = self.compute_tip_normals(self.cur_fins[idx][0])
                     tip_pose_candidate += list(self._p.multiplyTransforms([0, 0, 0], quat, local_normals, [0, 0, 0, 1])[0])
                     tip_pose.append(tip_pose_candidate)
@@ -617,15 +526,17 @@ class BookShelfBulletEnv(gym.Env):
         if self.c_step_timer == self.n_steps:
             pcd_output = get_canonical_point_cloud()
             com_x = rb.get_link_com_xyz_orn(self._p, self.o_id, -1)[0][0] * 0.5
-            for _ in range(50):
+            for _ in range(50 if self.train else 0):
                 pos, quat = rb.get_link_com_xyz_orn(self._p, self.o_id, -1)
                 if not self.train and self.add_physics:
                     self.update_grasp(pos, quat)
                     tip_pose = []
                     for idx in range(len(self.all_fingers)):
-                        tip_pose_candidate = list(self._p.getBasePositionAndOrientation(self.tip_ids[idx])[0])
+                        #tip_pose_candidate = list(self._p.getBasePositionAndOrientation(self.tip_ids[idx])[0])
+                        cur_fin = np.asarray(self.grasp_pos[idx]) * np.array([1,1,0.5])
+                        tip_pose_candidate = list(self._p.multiplyTransforms(pos, quat, cur_fin, [0, 0, 0, 1])[0])
                         # Get normal using local coordinate
-                        local_normals = self.compute_tip_normals(self.cur_fins[idx][0] if idx < self.num_fingertips else self.grasp_pos[idx-self.num_fingertips])
+                        local_normals = self.compute_tip_normals(self.cur_fins[idx][0] if idx < self.num_fingertips else self.grasp_pos[idx])
                         tip_pose_candidate += list(self._p.multiplyTransforms([0,0,0], quat, local_normals, [0, 0, 0, 1])[0])
                         tip_pose.append(tip_pose_candidate)
                     tip_poses.append(tip_pose) # position + tip_normals 
@@ -647,9 +558,11 @@ class BookShelfBulletEnv(gym.Env):
                     self.update_constraint_with_delta(quat,delta=delta)
                     tip_pose = []
                     for idx in range(len(self.all_fingers)):
-                        tip_pose_candidate = list(self._p.getBasePositionAndOrientation(self.tip_ids[idx])[0])
+                        #tip_pose_candidate = list(self._p.getBasePositionAndOrientation(self.tip_ids[idx])[0])
+                        cur_fin = np.asarray(self.grasp_pos[idx]) * np.array([1,1,0.5])
+                        tip_pose_candidate = list(self._p.multiplyTransforms(pos, quat, cur_fin, [0, 0, 0, 1])[0])
                         # Get normal using local coordinate
-                        local_normals = self.compute_tip_normals(self.cur_fins[idx][0] if idx < self.num_fingertips else self.grasp_pos[idx-self.num_fingertips])
+                        local_normals = self.compute_tip_normals(self.cur_fins[idx][0] if idx < self.num_fingertips else self.grasp_pos[idx])
                         tip_pose_candidate += list(self._p.multiplyTransforms([0,0,0], quat, local_normals, [0, 0, 0, 1])[0])
                         tip_pose.append(tip_pose_candidate)
                     tip_poses.append(tip_pose) # position + tip_normals 
@@ -786,24 +699,26 @@ class BookShelfBulletEnv(gym.Env):
 
     def setup_grasp(self,pos, quat):
         self.grasp_constraint = []
-        for i,tip in enumerate(self.grasp_pos):
+        for i,idx in enumerate(self.grasp_idx):
+            tip = self.grasp_pos[idx]
             tip_pose, _ = self._p.multiplyTransforms(pos, quat, tip, [0, 0, 0, 1]) # Position of finger tip in world coordinate
-            self._p.setCollisionFilterPair(self.tip_ids[self.grasp_idx[i]], self.o_id, -1, -1, 0)
-            self._p.resetBasePositionAndOrientation(self.tip_ids[self.grasp_idx[i]],
+            self._p.setCollisionFilterPair(self.tip_ids[idx], self.o_id, -1, -1, 0)
+            self._p.resetBasePositionAndOrientation(self.tip_ids[idx],
                                                     tip_pose,
                                                     quat)
             # Connect finger tips to the object for this simulation step
-            c = self._p.createConstraint(self.tip_ids[self.grasp_idx[i]], -1, -1, -1, pybullet.JOINT_FIXED,
+            c = self._p.createConstraint(self.tip_ids[idx], -1, -1, -1, pybullet.JOINT_FIXED,
                                             [0, 0, 0], [0, 0, 0],
                                             childFramePosition=tip_pose,
                                             childFrameOrientation=quat)
             self.grasp_constraint.append(c)
         self._p.stepSimulation()
-        for i, tip in enumerate(self.grasp_pos):
-            self._p.setCollisionFilterPair(self.tip_ids[self.grasp_idx[i]],self.o_id, -1, -1, 1)
+        for i, idx in enumerate(self.grasp_idx):
+            self._p.setCollisionFilterPair(self.tip_ids[idx],self.o_id, -1, -1, 1)
 
     def update_grasp(self, pos, quat):
-        for i,tip in enumerate(self.grasp_pos):
+        for i,idx in enumerate(self.grasp_idx):
+            tip = self.grasp_pos[idx]
             tip_pose, _ = self._p.multiplyTransforms(pos, quat, tip, [0, 0, 0, 1])
             tip_pose = np.array(tip_pose)
             self._p.changeConstraint(self.grasp_constraint[i], tip_pose, quat, maxForce=self.max_forces, erp=0.9)
@@ -815,7 +730,8 @@ class BookShelfBulletEnv(gym.Env):
             tip_pose,_ = self._p.multiplyTransforms(pos, quat, self.cur_fins[i][0], [0, 0, 0, 1])
             self.ref_poses_cond.append(np.array(tip_pose))
         self.ref_poses_grasp = []
-        for i,tip in enumerate(self.grasp_pos):
+        for i,idx in enumerate(self.grasp_idx):
+            tip = self.grasp_pos[idx]
             tip_pose, _ = self._p.multiplyTransforms(pos, quat, tip, [0, 0, 0, 1])
             self.ref_poses_grasp.append(np.array(tip_pose))
         self._p.changeDynamics(self.o_id,-1,mass=0.1) # Have very good effect!
@@ -827,14 +743,8 @@ class BookShelfBulletEnv(gym.Env):
                 tip_pose += delta
             self._p.changeConstraint(self.tip_cids[i], tip_pose, quat, maxForce=self.max_forces*2, erp=0.9)
 
-        for i in range(len(self.grasp_pos)):
+        for i, idx in enumerate(self.grasp_idx):
             tip_pose = self.ref_poses_grasp[i]
             if delta is not None:
                 tip_pose += delta
             self._p.changeConstraint(self.grasp_constraint[i],tip_pose, quat, maxForce=self.max_forces*2, erp=0.9)
-
-
-            
-            
-
-

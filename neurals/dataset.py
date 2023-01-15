@@ -13,7 +13,8 @@ import torch.utils.data
 class SmallDataset(torch.utils.data.dataset.Dataset):
     def __init__(self, seed_folder="seeds",
                        point_clouds=["pose_0_pcd", "pose_1_pcd", "pose_2_pcd", "pose_3_pcd", "pose_4_pcd"], 
-                       has_negative_grasp=False):
+                       has_negative_grasp=False,
+                       use_scale = False):
         self.point_clouds = []
         self.point_normals = []
         pose_index = []
@@ -30,7 +31,7 @@ class SmallDataset(torch.utils.data.dataset.Dataset):
             self.point_normals.append(normal_np[idx])
 
         self.scales = []
-        if os.path.isdir(f"data/{seed_folder}/scales"):
+        if os.path.isdir(f"data/{seed_folder}/scales") and use_scale:
             for idx in pose_index:
                 scale = np.load(f"data/{seed_folder}/scales/pose_{idx:02}.npy")
                 self.scales.append(scale)

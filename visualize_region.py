@@ -1,6 +1,6 @@
 import numpy as np
-from envs.small_block_contact_env import LaptopBulletEnv
-from envs.bookshelf_env import BookShelfBulletEnv
+from unused.small_block_contact_env import LaptopBulletEnv
+from unused.bookshelf_env import BookShelfBulletEnv
 import utils.rigidBodySento as rb
 
 env = BookShelfBulletEnv()

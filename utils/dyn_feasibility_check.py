@@ -15,7 +15,7 @@ MIN_NORMAL_FORCE = {
     3:1.0,
     4:1000.0}
 MIN_DISTANCE_BETWEEN_FINGER = 0.03 # Should differ task from task
-DEFAULT_FRICTION_COEFF = 2
+DEFAULT_FRICTION_COEFF = 5
 
 def get_screw_symmetric(v):
     return np.array([[0, -v[2], v[1]],

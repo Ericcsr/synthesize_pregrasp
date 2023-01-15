@@ -11,6 +11,7 @@ class MeshRegion:
         self.triangles = np.asarray(mesh.triangles)
         self.triangle_normals = np.asarray(mesh.triangle_normals)
         self.vertices = np.asarray(mesh.vertices)
+        self.regions = np.arange(len(self.triangles))
 
     @staticmethod
     def calculate_barycentry_weight(x,y,z=None,method="uniform"):
@@ -48,3 +49,15 @@ class MeshRegion:
         result += vertex[2] * w[2]
         #print("Finger:",finger_id,"region:", region_id,"W:",w,"result:",result)
         return result, self.triangle_normals[region_id]    
+
+    # Should be in mesh local coordinate
+    def sample_points(self, region_id, n_samples=5):
+        region = self.triangles[region_id]
+        vertex = self.vertices[region]
+        result = np.zeros((n_samples, 3))
+
+        coord = np.random.random((n_samples, 2))
+        for i in range(n_samples):
+            w = self.calculate_barycentry_weight(x=coord[i,0],y=coord[i,1],method="uniform")
+            result[i] += vertex[0] * w[0] + vertex[1] * w[1] + vertex[2] * w[2]
+        return result

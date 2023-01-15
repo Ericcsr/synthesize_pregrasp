@@ -5,16 +5,23 @@ from neurals.train_options import TrainOptions
 import torch.utils.data
 
 def main():
-    opt = TrainOptions().parse()
+    parser = TrainOptions()
+    parser.parser.add_argument("--conditions", type=str, default="[0,1]")
+    opt = parser.parse()
+
     if opt == None:
         return
     use_wandb = opt.use_wandb
-
+    cond = []
+    exec(f"cond = {opt.conditions}")
+    pred_fingers = [0,1,2,3,4]
+    for c in cond:
+        pred_fingers.remove(c)
     if use_wandb:
         import wandb
         wandb.init()
         wandb.config.update(opt)
-    model = dgn.DexGraspNetModel(opt, pred_base=False,pred_fingers=[2,3,4], extra_cond_fingers=[0,1], gpu_id=0)
+    model = dgn.DexGraspNetModel(opt, pred_base=False,pred_fingers=pred_fingers, extra_cond_fingers=cond, gpu_id=0)
     full_dataset = neurals.dataset.SmallDataset(seed_folder="seeds_scale",
                                                 point_clouds=["pose_00_pcd","pose_01_pcd","pose_02_pcd","pose_03_pcd",
                                                               "pose_04_pcd","pose_05_pcd","pose_06_pcd","pose_07_pcd",
@@ -23,7 +30,8 @@ def main():
                                                               "pose_17_pcd","pose_18_pcd","pose_19_pcd","pose_20_pcd",
                                                               "pose_21_pcd","pose_22_pcd","pose_23_pcd","pose_24_pcd",
                                                               "pose_25_pcd","pose_26_pcd","pose_27_pcd","pose_28_pcd","pose_29_pcd",
-                                                              "pose_30_pcd","pose_31_pcd","pose_32_pcd"])
+                                                              "pose_30_pcd","pose_31_pcd","pose_32_pcd","pose_33_pcd", "pose_34_pcd",
+                                                              "pose_35_pcd"], use_scale = False)
 
     # Split the dataset
     dataset_size = len(full_dataset)

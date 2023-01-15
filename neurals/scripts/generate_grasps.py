@@ -1,16 +1,18 @@
 import os
+from functools import partial
 import open3d as o3d
 import numpy as np
 import utils.helper as helper
 from neurals.NPGraspNet import NPGraspNet
 from neurals.test_options import TestOptions
-from utils.dyn_feasibility_check import check_dyn_feasible_parallel
+from utils.dyn_feasibility_check import simple_check_dyn_feasible
 from utils.kin_feasibility_check import check_kin_feasible_parallel
-
-def load_traj_data(exp_name):
+import model.manipulation_obj_creator as creator
+from envs.scales import SCALES
+def load_traj_data(exp_name,idx=99):
     tip_poses = np.load(f"data/tip_data/{exp_name}_tip_poses.npy")
     obj_poses = np.load(f"data/object_poses/{exp_name}_object_poses.npy")
-    return tip_poses[-1], obj_poses[-1,:3], obj_poses[-1, 3:]
+    return tip_poses[idx], obj_poses[idx,:3], obj_poses[idx, 3:]
 
 def parse_raw_data(tip_pose, obj_pos, obj_orn):
     """
@@ -22,7 +24,8 @@ def parse_raw_data(tip_pose, obj_pos, obj_orn):
     new_tip_pose = []
     finger_idx = []
     for i in range(tip_pose.shape[0]):
-        if tip_pose[i].sum() < 100:
+        print(tip_pose[i].sum(),i)
+        if tip_pose[i].sum() < 10:
             candidate_pos = tip_pose[i,:3] - obj_pos
             orn = helper.convert_quat_for_drake(obj_orn)
             candidate_pos = helper.apply_drake_q_rotation(orn, candidate_pos, invert=True)
@@ -63,6 +66,8 @@ def visualize_finger_tip(tip_poses, radius=0.01):
 def main():
     parser = TestOptions()
     parser.parser.add_argument("--exp_name", type=str, default=None, required=True)
+    parser.parser.add_argument("--env",type=str, default=None, required=True)
+    parser.parser.add_argument("--visualize", action="store_true", default=False)
     args = parser.parse()
     tip_pose, obj_pos, obj_orn = load_traj_data(args.exp_name)
     new_tip_pose, finger_idx = parse_raw_data(tip_pose, obj_pos, obj_orn)
@@ -71,7 +76,8 @@ def main():
     pcd_o3d = o3d.io.read_point_cloud(f"data/output_pcds/{args.exp_name}_pcd.ply")
     # if len(pcd_o3d.points) > 1024:
     #     pcd_o3d = pcd_o3d.farthest_point_down_sample(1024)
-    o3d.visualization.draw_geometries([pcd_o3d])
+    if args.visualize:
+        o3d.visualization.draw_geometries([pcd_o3d])
     assert(pcd_o3d.has_normals())
     points, normals, kd_tree = process_pcd(pcd_o3d)
 
@@ -96,20 +102,29 @@ def main():
         proj_grasps.append(proj_grasp)
 
     # Visualize each grasps and check feasibility
+    # Need to assume object is placed at canonical coordinate or it will crash
+    score = 0
+    # Need to customize each environments
+    object_creator = partial(creator.object_creators[args.env], scale=SCALES[args.env])
     for i,grasp in enumerate(proj_grasps):
-        vis_tip = visualize_finger_tip(grasp[:,:3])
-        #kin_feasibility = check_kin_feasible_parallel(grasp[:,:3], grasp[:,3:])
-        # dyn_feasibility = check_dyn_feasible_parallel(grasp[:,:3], grasp[:,3:])
-        #print("Grasp:", i, "Kinematics:", kin_feasibility[0])
-        # Should be in local frame
-        print("PCD ID:",i)
-        o3d.visualization.draw_geometries([pcd_o3d]+vis_tip)
-    np.save(f"data/predicted_grasps/{args.exp_name}.npy", proj_grasps)
+        
+        dyn_feasibility = simple_check_dyn_feasible(grasp[:,:3], grasp[:,3:])
+        if dyn_feasibility:
+            kin_feasibility = check_kin_feasible_parallel(grasp[:,:3], grasp[:,3:], 
+                                                          hand_model="shadow", object_creator=object_creator)
+            if kin_feasibility:
+                score += 1.0
+        if args.visualize:
+            print("PCD ID:",i)
+            vis_tip = visualize_finger_tip(grasp[:,:3])
+            o3d.visualization.draw_geometries([pcd_o3d]+vis_tip)
+    print("Success rate:", score / len(proj_grasps))
+
+    if args.visualize: # Avoid corrupt current grasps
+        np.save(f"data/predicted_grasps/{args.exp_name}.npy", proj_grasps)
 
 if __name__ == "__main__":
     main()
-
-
 
 
 

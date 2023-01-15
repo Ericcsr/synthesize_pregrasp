@@ -21,7 +21,20 @@ allegro_finger_permutations = list(permutations(allegro_rbm.ActiveAllegroHandFin
 shadow_finger_permutations = list(permutations(shadow_rbm.ActiveShadowHandFingers))
 random_state = np.random.RandomState(0)
 
-ik_attempts = 3
+check_attempts = 3 # check kinematic feasible should be faster
+check_num_process = 16
+check_quat_inits = np.zeros((check_num_process, check_attempts, 4))
+check_pose_inits = np.zeros((check_num_process, check_attempts, 2))
+for j, yaw in enumerate(np.linspace(0, 2*np.pi, check_num_process, endpoint=False)):
+    for i,rol in enumerate(np.linspace(0, 2*np.pi, check_attempts, endpoint=False)):
+        quat_init = scipy_rot.from_euler(
+            "xyz", [rol, -np.pi/2, yaw]).as_quat()[[3, 0, 1, 2]]
+        rot_matrix = np.array([[np.cos(yaw), -np.sin(yaw)],
+                            [np.sin(yaw),  np.cos(yaw)]])
+        check_pose_inits[j, i] = rot_matrix @ np.array([-0.3, 0])
+        check_quat_inits[j, i] = quat_init
+
+ik_attempts = 10
 num_process = 16
 quat_inits = np.zeros((num_process, ik_attempts, 4))
 pose_inits = np.zeros((num_process, ik_attempts, 2))
@@ -74,7 +87,8 @@ def check_kin_feasible(contact_points,
                                                      object_base_link_name = base_link_name,
                                                      object_world_pose = object_world_pose,
                                                      object_creator=object_creator,
-                                                     threshold_distance=1.)
+                                                     threshold_distance=1.,
+                                                     drake_model_path=model_param.shadow_hand_urdf_simple_collision_path)
         active_fingers = shadow_rbm.ActiveShadowHandFingers
     else:
         raise NotImplementedError
@@ -92,15 +106,15 @@ def check_kin_feasible(contact_points,
                                                bounding_box["lower"])
     
     # Try multiple solve to the problem
-    for i in range(ik_attempts):
+    for i in range(check_attempts):
         q_init = np.zeros_like(ik.q())
         # Set the hand to be hovering above the table with palm pointing down
         q_init[hand_plant.base_quaternion_idx_start:
-                hand_plant.base_quaternion_idx_start+4] = quat_inits[pid,i]
+                hand_plant.base_quaternion_idx_start+4] = check_quat_inits[pid,i]
         q_init[hand_plant.base_position_idx_start +
                 2] = dgc.hand_ik_initial_guess_height
         q_init[hand_plant.base_position_idx_start:
-                hand_plant.base_position_idx_start+2] = pose_inits[pid,i]
+                hand_plant.base_position_idx_start+2] = check_pose_inits[pid,i]
         q_init += (np.random.random(q_init.shape) - 0.5) / 0.5 * 0.03
         # Solve IK
         solver = SnoptSolver()
@@ -115,7 +129,7 @@ def check_kin_feasible(contact_points,
         # Check all fingertips are close to the target
         for finger in active_fingers:
             if isinstance(constraints_on_finger[finger], list):
-                if not constraints_on_finger[finger][0].evaluator().CheckSatisfied(q_sol, tol=1e-2):
+                if not constraints_on_finger[finger][0].evaluator().CheckSatisfied(q_sol, tol=1.5e-2):
                     match_fingertip = False
                     break
         no_collision = collision_constr.evaluator().CheckSatisfied(q_sol, tol=1.5e-2)
@@ -160,7 +174,7 @@ def check_kin_feasible_parallel(contact_points,
 # Some Repeatitive implement dedicated for solving IK
 
 def solve_ik(contact_points, contact_normals, object_path=None, object_creator=None, 
-             object_pose=None, bounding_box=None, q_init_guess=None, ref_q=None, hand_model="allegro",pid=0):
+             object_pose=None, bounding_box=None, q_init_guess=None, ref_q=None, hand_model="allegro", allowance=model_param.ALLOWANCE,pid=0):
     """
     If object_path == None, then by default use naive_box
     Assume contact points and contact normals are squeezed np.ndarray
@@ -194,7 +208,7 @@ def solve_ik(contact_points, contact_normals, object_path=None, object_creator=N
                     tip_pose_normal,
                     padding=model_param.object_padding,
                     collision_distance=1e-4,
-                    allowed_deviation=np.ones(3)*0.005,
+                    allowed_deviation=np.ones(3)*0.002,
                     straight_unused_fingers=False if not (ref_q is None) else True)
 
     # Add Extra constraints related to IK Solving
@@ -208,7 +222,7 @@ def solve_ik(contact_points, contact_normals, object_path=None, object_creator=N
         lb, ub = hand_plant.get_joint_limits()
         lb[:7] = -model_param.ROOT_RANGE
         ub[:7] = model_param.ROOT_RANGE
-        r = (ub-lb) * model_param.ALLOWANCE #TODO: Set bound for root joint!
+        r = (ub-lb) * allowance #TODO: Set bound for root joint!
         prog.AddBoundingBoxConstraint(ref_q -r , ref_q + r, ik.q())
     # Prepare reference data for each IK Solve
 
@@ -243,7 +257,7 @@ def solve_ik(contact_points, contact_normals, object_path=None, object_creator=N
         # Check all fingertips are close to the target
         for finger in active_fingers:
             if isinstance(constraints_on_finger[finger], list):
-                if not constraints_on_finger[finger][0].evaluator().CheckSatisfied(q_sol, tol=1e-2):
+                if not constraints_on_finger[finger][0].evaluator().CheckSatisfied(q_sol, tol=0.5e-2):
                     match_fingertip = False
                     break
         no_collision = collision_constr.evaluator().CheckSatisfied(q_sol, tol=1.5e-2)
@@ -268,7 +282,7 @@ def solve_ik(contact_points, contact_normals, object_path=None, object_creator=N
 
 def solve_ik_parallel(contact_points, contact_normals, object_path=None, object_creator=None, 
                       object_pose=None, bounding_box=None, q_init_guess=None, ref_q=None, num_process=16,
-                      hand_model="allegro"):
+                      hand_model="allegro", allowance=model_param.ALLOWANCE):
     kwargs = {
         "contact_points":contact_points,
         "contact_normals":contact_normals,
@@ -278,7 +292,8 @@ def solve_ik_parallel(contact_points, contact_normals, object_path=None, object_
         "bounding_box":bounding_box,
         "q_init_guess":q_init_guess,
         "ref_q":ref_q,
-        "hand_model":hand_model
+        "hand_model":hand_model,
+        "allowance": allowance
     }
     args = []
     for i in range(num_process):
@@ -328,7 +343,7 @@ def solve_ik_keypoints(targets, obj_poses, obj_orns, object_path=None, object_cr
             min_dist_joint = results[0][1]
             for result in results:
                 print("Collision:",result[0][0],"Fingertip:",result[0][1])
-                dist = helper.quaternion_distance(result[1][1], joint_states[-1][1]) + np.linalg.norm(result[1][0]-joint_states[-1][0])
+                dist = helper.quaternion_distance(result[1][1], joint_states[-1][1]) + 5*np.linalg.norm(result[1][0]-joint_states[-1][0])
                 if result[0][0] and result[0][1] and dist < min_dist:
                     min_dist = dist
                     min_dist_q = result[2].copy()
@@ -350,7 +365,7 @@ def solve_ik_keypoints(targets, obj_poses, obj_orns, object_path=None, object_cr
 
 # Need each solve need to be regularized by the q_interp
 def solve_interpolation(targets, obj_poses, obj_orns, q_start, q_end,
-                        object_path=None, object_creator=None, hand_model="allegro"):
+                        object_path=None, object_creator=None, hand_model="allegro", allowance=model_param.ALLOWANCE):
     joint_states = []
     success_flags = []
     # if quaternion is included in q_start and end interpolation may be problematic..
@@ -400,7 +415,7 @@ def solve_interpolation(targets, obj_poses, obj_orns, q_start, q_end,
         #tip_pose, tip_normals = helper.express_tips_world_frame(targets[i,:3], targets[i,3:], obj_pose)
         tip_pose, tip_normals = targets[i,:,:3], targets[i,:,3:]
         results = solve_ik_parallel(tip_pose, tip_normals, q_init_guess=q_interp[i], object_pose=obj_pose, ref_q=q_interp[i],
-                                    object_path=object_path, object_creator=object_creator, hand_model=hand_model)
+                                    object_path=object_path, object_creator=object_creator, hand_model=hand_model, allowance=allowance)
         min_dist = np.inf
         min_dist_joint = results[0][1]
         for result in results:

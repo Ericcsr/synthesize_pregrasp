@@ -1,0 +1,1 @@
+Max force: 20.0 mean rewards: -1851.5198567708335, best rewards:-671.77783203125

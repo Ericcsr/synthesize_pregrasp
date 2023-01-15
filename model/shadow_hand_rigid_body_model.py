@@ -14,6 +14,7 @@ from pydrake.multibody.inverse_kinematics import InverseKinematics
 from pydrake.multibody.plant import AddMultibodyPlantSceneGraph, MultibodyPlant
 from pydrake.multibody.parsing import Parser
 
+
 def norm_cost(q):
     return q.dot(q)
 
@@ -23,7 +24,8 @@ class ShadowHandPlantDrake:
                  object_base_link_name=None,
                  object_world_pose=None,
                  object_creator = None,
-                 threshold_distance=1.):
+                 threshold_distance=1.,
+                 drake_model_path=model_param.shadow_hand_urdf_collision_path):
         self.num_fingers = 4
         self.dof_per_finger = 4
         self.threshold_distance=threshold_distance
@@ -31,7 +33,7 @@ class ShadowHandPlantDrake:
         self.plant, self.scene_graph = AddMultibodyPlantSceneGraph(
             builder, MultibodyPlant(time_step=0.01))
         
-        drake_shadow_path = model_param.shadow_hand_urdf_collision_path
+        drake_shadow_path = drake_model_path
         parser = Parser(self.plant)
         self.hand_model = parser.AddModelFromFile(drake_shadow_path)
         # Add object
@@ -230,7 +232,7 @@ class ShadowHandPlantDrake:
             finger_map.append(ShadowHandFinger.LITTLE)
         for i, finger in enumerate(finger_map):
             contact_position = np.squeeze(finger_tip_poses[i, :3])
-            if contact_position[0] > 50:
+            if contact_position[0]+contact_position[1]+contact_position[2] > 20:
                 desired_positions[finger] = np.array([100., 100., 100.])
                 continue
             constraints_on_finger[finger] = [ik.AddPositionConstraint(
@@ -244,11 +246,11 @@ class ShadowHandPlantDrake:
             if has_normals:
                 contact_normal = finger_tip_poses[i, 3:]
                 contact_normal /= np.linalg.norm(contact_normal)
-                # constraints_on_finger[finger].append(ik.AddAngleBetweenVectorsConstraint(self.plant.world_frame(),
-                #                                  contact_normal,
-                #                                  self.fingertip_frames[finger],
-                #                                  np.array([0.,0.,-1.]),
-                #                                  0., np.pi/3))
+                constraints_on_finger[finger].append(ik.AddAngleBetweenVectorsConstraint(self.plant.world_frame(),
+                                                 contact_normal,
+                                                 self.fingertip_frames[finger],
+                                                 np.array([0.,0.,-1.]),
+                                                 0, np.pi/2))
             unused_fingers.remove(finger)
 
         prog = ik.get_mutable_prog()
@@ -256,11 +258,13 @@ class ShadowHandPlantDrake:
         prog.AddCost(norm_cost, vars = q)
         if straight_unused_fingers:
             for finger in unused_fingers:
-                if finger != ShadowHandFinger.THUMB:
-                    constraints_on_finger[finger] = prog.AddBoundingBoxConstraint(
-                        0., 0., q[self.finger_joints_idx[finger]])
-                else:
-                    constraints_on_finger[finger] = None
+                # if finger != ShadowHandFinger.THUMB:
+                constraints_on_finger[finger] = prog.AddBoundingBoxConstraint(
+                    DEFAULT_SHADOW[finger]-DEFAULT_JOINT_ALLOWANCE, 
+                    DEFAULT_SHADOW[finger]+DEFAULT_JOINT_ALLOWANCE, 
+                    q[self.finger_joints_idx[finger]])
+                # else:
+                #     constraints_on_finger[finger] = None
         else:
             for finger in unused_fingers:
                 constraints_on_finger[finger] = None
