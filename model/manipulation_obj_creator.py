@@ -8,22 +8,22 @@ from pydrake.all import (SpatialInertia, UnitInertia, CoulombFriction)
 from envs.scales import SCALES
 
 #TODO: change scale of other environments
-def create_foodbox_env(plant, has_floor = False, scale=SCALES["foodbox"]):
+def create_foodbox_env(plant, has_floor = False, scale=SCALES["foodbox"],obstacle_collidable=True):
     scenario.AddShape(plant, Box(0.4*scale[0], 0.4*scale[1], 0.1*scale[2]), "manipulated_object",
                       collidable=True)
     if has_floor:
-        scenario.AddShape(plant, Box(10.0, 10.0, 0.02), "floor", collidable=True)
+        scenario.AddShape(plant, Box(10.0, 10.0, 0.02), "floor", collidable=obstacle_collidable)
         plant.WeldFrames(plant.world_frame(),
                          plant.GetFrameByName("floor"),
                          RigidTransform(p=[0., 0., -0.012])) # Add slightly more clearance to prevent problem in collision detection
 
-def create_bookshelf_env(plant, has_floor = False, scale=SCALES["bookshelf"]): # Need to confirm whether this is right
+def create_bookshelf_env(plant, has_floor = False, scale=SCALES["bookshelf"],obstacle_collidable=True): # Need to confirm whether this is right
     scenario.AddShape(plant, Box(0.4*scale[0], 0.4*scale[1], 0.1*scale[2]), "manipulated_object",
                      collidable=True)
     scenario.AddShape(plant, Box(0.4*scale[0], 0.4*scale[1], 0.1*scale[2]), "left_book",
-                      collidable=True)
+                      collidable=obstacle_collidable)
     scenario.AddShape(plant, Box(0.4*scale[0], 0.4*scale[1], 0.1*scale[2]), "right_book",
-                      collidable=True)
+                      collidable=obstacle_collidable)
 
     # Pre-fix coordinates of left and right book
     plant.WeldFrames(plant.world_frame(),
@@ -35,21 +35,21 @@ def create_bookshelf_env(plant, has_floor = False, scale=SCALES["bookshelf"]): #
                      RigidTransform(quaternion=eigen_geometry.Quaternion([0.7071068, 0.7071068, 0, 0]),
                                     p = [0., -0.11*scale[2], 0.2]))
     if has_floor:
-        scenario.AddShape(plant, Box(2.0, 2.0, 0.02), "floor", collidable=True)
+        scenario.AddShape(plant, Box(2.0, 2.0, 0.02), "floor", collidable=obstacle_collidable)
         plant.WeldFrames(plant.world_frame(),
                          plant.GetFrameByName("floor"),
                          RigidTransform(p=[0., 0., -0.012])) # Add slightly more clearance to prevent problem in collision detection
 
 
-def create_waterbottle_env(plant, has_floor = False, scale=SCALES["waterbottle"]):
+def create_waterbottle_env(plant, has_floor = False, scale=SCALES["waterbottle"],obstacle_collidable=True):
     scenario.AddShape(plant, Cylinder(0.041,0.22), "manipulated_object",
                      collidable=True)
     scenario.AddShape(plant, Box(0.08, 0.05, 0.24), "left_bottle",
-                      collidable=True)
+                      collidable=obstacle_collidable)
     scenario.AddShape(plant, Box(0.08, 0.05, 0.24), "right_bottle",
-                      collidable=True)
+                      collidable=obstacle_collidable)
 
-    scenario.AddShape(plant, Box(5,5,0.01), "ceiling",collidable=True)
+    scenario.AddShape(plant, Box(5,5,0.01), "ceiling",collidable=obstacle_collidable)
 
     plant.WeldFrames(plant.world_frame(),
                      plant.GetFrameByName("left_bottle"),
@@ -62,30 +62,30 @@ def create_waterbottle_env(plant, has_floor = False, scale=SCALES["waterbottle"]
                      RigidTransform(p= [0., 0., 0.30]))
     
     if has_floor:
-        scenario.AddShape(plant, Box(2.0, 2.0, 0.02), "floor", collidable=True)
+        scenario.AddShape(plant, Box(2.0, 2.0, 0.02), "floor", collidable=obstacle_collidable)
         plant.WeldFrames(plant.world_frame(),
                          plant.GetFrameByName("floor"),
                          RigidTransform(p=[0., 0., -0.012])) # Add slightly more clearance to prevent problem in collision detection
 
-def create_laptop_env(plant, has_floor=False, scale=SCALES["laptop"]):
+def create_laptop_env(plant, has_floor=False, scale=SCALES["laptop"],obstacle_collidable=True):
     # scenario.AddShape(plant, Box(0.4*scale[0], 0.4*scale[1], 0.1*scale[2]), "manipulated_object", 
     #                   collidable=True)
     scenario.AddConvexMesh(plant, "model/resources/meshes/keyboard_cvx.obj", 
                            "manipulated_object",
                            collidable=True)
     if has_floor:
-        scenario.AddShape(plant, Box(10.0, 10.0, 0.02), "floor", collidable=True)
+        scenario.AddShape(plant, Box(10.0, 10.0, 0.02), "floor", collidable=obstacle_collidable)
         plant.WeldFrames(plant.world_frame(),
                          plant.GetFrameByName("floor"),
                          RigidTransform(p=[0., 0., -0.012])) # Add slightly more clearance to prevent problem in collision detection
 
-def create_plate_env(plant, has_floor=False, scale=SCALES["plate"]):
+def create_plate_env(plant, has_floor=False, scale=SCALES["plate"],obstacle_collidable=True):
     # TODO: Add convex based mesh
     scenario.AddConvexMesh(plant, "model/resources/meshes/plate_cvx_simple.obj", 
                            "manipulated_object",
                            collidable=True)
     if has_floor:
-        scenario.AddShape(plant, Box(10.0, 10.0, 0.5), "floor", collidable=True)
+        scenario.AddShape(plant, Box(10.0, 10.0, 0.5), "floor", collidable=obstacle_collidable)
         plant.WeldFrames(plant.world_frame(),
                          plant.GetFrameByName("floor"),
                          RigidTransform(p=[0., 0., -0.252]))
@@ -98,52 +98,52 @@ def create_handle_env(plant, has_floor=False):
         plant.WeldFrames(plant.world_frame(),plant.GetFrameByName("floor"), 
                          RigidTransform(p=[0.,0., -0.012]))
 
-def create_groovepen_env(plant, has_floor=False,scale=SCALES["groovepen"]):
+def create_groovepen_env(plant, has_floor=False,scale=SCALES["groovepen"],obstacle_collidable=True):
     #scenario.AddURDFModel(plant, "envs/assets/pen.urdf", fixed_body_name="manipulated_object")
     scenario.AddConvexMesh(plant, 
                            "model/resources/meshes/pen_cvx.obj",
                            "manipulated_object",
                            collidable=True)
     # Add groove
-    scenario.AddShape(plant, Box(0.4,0.04,0.03), "groove_1", collidable=True)
+    scenario.AddShape(plant, Box(0.4,0.04,0.03), "groove_1", collidable=obstacle_collidable)
     plant.WeldFrames(plant.world_frame(), 
                      plant.GetFrameByName("groove_1"),
                      RigidTransform(p=[0.2, -0.04, 0.03]))
-    scenario.AddShape(plant, Box(0.4,0.04,0.03), "groove_2", collidable=True)
+    scenario.AddShape(plant, Box(0.4,0.04,0.03), "groove_2", collidable=obstacle_collidable)
     plant.WeldFrames(plant.world_frame(),
                     plant.GetFrameByName("groove_2"),
                     RigidTransform(p=[0.2,0.04,0.03]))
-    scenario.AddShape(plant, Box(0.04,0.12,0.03),"groove_3", collidable=True)
+    scenario.AddShape(plant, Box(0.04,0.12,0.03),"groove_3", collidable=obstacle_collidable)
     plant.WeldFrames(plant.world_frame(),
                     plant.GetFrameByName("groove_3"),
                     RigidTransform(p=[-0.02,0,0.03]))
     if has_floor:
-        scenario.AddShape(plant, Box(10.0, 10.0, 0.02), "floor", collidable=True)
+        scenario.AddShape(plant, Box(10.0, 10.0, 0.02), "floor", collidable=obstacle_collidable)
         plant.WeldFrames(plant.world_frame(),plant.GetFrameByName("floor"), 
                          RigidTransform(p=[0.,0., -0.012]))
 
-def create_ruler_env(plant, has_floor = False, scale=SCALES["ruler"]):
+def create_ruler_env(plant, has_floor = False, scale=SCALES["ruler"],obstacle_collidable=True):
     scenario.AddShape(plant, Box(0.4*scale[0], 0.4*scale[1], 0.1*scale[2]), "manipulated_object",
                       collidable=True)
     if has_floor:
-        scenario.AddShape(plant, Box(3,3,0.05), "floor", collidable=True)
+        scenario.AddShape(plant, Box(3,3,0.05), "floor", collidable=obstacle_collidable)
         plant.WeldFrames(plant.world_frame(), plant.GetFrameByName("floor"),
                          RigidTransform(p=[0,1.48,-0.035]))
 
-def create_cardboard_env(plant, has_floor=False, scale=SCALES["cardboard"]):
+def create_cardboard_env(plant, has_floor=False, scale=SCALES["cardboard"],obstacle_collidable=True):
     scenario.AddShape(plant, Box(0.4*scale[0], 0.4*scale[1], 0.1*scale[2]), "manipulated_object",
                       collidable=True)
     if has_floor:
-        scenario.AddShape(plant, Box(3,3,0.05), "floor", collidable=True)
+        scenario.AddShape(plant, Box(3,3,0.05), "floor", collidable=obstacle_collidable)
         plant.WeldFrames(plant.world_frame(), plant.GetFrameByName("floor"),
                          RigidTransform(p=[0,1.48,-0.035]))
 
-def create_keyboard_env(plant, has_floor=False, scale=SCALES["keyboard"]):
+def create_keyboard_env(plant, has_floor=False, scale=SCALES["keyboard"],obstacle_collidable=True):
     scenario.AddConvexMesh(plant, "model/resources/meshes/keyboard_cvx.obj", 
                            "manipulated_object",
                            collidable=True)
     if has_floor:
-        scenario.AddShape(plant, Box(3,3,0.05), "floor", collidable=True)
+        scenario.AddShape(plant, Box(3,3,0.05), "floor", collidable=obstacle_collidable)
         plant.WeldFrames(plant.world_frame(), plant.GetFrameByName("floor"),
                          RigidTransform(p=[-1, 0,-0.035]))
 object_creators = {

@@ -28,14 +28,16 @@ args = parser.parse_args()
 # Should not generate CSG until very end
 if args.env in ["plate","pen","waterbottle"]:
     mesh = o3d.io.read_triangle_mesh(os.path.join(currentdir, f"../../envs/assets/{args.env}_cvx_simple.obj"))
-    mesh.compute_vertex_normals()
-    mesh.compute_triangle_normals()
-    pcd = mesh.sample_points_poisson_disk(1024, use_triangle_normal=True)
-    contact_regions = MeshRegion(mesh)
-    cropped_pcd = o3d.io.read_point_cloud(os.path.join(currentdir, f"../../envs/assets/init_pcds/{args.env}.ply"))# Should be saved from environment and distance value 
 else:
     scale = SCALES[args.env]
     mesh = o3d.geometry.TriangleMesh.create_box(0.4*scale[0],0.4*scale[1],0.1*scale[2])
+    mesh.translate([-0.5*0.4*scale[0], -0.5*0.4*scale[0], -0.5*0.1*scale[2]])
+mesh.compute_vertex_normals()
+mesh.compute_triangle_normals()
+pcd = mesh.sample_points_poisson_disk(1024, use_triangle_normal=True)
+contact_regions = MeshRegion(mesh)
+cropped_pcd = o3d.io.read_point_cloud(os.path.join(currentdir, f"../../envs/assets/init_pcds/{args.env}.ply"))# Should be saved from environment and distance value 
+
 
 
 
@@ -62,7 +64,7 @@ def deocclude(aabbs,pcd):
 for r_id in contact_regions.regions:
     points = contact_regions.sample_points(region_id=r_id, n_samples=NUM_SAMPLES)
     _pcd = o3d.geometry.PointCloud(o3d.utility.Vector3dVector(points))
-    _pcd.rot(rot_mat,center=[0,0,0])
+    _pcd.rotate(rot_mat,center=[0,0,0])
     _pcd.translate(init_pose[:3])
     _pcd = deocclude(aabbs, pcd)
     if len(_pcd.points) > NUM_SAMPLES/2:
@@ -157,4 +159,22 @@ for o in order:
     sorted_path.append(paths[o])
 
 print("Top paths")
-print(sorted_path[:10])
+csg_nodes = set()
+for p in sorted_path[:10]:
+    for node in p:
+        csg_nodes.add(node)
+csg_nodes = list(csg_nodes)
+csg_nodes_np = np.asarray(list(csg_nodes))
+csg_paths_ids = []
+for p in sorted_path[:10]:
+    csg_path_id = []
+    for node in p:
+        csg_path_id.append(csg_nodes.index(node))
+    csg_paths_ids.append(csg_path_id)
+
+csg_paths_ids = np.asarray(csg_paths_ids)
+print(csg_nodes_np)
+print(csg_paths_ids)
+np.save(os.path.join(currentdir, f"../../data/contact_states/{args.env}_env/csg.npy"), csg_nodes_np)
+np.save(os.path.join(currentdir, f"../../data/contact_states/{args.env}_env/paths_id.npy"), csg_paths_ids)
+print("csg saved")

@@ -20,6 +20,7 @@ class SmallBlockRegionDummy:
         scaled_action = (sub_action+1) * 0.5 # Mapped to [0, 1]
         fixed_axis = self.fixed_axis[region_id]
         region = self.regions[region_id]
+        #print("finger_id:",finger_id,region)
         if fixed_axis == 0:
             x = region[0]
             y_range = region[3] - region[2]

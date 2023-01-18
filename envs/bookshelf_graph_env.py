@@ -70,7 +70,8 @@ class BookShelfBulletEnv(gym.Env):
                  showImage=False,
                  has_distance_field=False,
                  max_forces = model_param.MAX_FORCE,
-                 add_physics=False): # TODO: remove spherical coordinate if proved to be none feasible.
+                 add_physics=False,
+                 validate=False): # TODO: remove spherical coordinate if proved to be none feasible.
         self.train = train
         self.add_physics = add_physics
         self.has_distance_field = has_distance_field
@@ -92,7 +93,10 @@ class BookShelfBulletEnv(gym.Env):
         for i, finger in enumerate(self.active_finger_tips):
             self.active_finger_tips_idx[finger] = i
         self.num_interp_f = num_interp_f
-        self.csg = ContactStateGraph(np.load("data/contact_states/bookshelf_env/dummy_states.npy"))
+        if validate:
+            self.csg = ContactStateGraph(np.load("data/contact_states/bookshelf_env/csg.npy"))
+        else:
+            self.csg = ContactStateGraph(np.load("data/contact_states/bookshelf_env/dummy_states.npy"))
         self.contact_region = SmallBlockRegionDummy(scale=SCALE)
         self.path = path
         if self.num_fingertips != 4:

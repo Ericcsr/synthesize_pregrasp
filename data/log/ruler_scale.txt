@@ -1,0 +1,3 @@
+Max force: 20.0 mean rewards: -4686.049743652344, best rewards:-4686.049743652344
+Max force: 20.0 mean rewards: -3657.0389404296875, best rewards:-3657.0389404296875
+Max force: 20.0 mean rewards: -7558.406494140625, best rewards:-7558.406494140625

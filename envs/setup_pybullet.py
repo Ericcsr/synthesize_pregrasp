@@ -54,7 +54,7 @@ def create_laptop(p, alpha=1.0, scale=[1,1,1]):
                                         init_quat = np.array([0, 0, 0, 1]))
     return o_id, floor_id, wall_id
 
-def create_keyboard(p,scale=[1,1,1]):
+def create_keyboard(p,alpha=1.0,scale=[1,1,1]):
     floor_id = p.loadURDF(os.path.join(currentdir, "assets/small_plane.urdf"),basePosition=[-1,0,0])
     init_xyz = np.array([0.38, 0.0, 0.03])
     init_orn = np.array([0, 0, 0, 1])

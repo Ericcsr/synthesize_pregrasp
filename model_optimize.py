@@ -14,6 +14,7 @@ import numpy as np
 import traceback
 import os
 from neurals.test_options import TestOptions
+from neurals.scripts.generate_grasps import validate_path
 #from utils.path_filter import filter_paths
 
 envs_dict = {
@@ -42,6 +43,7 @@ if __name__ == '__main__':
     parser.add_argument("--name_score", type=str, default=None, required=True)
     parser.add_argument("--name_epoch", type=str, default=2980)
     parser.add_argument("--has_distance_field", action="store_true", default=False)
+    parser.add_argument("--validate", action="store_true", default=False)
     args = original_parser.parse()
 
     
@@ -56,8 +58,8 @@ if __name__ == '__main__':
 
     # paths = filter_paths(paths_raw, ref_env.csg, ref_env.contact_region)
     # Need to check final state dynamical feasibility here
-    
-    paths = np.array([[2,2,2]]) #
+    if args.validate:
+        paths = np.load(f"data/contact_states/{args.env}_env/paths_id.npy")
     weight = np.array([0.5])
 
     log_text_list = []
@@ -68,11 +70,11 @@ if __name__ == '__main__':
         for i, path in enumerate(paths): # Search for all the paths.
             optimizer = StochTrajOptimizer(env=envs_dict[args.env], sigma=0.8, initial_guess=None,
                                     TimeSteps=args.steps, seed=12367134, render=False, Iterations=args.iters, active_finger_tips=[0,1], num_interp_f=7,
-                                    Num_processes=2, Traj_per_process=130, opt_time=False, verbose=1,mode=args.mode,
+                                    Num_processes=6, Traj_per_process=60 if not args.validate else 30, opt_time=False, verbose=1,mode=args.mode,
                                     last_fins=fin_data, init_obj_pose=init_obj_pose, steps=args.steps, path=path,
                                     sc_path=f"neurals/pretrained_score_function/{args.name_score}/{args.name_epoch}.pth",
                                     dex_path=f"checkpoints/{args.name}/latest_net.pth", opt_dict=opt_dict, 
-                                    has_distance_field=args.has_distance_field, max_forces = max_force)
+                                    has_distance_field=args.has_distance_field, max_forces = max_force, validate=args.validate)
 
             uopt = None
             Jopt_log = []
@@ -98,7 +100,19 @@ if __name__ == '__main__':
             if args.render:
                 optimizer.render_traj(uopt)
             # Automatic evaluation
-            os.system(f"python model_test.py --exp_name {args.exp_name}_{max_force} --env {args.env}")
+            cmd = f"python model_test.py --exp_name {args.exp_name}_{max_force} --env {args.env}"
+            if args.validate:
+                cmd = cmd + f" --validate --path_id {i}"
+            os.system(cmd)
+            if args.validate:
+                r_suc = validate_path(exp_name=f"{args.exp_name}_{max_force}",
+                                      env=args.env,
+                                      visualize=False)
+                if r_suc > 0:
+                    print(f"Success in {i} path, r_suc: {r_suc}")
+                    break
+                
+
     except Exception as e:
         print(traceback.format_exc())
     finally:

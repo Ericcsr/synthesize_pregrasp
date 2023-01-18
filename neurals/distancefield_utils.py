@@ -35,7 +35,7 @@ def create_laptop_with_x_wall_df():
 
 def create_keyboard_df():
     floor = o3d.geometry.TriangleMesh.create_box(3,3,0.02)
-    floor.translate([-2.5,0,0])
+    floor.translate([-2.5,-1.5,-0.02])
     wall = o3d.geometry.TriangleMesh.create_box(0.02,2,1)
     wall.translate([-0.22, -1, 0])
     return DistFieldEnv([floor, wall])

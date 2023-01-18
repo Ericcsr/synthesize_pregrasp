@@ -25,6 +25,8 @@ def cuda_scheduler(num_process, num_gpus=4):
     assert(len(device_list) == num_process)
     return device_list
     
+context_flag = [False]
+
 class StochTrajOptimizer:
     def __init__(self,
                  env,
@@ -61,7 +63,9 @@ class StochTrajOptimizer:
         self.current_patience = patience
         self.device_list = cuda_scheduler(self.num_process, 1)
         self.kwargs = kwargs  # environment arguments
-        mp.set_start_method("spawn")
+        if context_flag[0] == False:
+            mp.set_start_method("spawn")
+            context_flag[0] = True
         if self.verbose==2:
             print('main program process id:', os.getpid())
 

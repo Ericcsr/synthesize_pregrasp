@@ -21,16 +21,16 @@ parser = ArgumentParser()
 parser.add_argument("--exp_name", type=str, default="")
 args = parser.parse_args()
 
-tip_pose_data = np.load(f"data/tip_data/{args.exp_name}.npy")
+tip_pose_data = np.load(f"data/tip_data/{args.exp_name}_tip_poses.npy")
 tip_pose_output = tip_pose_data.copy()
-obj_pose_data = np.load(f"data/object_poses/{args.exp_name}.npy")
+obj_pose_data = np.load(f"data/object_poses/{args.exp_name}_object_poses.npy")
 
 steps = tip_pose_data.shape[0]//model_param.CONTROL_SKIP
 
 # This should be done before solve for key points
 for i in range(1, steps):
-    for j in range(4):
-        if tip_pose_data[(i-1)*50,j].sum() < 100: # In contact previously
+    for j in range(5):
+        if tip_pose_data[(i-1)*50,j].sum() < 50: # In contact previously
             rel_pose = getRelativePose(tip_pose_data[i*50-1], obj_pose_data[i*50-1,:3], obj_pose_data[i*50-1,3:])
             world_pose = getWorldPose(rel_pose, obj_pose_data[i*50, :3], obj_pose_data[i*50, 3:])
             tip_pose_output[i*50,j] = world_pose

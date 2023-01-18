@@ -73,7 +73,8 @@ class KeyboardBulletEnv(gym.Env):
                  showImage=False,
                  has_distance_field = False,
                  max_forces = model_param.MAX_FORCE,
-                 add_physics=False):
+                 add_physics=False,
+                 validate=False):
         self.train = train
         self.add_physics=add_physics
         self.has_distance_field = has_distance_field
@@ -95,8 +96,11 @@ class KeyboardBulletEnv(gym.Env):
         for i,finger in enumerate(self.active_finger_tips):
             self.active_finger_tips_idx[finger] = i
         self.num_interp_f = num_interp_f
-        self.csg = ContactStateGraph(np.load("data/contact_states/keyboard_env/dummy_states.npy"))
-        self.contact_region = SmallBlockRegionDummy(scale=[0.6, 1.8, 0.6])
+        if validate:
+            self.csg = ContactStateGraph(np.load("data/contact_states/keyboard_env/csg.npy"))
+        else:
+            self.csg = ContactStateGraph(np.load("data/contact_states/keyboard_env/dummy_states.npy"))
+        self.contact_region = SmallBlockRegionDummy(scale=np.array([0.6, 1.8, 0.6]))
         #self.contact_region.create_geodesic_agent()
         #self.distance_matrix = self.contact_region.construct_distance_matrix()
         #self.csg = ContactStateEmbedding(np.load("data/contact_states/laptop_env/dummy_states_2.npy"), distance_table=self.distance_matrix, beta=0.5)
@@ -204,7 +208,7 @@ class KeyboardBulletEnv(gym.Env):
         for finger in self.all_fingers:
             color = colors[finger]
 
-            size = [0.01, 0.02, 0.011] if finger == 0 else [0.01, 0.01, 0.01]       # thumb larger
+            size = [0.01, 0.01, 0.01] if finger == 0 else [0.01, 0.01, 0.01]       # thumb larger
 
             init_xyz = (finger+2.0, finger+2.0, finger+2.0) if finger in self.active_finger_tips else (100,100,100)
             tip_id = rb.create_primitive_shape(self._p, 0.01, pybullet.GEOM_BOX, size,         # half-extend
@@ -213,7 +217,7 @@ class KeyboardBulletEnv(gym.Env):
                                                init_quat=(0, 0, 0, 1))
             self.tip_ids.append(tip_id)
             self._p.changeDynamics(tip_id, -1,
-                                   lateralFriction=100.0, restitution=0.0)                       # TODO
+                                   lateralFriction=5.0, restitution=0.0)                       # TODO
             self._p.setCollisionFilterPair(tip_id, self.floor_id, -1, -1, 0)
         
         self.tip_cids = []
@@ -494,9 +498,9 @@ class KeyboardBulletEnv(gym.Env):
             if t == 0 and self.c_step_timer == 0 and not self.train:
                 init_pcd = get_canonical_point_cloud()
                 init_df = self.compute_distance_field(init_pcd)
-                o3d.io.write_point_cloud(f"{currentdir}/assets/init_pcds/laptop.ply",init_pcd)
-                np.save(f"{currentdir}/assets/init_dfs/laptop.npy", init_df)
-                np.save(f"{currentdir}/assets/init_pose/laptop.npy", np.hstack([pos,quat]))
+                o3d.io.write_point_cloud(f"{currentdir}/assets/init_pcds/keyboard.ply",init_pcd)
+                np.save(f"{currentdir}/assets/init_dfs/keyboard.npy", init_df)
+                np.save(f"{currentdir}/assets/init_pose/keyboard.npy", np.hstack([pos,quat]))
             if not self.train:
                 tip_pose = []
                 for idx in range(self.num_fingertips):
@@ -543,7 +547,7 @@ class KeyboardBulletEnv(gym.Env):
             self.setup_grasp(obj_pos, obj_orn)
         if self.c_step_timer == self.n_steps:
             pcd_output = get_canonical_point_cloud()
-            com_h = rb.get_link_com_xyz_orn(self._p, self.o_id, -1)[0][2] * 0.5
+            com_h =(rb.get_link_com_xyz_orn(self._p, self.o_id, -1)[0][0]-0.38) * 0.5
             for _ in range(50 if self.train else 0):
                 pos, quat = rb.get_link_com_xyz_orn(self._p, self.o_id, -1)
                 if not self.train and self.add_physics:
@@ -587,7 +591,7 @@ class KeyboardBulletEnv(gym.Env):
                         time.sleep(self._ts * 4.0)
                         image = self.renderer.render()
                         images.append(image)
-            com_h += rb.get_link_com_xyz_orn(self._p, self.o_id, -1)[0][2] * 0.5
+            com_h += (rb.get_link_com_xyz_orn(self._p, self.o_id, -1)[0][0]-0.38) * 0.5
         obs = self.get_extended_observation()
 
         ave_r /= self.control_skip
@@ -682,6 +686,11 @@ class KeyboardBulletEnv(gym.Env):
     def load_grasp(self, grasp, finger_idx=[0,2,3,4]):
         self.grasp_pos = grasp[:,:3] + 0.01 * grasp[:,3:]
         self.grasp_idx = finger_idx
+        self.inverse_cond_idx = [0,1]
+        if 0 in self.grasp_idx:
+            self.inverse_cond_idx.remove(1)
+        elif 1 in self.grasp_idx:
+            self.inverse_cond_idx.remove(0)
 
     def setup_grasp(self,pos, quat):
         self.grasp_constraint = []
@@ -704,6 +713,8 @@ class KeyboardBulletEnv(gym.Env):
             self._p.setCollisionFilterPair(self.tip_ids[idx],self.o_id, -1, -1, 1)
 
     def update_grasp(self, pos, quat):
+        for i in self.inverse_cond_idx:
+            self._p.changeConstraint(self.tip_cids[i], maxForce=0)
         for i,idx in enumerate(self.grasp_idx):
             tip = self.grasp_pos[idx]
             tip_pose, _ = self._p.multiplyTransforms(pos, quat, tip, [0, 0, 0, 1])
@@ -729,7 +740,10 @@ class KeyboardBulletEnv(gym.Env):
             tip_pose = self.ref_poses_cond[i]
             if delta is not None:
                 tip_pose += delta
-            self._p.changeConstraint(self.tip_cids[i], tip_pose, quat, maxForce=self.max_forces, erp=0.9)
+            if i in self.inverse_cond_idx:
+                self._p.changeConstraint(self.tip_cids[i], maxForce=0)
+            else:
+                self._p.changeConstraint(self.tip_cids[i], tip_pose, quat, maxForce=self.max_forces, erp=0.9)
 
         for i,idx in enumerate(self.grasp_idx):
             tip_pose = self.ref_poses_grasp[i]

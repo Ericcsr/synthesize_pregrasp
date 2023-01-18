@@ -1,7 +1,7 @@
 import numpy as np
 
 SCALES = {
-    "bookshelf": np.array([1,1,0.5]),
+    "bookshelf": np.array([1,1,0.1]),
     "waterbottle": np.array([1,1,1]),
     "groovepen":np.array([1,1,1]),
     "laptop":np.array([0.6,1,0.3]),

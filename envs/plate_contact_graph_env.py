@@ -68,7 +68,8 @@ class PlateBulletEnv(gym.Env):
                  showImage=False,
                  has_distance_field = False,
                  max_forces = model_param.MAX_FORCE,
-                 add_physics = False):
+                 add_physics = False,
+                 validate=False):
         self.train = train
         self.add_physics = add_physics
         self.has_distance_field = has_distance_field
@@ -90,7 +91,10 @@ class PlateBulletEnv(gym.Env):
         for i,finger in enumerate(self.active_finger_tips):
             self.active_finger_tips_idx[finger] = i
         self.num_interp_f = num_interp_f
-        self.csg = ContactStateGraph(np.load("data/contact_states/plate_env/dummy_states.npy"))
+        if validate:
+            self.csg = ContactStateGraph(np.load("data/contact_states/plate_env/csg.npy"))
+        else:
+            self.csg = ContactStateGraph(np.load("data/contact_states/plate_env/dummy_states.npy"))
         mesh = o3d.io.read_triangle_mesh(os.path.join(currentdir, "assets/plate_cvx_simple.obj"))
         mesh.compute_vertex_normals()
         mesh.compute_triangle_normals()
@@ -245,50 +249,6 @@ class PlateBulletEnv(gym.Env):
             3:None}
         return obs
 
-    def get_hand_pose(self,
-                      finger_infos: List[Tuple[List[float], bool]],
-                      last_finger_infos: List[Tuple[List[float], bool]])\
-                      -> Tuple[List[float], List[List[float]], float]:
-        # hand / fingers pose in object frame
-
-        #assert self.use_split_region
-
-        # offsets in object frame
-        # Eric: Hard coded offset, Need to get the position of finger tip here
-        # TODO: For two contact points, we may need to remove this terms since it does not make much sense
-        offsets = np.array([
-            [+0.25, -0.03, 0],  # thumb
-            [+0.25, +0.05, +0.1],  # ring
-            [+0.25, 0.0, +0.1],  # middle
-            [+0.25, -0.05, +0.1],  # index
-        ])
-
-        proposals = np.empty((0, 3), float)
-        for fin_ind, fin_info in enumerate(finger_infos):
-            if fin_info[1]:
-                proposals = np.vstack((proposals, np.array(fin_info[0]) + offsets[fin_ind, :]))
-            elif last_finger_infos[fin_ind][1]:
-                proposals = np.vstack((proposals, np.array(last_finger_infos[fin_ind][0]) + offsets[fin_ind, :]))
-
-        if proposals.shape[0] == 0:
-            # no fixed fingers
-            mean = np.array([0.5, 0.0, 0.3])
-            cost = 0.0
-        else:
-            mean = proposals.mean(axis=0)
-            cost = proposals.var(axis=0).sum()
-            #print(proposals.var(axis=0))
-
-        fin_pos = []
-        for fin_ind in range(self.num_fingertips):
-            if finger_infos[fin_ind][1]:
-                fin_pos.append(finger_infos[fin_ind][0])
-            elif last_finger_infos[fin_ind][1]:
-                fin_pos.append(last_finger_infos[fin_ind][0])
-            else:
-                fin_pos.append(list(mean - offsets[fin_ind, :]))
-
-        return list(mean), fin_pos, cost
 
     def step(self, a: List[float], rollout_verify=False):
 
@@ -554,7 +514,7 @@ class PlateBulletEnv(gym.Env):
                 for idx in range(self.num_fingertips):
                     tip_pose_candidate = list(self._p.multiplyTransforms(pos, quat, self.cur_fins[idx][0], [0, 0, 0, 1])[0])
                     local_normals = self.compute_tip_normals(self.cur_fins[idx][0])
-                    print("finger:",idx,"norm",local_normals)
+                    #print("finger:",idx,"norm",local_normals)
                     tip_pose_candidate += list(self._p.multiplyTransforms([0,0,0], quat, local_normals, [0, 0, 0, 1])[0])
                     tip_pose.append(tip_pose_candidate)
                 tip_poses.append(tip_pose) # position + tip_normals 

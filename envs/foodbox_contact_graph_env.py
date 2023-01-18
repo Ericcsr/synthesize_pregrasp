@@ -71,7 +71,8 @@ class FoodboxBulletEnv(gym.Env):
                  showImage=False,
                  has_distance_field = False,
                  max_forces = model_param.MAX_FORCE,
-                 add_physics=False):
+                 add_physics=False,
+                 validate=False):
         self.train = train
         self.add_physics = add_physics
         self.has_distance_field = has_distance_field
@@ -94,7 +95,10 @@ class FoodboxBulletEnv(gym.Env):
             self.active_finger_tips_idx[finger] = i
         print("Active:", self.active_finger_tips, self.active_finger_tips_idx)
         self.num_interp_f = num_interp_f
-        self.csg = ContactStateGraph(np.load("data/contact_states/laptop_env/dummy_states.npy"))
+        if validate:
+            self.csg = ContactStateGraph(np.load("data/contact_states/foodbox_env/csg.npy"))
+        else:
+            self.csg = ContactStateGraph(np.load("data/contact_states/foodbox_env/dummy_states.npy"))
         self.contact_region = SmallBlockRegionDummy(scale=SCALE)
         self.path = path
         if self.num_fingertips != 2:

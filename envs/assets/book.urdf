@@ -9,7 +9,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="book.obj" scale="1 1 1"/>
+        <mesh filename="book.obj" scale="1 1 0.3"/>
       </geometry>
        <material name="white">
         <color rgba="1 1 1 1"/>
@@ -19,7 +19,7 @@
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
         <!-- <mesh filename="box.stl" scale="1 1 1"/> -->
-        <box size="0.4 0.4 0.05"/>
+        <box size="0.4 0.4 0.015"/>
       </geometry>
     </collision>
   </link>

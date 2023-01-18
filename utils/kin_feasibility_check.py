@@ -64,17 +64,23 @@ SHADOW_FINGER_MAP = [model_param.ShadowHandFinger.THUMB,
 def check_kin_feasible(contact_points, 
                        contact_normals, 
                        object_path=None, 
-                       object_creator=None, 
+                       object_creator=None,
                        base_link_name="manipulated_object", 
                        bounding_box=None,
                        hand_model = "allegro",
+                       object_pose=None,
                        pid=0):
     """
     If object_path == None, then by default use naive_box
     Assume contact points and contact normals are squeezed np.ndarray
     Assume Object is always placed at canonical pose
     """
-    object_world_pose = RigidTransform(p=np.array([0, 0, 0]))
+    # Always in canonical coordinate
+    if object_pose is None:
+        object_world_pose = RigidTransform(p=np.array([0, 0, 0]))
+    else:
+        orn = np.array([object_pose[6],object_pose[3],object_pose[4],object_pose[5]])
+        object_world_pose = RigidTransform(quaternion=eigen_geometry.Quaternion(orn), p=object_pose[:3])
     if hand_model == "allegro":
         hand_plant = allegro_rbm.AllegroHandPlantDrake(object_path=object_path, 
                                                object_base_link_name=base_link_name,
@@ -132,7 +138,7 @@ def check_kin_feasible(contact_points,
                 if not constraints_on_finger[finger][0].evaluator().CheckSatisfied(q_sol, tol=1.5e-2):
                     match_fingertip = False
                     break
-        no_collision = collision_constr.evaluator().CheckSatisfied(q_sol, tol=1.5e-2)
+        no_collision = collision_constr.evaluator().CheckSatisfied(q_sol, tol=2e-2)
         
         base_condition = True
         if not (bounding_box is None):
@@ -148,7 +154,8 @@ def check_kin_feasible_parallel(contact_points,
                                 base_link_name="manipulated_object", 
                                 bounding_box=None, 
                                 num_process=16,
-                                hand_model = "allegro"):
+                                hand_model = "allegro",
+                                object_pose=None):
     kwargs = {
         "contact_points":contact_points,
         "contact_normals":contact_normals,
@@ -156,7 +163,8 @@ def check_kin_feasible_parallel(contact_points,
         "object_creator":object_creator,
         "base_link_name":base_link_name,
         "bounding_box":bounding_box,
-        "hand_model":hand_model
+        "hand_model":hand_model,
+        "object_pose":object_pose
     }
     args = []
     for i in range(num_process):
