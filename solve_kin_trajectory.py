@@ -38,7 +38,9 @@ OBJECTS = {
     "ruler":"ruler",
     "cardboard":"cardboard",
     "laptop":"laptop",
-    "keyboard":"keyboard"
+    "keyboard":"keyboard",
+    "cshape":"cshape",
+    "tape":"tape"
 }
 
 # TODO: Load object poses as well as finger tip pose trajectory

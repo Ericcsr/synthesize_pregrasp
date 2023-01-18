@@ -7,6 +7,8 @@ from envs.groovepen_contact_graph_env import GroovePenBulletEnv
 from envs.ruler_contact_graph_env import RulerBulletEnv
 from envs.cardboard_contact_graph_env import CardboardBulletEnv
 from envs.keyboard_contact_graph_env import KeyboardBulletEnv
+from envs.cshape_contact_graph_env import CShapeBulletEnv
+from envs.tape_contact_graph_env import TapeBulletEnv
 import open3d as o3d
 import numpy as np
 import random
@@ -40,7 +42,9 @@ envs_dict = {
     "groovepen": GroovePenBulletEnv,
     "ruler":RulerBulletEnv,
     "cardboard":CardboardBulletEnv,
-    "keyboard":KeyboardBulletEnv
+    "keyboard":KeyboardBulletEnv,
+    "cshape":CShapeBulletEnv,
+    "tape":TapeBulletEnv
 }
 
 

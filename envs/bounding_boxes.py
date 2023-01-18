@@ -16,5 +16,7 @@ BOUNDING_BOXES = {
     "foodbox":[o3d.geometry.AxisAlignedBoundingBox(min_bound=np.array([-100, -100, 0.005]),max_bound=np.array([100, 100, 100]))],
     "plate":[o3d.geometry.AxisAlignedBoundingBox(min_bound=np.array([-100, -100, 0.005]),max_bound=np.array([100, 100, 100]))],
     "keyboard": [o3d.geometry.AxisAlignedBoundingBox(min_bound=np.array([-0.31,-100,0.005]), max_bound=np.array([0.5,100,100])),
-                 o3d.geometry.AxisAlignedBoundingBox(min_bound=np.array([0.5,-100,-100]), max_bound=np.array([100,100,100]))]
+                 o3d.geometry.AxisAlignedBoundingBox(min_bound=np.array([0.5,-100,-100]), max_bound=np.array([100,100,100]))],
+    "cshape":[o3d.geometry.AxisAlignedBoundingBox(min_bound=np.array([-0.07, -100, 0.005]),max_bound=np.array([100, 100, 100]))],
+    "tape":[o3d.geometry.AxisAlignedBoundingBox(min_bound=np.array([-0.12, -100, 0.005]),max_bound=np.array([100, 100, 100]))]
 }

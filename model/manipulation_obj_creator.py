@@ -146,6 +146,27 @@ def create_keyboard_env(plant, has_floor=False, scale=SCALES["keyboard"],obstacl
         scenario.AddShape(plant, Box(3,3,0.05), "floor", collidable=obstacle_collidable)
         plant.WeldFrames(plant.world_frame(), plant.GetFrameByName("floor"),
                          RigidTransform(p=[-1, 0,-0.035]))
+
+def create_cshape_env(plant, has_floor=False, scale=SCALES["cshape"],obstacle_collidable=True):
+    scenario.AddConvexMesh(plant, "model/resources/meshes/cshape_cvx.obj", 
+                           "manipulated_object",
+                           collidable=True)
+    if has_floor:
+        scenario.AddShape(plant, Box(10.0, 10.0, 0.02), "floor", collidable=obstacle_collidable)
+        plant.WeldFrames(plant.world_frame(),
+                         plant.GetFrameByName("floor"),
+                         RigidTransform(p=[0., 0., -0.012]))
+
+def create_tape_env(plant, has_floor=False, scale=SCALES["cshape"],obstacle_collidable=True):
+    scenario.AddConvexMesh(plant, "model/resources/meshes/tape_cvx.obj", 
+                           "manipulated_object",
+                           collidable=True)
+    if has_floor:
+        scenario.AddShape(plant, Box(10.0, 10.0, 0.02), "floor", collidable=obstacle_collidable)
+        plant.WeldFrames(plant.world_frame(),
+                         plant.GetFrameByName("floor"),
+                         RigidTransform(p=[0., 0., -0.012]))
+
 object_creators = {
     "foodbox":create_foodbox_env,
     "bookshelf":create_bookshelf_env,
@@ -155,5 +176,7 @@ object_creators = {
     "groovepen":create_groovepen_env,
     "ruler":create_ruler_env,
     "cardboard":create_cardboard_env,
-    "keyboard":create_keyboard_env
+    "keyboard":create_keyboard_env,
+    "cshape":create_cshape_env,
+    "tape":create_tape_env
 }

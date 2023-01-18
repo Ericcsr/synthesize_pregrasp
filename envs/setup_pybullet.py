@@ -140,6 +140,30 @@ def create_cardboard(p, alpha=0.8, scale=[1,1,1]):
                       basePosition=[0,0.2 * scale[0],0.001], baseOrientation=[0, 0, -0.7071068, 0.7071068])
     return o_id, floor_id
 
+def create_tape(p,alpha=1, scale=[1,1,1]):
+    floor_id = p.loadURDF(os.path.join(currentdir, "assets/plane.urdf"), useFixedBase=True)
+    init_xyz = np.array([0.0, 0.0, 0.0425])
+    init_orn = np.array([0, 0, 0, 1])
+    o_id = p.loadURDF(os.path.join(currentdir, "assets/tape.urdf"), basePosition=init_xyz, baseOrientation=init_orn)
+
+    wall_id = rb.create_primitive_shape(p, 0, pybullet.GEOM_BOX, (0.1, 2.0, 0.5),
+                                        color = (0.5, 0.5, 0.5, 1.0), collidable=True,
+                                        init_xyz = np.array([-0.08, 0, 0.5]),
+                                        init_quat = np.array([0, 0, 0, 1]))
+    return o_id, floor_id, wall_id
+
+def create_cshape(p,alpha=1, scale=[1,1,1]):
+    floor_id = p.loadURDF(os.path.join(currentdir, "assets/plane.urdf"), useFixedBase=True)
+    init_xyz = np.array([0.0, 0.0, 0.0425])
+    init_orn = np.array([0, 0, 0, 1])
+    o_id = p.loadURDF(os.path.join(currentdir, "assets/cshape.urdf"), basePosition=init_xyz, baseOrientation=init_orn)
+
+    wall_id = rb.create_primitive_shape(p, 0, pybullet.GEOM_BOX, (0.1, 2.0, 0.5),
+                                        color = (0.5, 0.5, 0.5, 1.0), collidable=True,
+                                        init_xyz = np.array([-0.08, 0, 0.5]),
+                                        init_quat = np.array([0, 0, 0, 1]))
+    return o_id, floor_id, wall_id
+
 pybullet_creator = {
     "foodbox":create_foodbox,
     "bookshelf":create_bookshelf,

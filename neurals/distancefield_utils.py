@@ -96,6 +96,20 @@ def create_cardboard_df():
     table.translate([-1.5,-0.02,-10])
     return DistFieldEnv([table])
 
+def create_cshape_df():
+    floor = o3d.geometry.TriangleMesh.create_box(2, 2, 0.02)
+    floor.translate([-1, -1, -0.02])
+    wall = o3d.geometry.TriangleMesh.create_box(0.02, 2, 1)
+    wall.translate([-0.145, -1, 0])
+    return DistFieldEnv([floor, wall])
+
+def create_tape_df():
+    floor = o3d.geometry.TriangleMesh.create_box(2, 2, 0.02)
+    floor.translate([-1, -1, -0.02])
+    wall = o3d.geometry.TriangleMesh.create_box(0.02, 2, 1)
+    wall.translate([-0.09, -1, 0])
+    return DistFieldEnv([floor, wall])
+
 env_lists = [create_foodbox_df, create_laptop_with_x_wall_df, create_laptop_with_y_wall_df, create_bookshelf_df, create_laptop_with_table, create_plate_df, create_waterbottle_df, create_ruler_df, create_cardboard_df]
 
 if __name__ == "__main__":
