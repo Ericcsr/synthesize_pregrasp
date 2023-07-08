@@ -1,0 +1,6 @@
+pytorch
+pydrake==1.12.0
+pybullet
+urdfpy
+opencv-python
+gym

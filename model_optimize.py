@@ -74,7 +74,7 @@ if __name__ == '__main__':
         for i, path in enumerate(paths): # Search for all the paths.
             optimizer = StochTrajOptimizer(env=envs_dict[args.env], sigma=0.8, initial_guess=None,
                                     TimeSteps=args.steps, seed=12367134, render=False, Iterations=args.iters, active_finger_tips=[0,1], num_interp_f=7,
-                                    Num_processes=6, Traj_per_process=60 if not args.validate else 30, opt_time=False, verbose=1,mode=args.mode,
+                                    Num_processes=12, Traj_per_process=30 if not args.validate else 15, opt_time=False, verbose=1,mode=args.mode,
                                     last_fins=fin_data, init_obj_pose=init_obj_pose, steps=args.steps, path=path,
                                     sc_path=f"neurals/pretrained_score_function/{args.name_score}/{args.name_epoch}.pth",
                                     dex_path=f"checkpoints/{args.name}/latest_net.pth", opt_dict=opt_dict, 

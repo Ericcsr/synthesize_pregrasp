@@ -63,12 +63,12 @@ def AddPackagePaths(parser):
                      "manipulation/models/wsg_50_description"))
 
 
-reserved_labels = [
-    pydrake.geometry.render.RenderLabel.kDoNotRender,
-    pydrake.geometry.render.RenderLabel.kDontCare,
-    pydrake.geometry.render.RenderLabel.kEmpty,
-    pydrake.geometry.render.RenderLabel.kUnspecified,
-]
+# reserved_labels = [
+#     pydrake.geometry.render.RenderLabel.kDoNotRender,
+#     pydrake.geometry.render.RenderLabel.kDontCare,
+#     pydrake.geometry.render.RenderLabel.kEmpty,
+#     pydrake.geometry.render.RenderLabel.kUnspecified,
+# ]
 
 
 def colorize_labels(image):

@@ -134,13 +134,15 @@ def validate_path(exp_name, env, visualize=False):
             if kin_feasibility[0]:
                 score += 1.0
         if visualize:
-            print("PCD ID:",i)
+            print("grasp ID:",i)
             vis_tip = visualize_finger_tip(grasp[:,:3])
             o3d.visualization.draw_geometries([pcd_o3d]+vis_tip)
     print("Success rate:", score / len(proj_grasps))
+    grasp_id = int(input("Please input the grasp ID of the grasp you want"))
+
 
     if visualize: # Avoid corrupt current grasps
-        np.save(f"data/predicted_grasps/{exp_name}.npy", proj_grasps)
+        np.save(f"data/predicted_grasps/{exp_name}.npy", proj_grasps[grasp_id])
     return score / len(proj_grasps)
 
 def main():

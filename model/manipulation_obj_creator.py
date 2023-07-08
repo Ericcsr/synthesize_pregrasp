@@ -68,11 +68,11 @@ def create_waterbottle_env(plant, has_floor = False, scale=SCALES["waterbottle"]
                          RigidTransform(p=[0., 0., -0.012])) # Add slightly more clearance to prevent problem in collision detection
 
 def create_laptop_env(plant, has_floor=False, scale=SCALES["laptop"],obstacle_collidable=True):
-    # scenario.AddShape(plant, Box(0.4*scale[0], 0.4*scale[1], 0.1*scale[2]), "manipulated_object", 
-    #                   collidable=True)
-    scenario.AddConvexMesh(plant, "model/resources/meshes/keyboard_cvx.obj", 
-                           "manipulated_object",
-                           collidable=True)
+    scenario.AddShape(plant, Box(0.4*scale[0], 0.4*scale[1], 0.1*scale[2]), "manipulated_object", 
+                      collidable=True)
+    # scenario.AddConvexMesh(plant, "model/resources/meshes/keyboard_cvx.obj", 
+    #                        "manipulated_object",
+    #                        collidable=True)
     if has_floor:
         scenario.AddShape(plant, Box(10.0, 10.0, 0.02), "floor", collidable=obstacle_collidable)
         plant.WeldFrames(plant.world_frame(),
@@ -139,9 +139,8 @@ def create_cardboard_env(plant, has_floor=False, scale=SCALES["cardboard"],obsta
                          RigidTransform(p=[0,1.48,-0.035]))
 
 def create_keyboard_env(plant, has_floor=False, scale=SCALES["keyboard"],obstacle_collidable=True):
-    scenario.AddConvexMesh(plant, "model/resources/meshes/keyboard_cvx.obj", 
-                           "manipulated_object",
-                           collidable=True)
+    scenario.AddShape(plant, Box(0.24, 0.72, 0.04), "manipulated_object", 
+                      collidable=True)
     if has_floor:
         scenario.AddShape(plant, Box(3,3,0.05), "floor", collidable=obstacle_collidable)
         plant.WeldFrames(plant.world_frame(), plant.GetFrameByName("floor"),

@@ -18,7 +18,7 @@ shadow_hand_offset = 2
 # allegro_base_inertia_offset = -0.0475
 # allegro_base_collision_offset = 0.0475
 gravity_vector = [0., 0., -9.8]
-object_padding = -0.005  # Radius of the finger
+object_padding = 0.0  # Radius of the finger
 
 force_closure_regularization_weight = 0.05
 min_finger_normal = 0.1
@@ -27,7 +27,7 @@ SCALE = 0.6
 POINT_NUM=20000
 MAX_FORCE=80
 CONTROL_SKIP=50
-ALLOWANCE=0.02
+ALLOWANCE=0.01
 ROOT_RANGE=1.0
 
 HAS_FLOOR=False

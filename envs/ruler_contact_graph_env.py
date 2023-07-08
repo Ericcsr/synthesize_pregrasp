@@ -184,14 +184,14 @@ class RulerBulletEnv(gym.Env):
         self.mesh_obj.compute_vertex_normals()
         self.mesh_obj.compute_triangle_normals()
         self.mesh_obj.translate(np.array([-0.2, -0.2, -0.05])*SCALE) # Here we need to minus 0.05 or there will be distributional issue..
-        self.pcd_obj = self.mesh_obj.sample_points_poisson_disk(2048, use_triangle_normal=True)
+        self.pcd_obj = self.mesh_obj.sample_points_poisson_disk(8192, use_triangle_normal=True)
         self.points = np.asarray(self.pcd_obj.points)
         self.normals = np.asarray(self.pcd_obj.normals)
         self.pcd_kd_tree = o3d.geometry.KDTreeFlann(self.pcd_obj)
 
         # TODO: (Eric) Need to tune friction.
         self._p.changeDynamics(self.floor_id, -1,
-                               lateralFriction=0.006, restitution=0.0)            # TODO
+                               lateralFriction=0.005, restitution=0.0)            # TODO
         self._p.changeDynamics(self.o_id, -1,
                                lateralFriction=70.0, restitution=0.0)             # TODO
 
@@ -546,7 +546,7 @@ class RulerBulletEnv(gym.Env):
                     tip_pose = []
                     for idx in range(len(self.all_fingers)):
                         tip_pose_candidate = list(self._p.getBasePositionAndOrientation(self.tip_ids[idx])[0])
-                        local_normals = self.compute_tip_normals(self.cur_fins[idx][0] if idx < self.num_fingertips else self.grasp_pos[idx])
+                        local_normals = self.compute_tip_normals(self.cur_fins[idx][0] if idx not in self.grasp_idx else self.grasp_pos[idx])
                         tip_pose_candidate += list(self._p.multiplyTransforms([0,0,0], quat, local_normals, [0, 0, 0, 1])[0])
                         tip_pose.append(tip_pose_candidate)
                     tip_poses.append(tip_pose)
@@ -569,7 +569,7 @@ class RulerBulletEnv(gym.Env):
                     tip_pose = []
                     for idx in range(len(self.all_fingers)):
                         tip_pose_candidate = list(self._p.getBasePositionAndOrientation(self.tip_ids[idx])[0])
-                        local_normals = self.compute_tip_normals(self.cur_fins[idx][0] if idx < self.num_fingertips else self.grasp_pos[idx])
+                        local_normals = self.compute_tip_normals(self.cur_fins[idx][0] if idx not in self.grasp_idx else self.grasp_pos[idx])
                         tip_pose_candidate += list(self._p.multiplyTransforms([0, 0, 0], quat, local_normals, [0, 0, 0, 1])[0])
                         tip_pose.append(tip_pose_candidate)
                     tip_poses.append(tip_pose)

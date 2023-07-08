@@ -232,7 +232,7 @@ class ShadowHandPlantDrake:
             finger_map.append(ShadowHandFinger.LITTLE)
         for i, finger in enumerate(finger_map):
             contact_position = np.squeeze(finger_tip_poses[i, :3])
-            if contact_position[0]+contact_position[1]+contact_position[2] > 20:
+            if np.abs(contact_position[0])+np.abs(contact_position[1])+np.abs(contact_position[2]) > 20:
                 desired_positions[finger] = np.array([100., 100., 100.])
                 continue
             constraints_on_finger[finger] = [ik.AddPositionConstraint(
@@ -250,7 +250,7 @@ class ShadowHandPlantDrake:
                                                  contact_normal,
                                                  self.fingertip_frames[finger],
                                                  np.array([0.,0.,-1.]),
-                                                 0, np.pi/2))
+                                                 0, np.pi/3))
             unused_fingers.remove(finger)
 
         prog = ik.get_mutable_prog()

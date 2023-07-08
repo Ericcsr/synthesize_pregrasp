@@ -268,7 +268,7 @@ def solve_ik(contact_points, contact_normals, object_path=None, object_creator=N
                 if not constraints_on_finger[finger][0].evaluator().CheckSatisfied(q_sol, tol=0.5e-2):
                     match_fingertip = False
                     break
-        no_collision = collision_constr.evaluator().CheckSatisfied(q_sol, tol=1.5e-2)
+        no_collision = collision_constr.evaluator().CheckSatisfied(q_sol, tol=2e-2)
         
         base_condition = True
         if not (bounding_box is None):

@@ -15,7 +15,7 @@ from argparse import ArgumentParser
 from envs.scales import SCALES
 
 NUM_KEY_FRAMES=4
-NUM_INTERP=8
+NUM_INTERP=4
 FULL_FINGERS = [0,1,2,3,4]
 
 ALLEGRO_FINGER_MAP = [model_param.AllegroHandFinger.THUMB, 
